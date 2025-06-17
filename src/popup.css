@@ -1,0 +1,74 @@
+#booking-ai-popup {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  width: 24rem;
+  height: 24rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
+}
+
+#booking-ai-popup .header {
+  background-color: #2563eb;
+  color: white;
+  padding: 1rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#booking-ai-popup .header h1 {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+#booking-ai-popup .close-button {
+  color: white;
+  cursor: pointer;
+}
+
+#booking-ai-popup .close-button:hover {
+  color: #e5e7eb;
+}
+
+#booking-ai-popup .content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+#booking-ai-popup .message {
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+#booking-ai-popup .message p {
+  color: #1f2937;
+}
+
+#booking-ai-popup .footer {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+#booking-ai-popup .screenshot-button {
+  width: 100%;
+  background-color: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#booking-ai-popup .screenshot-button:hover {
+  background-color: #1d4ed8;
+} 

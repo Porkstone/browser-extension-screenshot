@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Booking.com AI Assistant",
+  "version": "1.0",
+  "description": "AI-powered assistant for Booking.com",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "https://secure.booking.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://secure.booking.com/*"],
+      "js": ["content.js"],
+      "css": ["popupStyles.css"]
+    }
+  ]
+} 
