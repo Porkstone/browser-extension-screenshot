@@ -126,9 +126,11 @@ async function captureFullPageScreenshot() {
         pageWidth,
         pageHeight
       );
+     
+
       const questions = [
-        "What is the name of the Website? Please keep your answer concise.",
         "What is the name of the hotel?",
+        "What is the address of the hotel?",
         "What is the Customers name? Please keep your answer concise.",
         "What is the Customers email address? Please keep your answer concise.",
         "What is the Customers phone number it might be a mobile number starting 07? Please keep your answer concise.",
@@ -139,7 +141,7 @@ async function captureFullPageScreenshot() {
         "What is the check out date? Please keep your answer concise and format dates as YYYY-MM-DD",
         "What is the room type?",
         "Is the booking canceleable with full refund?",
-        "What is the total cost?"
+        
       ];
       canvas.toBlob(async (blob) => {
         if (blob) {
