@@ -127,6 +127,18 @@ async function captureFullPageScreenshot() {
         pageHeight
       );
      
+      interface QuestionAnswer {
+        question: string;
+        answer: string;
+      }
+
+      // If your API returns the array directly
+    interface DirectArrayResponse extends Array<QuestionAnswer> {}
+
+  // If your API wraps the array in an object (like {results: [...]} as seen in your logs)
+    interface WrappedArrayResponse {
+      results: QuestionAnswer[];
+}
 
       const questions = [
         "What is the name of the hotel?",
@@ -155,25 +167,72 @@ async function captureFullPageScreenshot() {
               method: "POST",
               body: formData
             });
-            const result = await apiResponse.json();
+            const result = await apiResponse.json() as WrappedArrayResponse;
             console.log('API response:', result); // Debug log
+            console.log('First element:', result.results[0].answer);
+            
+            // Display the answers first
             const messageDiv = document.querySelector('.message');
             if (messageDiv) {
-              if (Array.isArray(result)) {
-                messageDiv.innerHTML = (result as any[]).map(
-                  (item: any) => `<div style=\"margin-bottom:8px;\"><strong>Q:</strong> ${item.question}<br><strong>A:</strong> ${item.answer}</div>`
-                ).join('');
-              } else if (result && Array.isArray(result.results)) {
-                // Handle { results: [...] }
-                messageDiv.innerHTML = (result.results as any[]).map(
-                  (item: any) => `<div style=\"margin-bottom:8px;\"><strong>Q:</strong> ${item.question}<br><strong>A:</strong> ${item.answer}</div>`
-                ).join('');
-              } else if (result && result.answer) {
-                messageDiv.innerHTML = `<div><strong>Q:</strong> ${result.question}<br><strong>A:</strong> ${result.answer}</div>`;
-              } else if (result && result.error) {
-                messageDiv.innerHTML = `<div>Error: ${result.error}</div>`;
+              // Get the results array from the wrapped response
+              const answersArray = result.results || [];
+              const answersHtml = answersArray.map(
+                (item: QuestionAnswer) => `<div style="margin-bottom:8px;"><strong>Q:</strong> ${item.question}<br><strong>A:</strong> ${item.answer}</div>`
+              ).join('');
+              
+              messageDiv.innerHTML = answersHtml;
+              
+              // Extract data for second API request
+              const hotelName = (answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || '');
+              const checkInDate = answersArray[8]?.answer || '';
+              const checkOutDate = answersArray[9]?.answer || '';
+              
+              console.log('answer[0]:', answersArray[0]?.answer);
+              console.log('Extracted data:', {
+                hotelName,
+                checkInDate,
+                checkOutDate
+              });
+              // If we have the required data, make the second API request
+              if (hotelName && checkInDate && checkOutDate) {
+                // Show "Searching..." message
+                messageDiv.innerHTML = '<p>Searching...</p>';
+                
+                try {
+                  // Encode hotel name for URL
+                  const encodedHotelName = encodeURIComponent(hotelName);
+                  const pricingUrl = `https://autodeal.io/api/prices/VN4?hotelName=${encodedHotelName}&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}&useProxy=true&userCountryCode=US`;
+                  console.log('Pricing API URL:', pricingUrl);
+                  const pricingResponse = await fetch(pricingUrl);
+                  const pricingData = await pricingResponse.json();
+                  
+                  console.log('Pricing API response:', pricingData);
+                  
+                  if (Array.isArray(pricingData) && pricingData.length > 0) {
+                    // Find the best price (lowest totalPrice)
+                    const bestPrice = pricingData.reduce((min, current) => 
+                      current.totalPrice < min.totalPrice ? current : min
+                    );
+                    
+                    // Convert USD to GBP (approximate rate: 1 USD = 0.79 GBP)
+                    const usdToGbpRate = 0.74;
+                    const priceInGbp = bestPrice.userLocalTotalPrice * usdToGbpRate;
+                    
+                    // Display best price at the top, then the original answers
+                    const bestPriceHtml = `<div style="background: #4CAF50; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-weight: bold; font-size: 18px;">Best price £{priceInGbp.toFixed(2)}</div>`;
+                    messageDiv.innerHTML = bestPriceHtml + answersHtml;
+                  } else {
+                    // No pricing data found, show original answers
+                    messageDiv.innerHTML = answersHtml;
+                  }
+                } catch (pricingError) {
+                  console.error('Pricing API error:', pricingError);
+                  // Show original answers if pricing request fails
+                  messageDiv.innerHTML = answersHtml;
+                }
               } else {
-                messageDiv.innerHTML = "<div>Could not parse API response.</div>";
+                // Missing required data, just show original answers
+                messageDiv.innerHTML = answersHtml;
               }
             }
           } catch (err) {
