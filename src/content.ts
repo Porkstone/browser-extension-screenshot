@@ -312,26 +312,33 @@ async function captureFullPageScreenshot() {
                       const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Thanks, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
                       messageDiv.innerHTML = messageDiv.innerHTML + confirmationMessage;
                       
-                      // Scroll to the bottom to show the newest message with a longer delay
+                      // Add 1 second delay before showing follow-up message
                       setTimeout(() => {
-                        const contentDiv = document.querySelector('.content') as HTMLElement;
-                        if (contentDiv) {
-                          // Use smooth scrolling for the content div
-                          contentDiv.scrollTo({
-                            top: contentDiv.scrollHeight,
-                            behavior: 'smooth'
-                          });
-                          // Also try scrolling the message div into view with longer duration
-                          const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                          if (lastMessage) {
-                            lastMessage.scrollIntoView({ 
-                              behavior: 'smooth', 
-                              block: 'end',
-                              inline: 'nearest'
+                        // Add follow-up message
+                        const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">I now have everything I need, in a few moments I will display how much you can save compared with booking.com!</div>`;
+                        messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage;
+                        
+                        // Scroll to the bottom to show the newest message with a longer delay
+                        setTimeout(() => {
+                          const contentDiv = document.querySelector('.content') as HTMLElement;
+                          if (contentDiv) {
+                            // Use smooth scrolling for the content div
+                            contentDiv.scrollTo({
+                              top: contentDiv.scrollHeight,
+                              behavior: 'smooth'
                             });
+                            // Also try scrolling the message div into view with longer duration
+                            const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                            if (lastMessage) {
+                              lastMessage.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'end',
+                                inline: 'nearest'
+                              });
+                            }
                           }
-                        }
-                      }, 300);
+                        }, 300);
+                      }, 1000);
                     });
                   }
                   
@@ -381,9 +388,11 @@ async function captureFullPageScreenshot() {
                                 existingError.remove();
                               }
                               
-                              // Display success message
-                              const successMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">I now have everything I need, in a few moments I will display how much you can save compared with booking.com!</div>`;
-                              messageDiv.innerHTML = messageDiv.innerHTML + successMessage;
+                              // Display success message without replacing the input form
+                              const successMessage = document.createElement('div');
+                              successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                              successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
+                              messageDiv.appendChild(successMessage);
                               
                               // Scroll to the bottom to show the newest message with a longer delay
                               setTimeout(() => {
@@ -483,26 +492,33 @@ async function captureFullPageScreenshot() {
                       const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Thanks, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
                       messageDiv.innerHTML = messageDiv.innerHTML + confirmationMessage;
                       
-                      // Scroll to the bottom to show the newest message with a longer delay
+                      // Add 1 second delay before showing follow-up message
                       setTimeout(() => {
-                        const contentDiv = document.querySelector('.content') as HTMLElement;
-                        if (contentDiv) {
-                          // Use smooth scrolling for the content div
-                          contentDiv.scrollTo({
-                            top: contentDiv.scrollHeight,
-                            behavior: 'smooth'
-                          });
-                          // Also try scrolling the message div into view with longer duration
-                          const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                          if (lastMessage) {
-                            lastMessage.scrollIntoView({ 
-                              behavior: 'smooth', 
-                              block: 'end',
-                              inline: 'nearest'
+                        // Add follow-up message
+                        const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">I now have everything I need, in a few moments I will display how much you can save compared with booking.com!</div>`;
+                        messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage;
+                        
+                        // Scroll to the bottom to show the newest message with a longer delay
+                        setTimeout(() => {
+                          const contentDiv = document.querySelector('.content') as HTMLElement;
+                          if (contentDiv) {
+                            // Use smooth scrolling for the content div
+                            contentDiv.scrollTo({
+                              top: contentDiv.scrollHeight,
+                              behavior: 'smooth'
                             });
+                            // Also try scrolling the message div into view with longer duration
+                            const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                            if (lastMessage) {
+                              lastMessage.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'end',
+                                inline: 'nearest'
+                              });
+                            }
                           }
-                        }
-                      }, 300);
+                        }, 300);
+                      }, 1000);
                     });
                   }
                   
@@ -552,9 +568,11 @@ async function captureFullPageScreenshot() {
                                 existingError.remove();
                               }
                               
-                              // Display success message
-                              const successMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">I now have everything I need, in a few moments I will display how much you can save compared with booking.com!</div>`;
-                              messageDiv.innerHTML = messageDiv.innerHTML + successMessage;
+                              // Display success message without replacing the input form
+                              const successMessage = document.createElement('div');
+                              successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                              successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
+                              messageDiv.appendChild(successMessage);
                               
                               // Scroll to the bottom to show the newest message with a longer delay
                               setTimeout(() => {
@@ -612,8 +630,8 @@ async function captureFullPageScreenshot() {
             }
             
             // Make second API call for pricing data
-            //const pricingResponse = await fetch("https://autodeal.io/api/pricesIN4-mock?hotelName=Russell%20Hotel%2C%2080%20London%20Road%2C%20Royal%20Tunbridge%20Wells%2C%20TN1%201DZ%2C%20United%20Kingdom&checkInDate=2025-08-22&checkOutDate=2025-08-24&useProxy=true&userCountryCode=US");
-            const pricingResponse = await fetch("https://autodeal.io/api/prices/IN4?hotelName=Russell%20Hotel%2C%2080%20London%20Road%2C%20Royal%20Tunbridge%20Wells%2C%20TN1%201DZ%2C%20United%20Kingdom&checkInDate=2025-08-22&checkOutDate=2025-08-24&useProxy=true&userCountryCode=US");
+            const hotelName = encodeURIComponent((answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || ''));
+            const pricingResponse = await fetch(`https://autodeal.io/api/prices/IN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
             const pricingData = await (async () => {
               await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
               return pricingResponse.json();
@@ -626,8 +644,13 @@ async function captureFullPageScreenshot() {
             
             // Process pricing data and update popup
             if (bookingData.pricingData.length > 0) {
+              // Get the hotel name from answers array index 0
+              const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
+              
               // Add best price below the existing content
-              const bestPriceHtml = `<div style="background: #4CAF50; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-weight: bold; font-size: 18px;">Best price £${bookingData.priceInGbp.toFixed(2)}</div>`;
+              const bestPriceHtml = `<div style="background: #4CAF50; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-weight: bold; font-size: 16px;">
+                The best value for ${hotelName} was found in India. It is £100 better than on booking.com. Here is the link to book <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: white; text-decoration: underline;">Book Now</a>
+              </div>`;
               messageDiv.innerHTML = messageDiv.innerHTML + bestPriceHtml;
               
               // Scroll to the bottom to show the newest message with a longer delay
@@ -683,7 +706,7 @@ function injectPopup() {
         </div>
       </div>
       <div class="footer">
-        <button id="screenshotBtn" class="screenshot-button">Refresh</button>
+        <button id="screenshotBtn" class="screenshot-button" style="display: none;">Refresh</button>
       </div>
     </div>
   `;
