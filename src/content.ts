@@ -2,6 +2,33 @@
 console.log('Booking.com AI Assistant is active');
 console.log('Content script loaded');
 
+// Data context to store booking information
+const bookingData: {
+  answersArray: Array<{question: string, answer: string}>;
+  customerName: string;
+  customerEmail: string;
+  hotelName: string;
+  checkInDate: string;
+  checkOutDate: string;
+} = {
+  answersArray: [],
+  customerName: '',
+  customerEmail: '',
+  hotelName: '',
+  checkInDate: '',
+  checkOutDate: ''
+};
+
+// Function to update booking data from answers
+function updateBookingData(answersArray: Array<{question: string, answer: string}>) {
+  bookingData.answersArray = answersArray;
+  bookingData.customerName = answersArray[2]?.answer || ''; // Customer name is at index 2
+  bookingData.customerEmail = answersArray[3]?.answer || ''; // Customer email is at index 3
+  bookingData.hotelName = (answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || '');
+  bookingData.checkInDate = answersArray[8]?.answer || '';
+  bookingData.checkOutDate = answersArray[9]?.answer || '';
+}
+
 // You can add additional functionality here that needs to interact with the page
 // For example, you could add event listeners or modify the page content 
 
@@ -162,82 +189,205 @@ async function captureFullPageScreenshot() {
           const formData = new FormData();
           formData.append("file", blob, `booking-fullpage-${new Date().toISOString()}.png`);
           formData.append("questions", JSON.stringify(questions));
-          try {
-            const apiResponse = await fetch("http://localhost:3001/api/ask", {
-              method: "POST",
-              body: formData
-            });
-            const result = await apiResponse.json() as WrappedArrayResponse;
-            console.log('API response:', result); // Debug log
-            console.log('First element:', result.results[0].answer);
+          
+          // Make first API call and display greeting immediately
+          const apiResponse = await fetch("http://localhost:3001/api/ask", {
+            method: "POST",
+            body: formData
+          });
+          
+          const result = await apiResponse.json() as WrappedArrayResponse;
+          console.log('API response:', result); // Debug log
+          console.log('First element:', result.results[0].answer);
+          
+          // Display the answers first
+          const messageDiv = document.querySelector('.message');
+          if (messageDiv) {
+            // Get the results array from the wrapped response
+            const answersArray = result.results || [];
             
-            // Display the answers first
-            const messageDiv = document.querySelector('.message');
-            if (messageDiv) {
-              // Get the results array from the wrapped response
-              const answersArray = result.results || [];
-              const answersHtml = answersArray.map(
-                (item: QuestionAnswer) => `<div style="margin-bottom:8px;"><strong>Q:</strong> ${item.question}<br><strong>A:</strong> ${item.answer}</div>`
-              ).join('');
-              
-              messageDiv.innerHTML = answersHtml;
-              
-              // Extract data for second API request
-              const hotelName = (answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || '');
-              const checkInDate = answersArray[8]?.answer || '';
-              const checkOutDate = answersArray[9]?.answer || '';
-              
-              console.log('answer[0]:', answersArray[0]?.answer);
-              console.log('Extracted data:', {
-                hotelName,
-                checkInDate,
-                checkOutDate
-              });
-              // If we have the required data, make the second API request
-              if (hotelName && checkInDate && checkOutDate) {
-                // Show "Searching..." message
-                messageDiv.innerHTML = '<p>Searching...</p>';
-                
-                try {
-                  // Encode hotel name for URL
-                  const encodedHotelName = encodeURIComponent(hotelName);
-                  const pricingUrl = `https://autodeal.io/api/prices/VN4?hotelName=${encodedHotelName}&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}&useProxy=true&userCountryCode=US`;
-                  console.log('Pricing API URL:', pricingUrl);
-                  const pricingResponse = await fetch(pricingUrl);
-                  const pricingData = await pricingResponse.json();
-                  
-                  console.log('Pricing API response:', pricingData);
-                  
-                  if (Array.isArray(pricingData) && pricingData.length > 0) {
-                    // Find the best price (lowest totalPrice)
-                    const bestPrice = pricingData.reduce((min, current) => 
-                      current.totalPrice < min.totalPrice ? current : min
-                    );
-                    
-                    // Convert USD to GBP (approximate rate: 1 USD = 0.79 GBP)
-                    const usdToGbpRate = 0.74;
-                    const priceInGbp = bestPrice.userLocalTotalPrice * usdToGbpRate;
-                    
-                    // Display best price at the top, then the original answers
-                    const bestPriceHtml = `<div style="background: #4CAF50; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-weight: bold; font-size: 18px;">Best price £{priceInGbp.toFixed(2)}</div>`;
-                    messageDiv.innerHTML = bestPriceHtml + answersHtml;
-                  } else {
-                    // No pricing data found, show original answers
-                    messageDiv.innerHTML = answersHtml;
-                  }
-                } catch (pricingError) {
-                  console.error('Pricing API error:', pricingError);
-                  // Show original answers if pricing request fails
-                  messageDiv.innerHTML = answersHtml;
-                }
-              } else {
-                // Missing required data, just show original answers
-                messageDiv.innerHTML = answersHtml;
-              }
+            // Update booking data context
+            updateBookingData(answersArray);
+            
+            console.log('answer[0]:', answersArray[0]?.answer);
+            console.log('Extracted data:', {
+              hotelName: bookingData.hotelName,
+              checkInDate: bookingData.checkInDate,
+              checkOutDate: bookingData.checkOutDate
+            });
+            
+            // Check for customer name and add greeting immediately
+            let finalHtml = '';
+            if (bookingData.customerName && bookingData.customerName.trim() !== '') {
+              const greetingHtml = `<div style="padding: 10px; margin-bottom: 15px; text-align: center;">Hi ${bookingData.customerName},</div>
+<div style="padding: 10px; margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
+<div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+  <button id="bookManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book Manually</button>
+  <button id="useAIAgent" style="background: #9C27B0; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Use AI Agent</button>
+</div>`;
+              finalHtml = greetingHtml;
             }
-          } catch (err) {
-            alert("Failed to send screenshot to API.");
-            console.error(err);
+            
+            // Display greeting immediately
+            messageDiv.innerHTML = finalHtml;
+            
+            // Double the height of the popup after screenshot
+            const popup = document.getElementById('booking-ai-popup');
+            if (popup) {
+              const currentHeight = popup.style.height || '400px';
+              const currentHeightValue = parseInt(currentHeight);
+              popup.style.height = (currentHeightValue * 2) + 'px';
+            }
+            
+            // Add click event handlers for the buttons
+            const bookManuallyBtn = document.getElementById('bookManually');
+            const useAIAgentBtn = document.getElementById('useAIAgent');
+            
+            if (bookManuallyBtn) {
+              bookManuallyBtn.addEventListener('click', () => {
+                bookManuallyBtn.style.background = '#4CAF50';
+                bookManuallyBtn.textContent = '✓ Book Manually';
+                if (useAIAgentBtn) {
+                  useAIAgentBtn.style.background = '#9E9E9E';
+                  useAIAgentBtn.style.cursor = 'not-allowed';
+                }
+                
+                // Add 1 second delay before showing follow-up message
+                setTimeout(() => {
+                  // Add follow-up message
+                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. What will be the full name and email of the main guest?</div>`;
+                  
+                  // Add additional buttons if customer name is present
+                  let additionalButtons = '';
+                  if (bookingData.customerName && bookingData.customerName.trim() !== '') {
+                    additionalButtons = `<div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
+                      <button id="useMyDetails" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">My name and email</button>
+                      <button id="enterManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">I will enter the details</button>
+                    </div>`;
+                  }
+                  
+                  messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage + additionalButtons;
+                  
+                  // Add click event handlers for the new buttons
+                  const useMyDetailsBtn = document.getElementById('useMyDetails');
+                  const enterManuallyBtn = document.getElementById('enterManually');
+                  
+                  if (useMyDetailsBtn) {
+                    useMyDetailsBtn.addEventListener('click', () => {
+                      useMyDetailsBtn.style.background = '#4CAF50';
+                      useMyDetailsBtn.textContent = '✓ My name and email';
+                      if (enterManuallyBtn) {
+                        enterManuallyBtn.style.background = '#9E9E9E';
+                        enterManuallyBtn.style.cursor = 'not-allowed';
+                        enterManuallyBtn.textContent = 'I will enter the details';
+                      }
+                      
+                      // Display confirmation message with customer name and email
+                      const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
+                      messageDiv.innerHTML = messageDiv.innerHTML + confirmationMessage;
+                    });
+                  }
+                  
+                  if (enterManuallyBtn) {
+                    enterManuallyBtn.addEventListener('click', () => {
+                      enterManuallyBtn.style.background = '#4CAF50';
+                      enterManuallyBtn.textContent = '✓ I will enter the details';
+                      if (useMyDetailsBtn) {
+                        useMyDetailsBtn.style.background = '#9E9E9E';
+                        useMyDetailsBtn.style.cursor = 'not-allowed';
+                        useMyDetailsBtn.textContent = 'My name and email';
+                      }
+                    });
+                  }
+                }, 1000);
+              });
+            }
+            
+            if (useAIAgentBtn) {
+              useAIAgentBtn.addEventListener('click', () => {
+                useAIAgentBtn.style.background = '#4CAF50';
+                useAIAgentBtn.textContent = '✓ Use AI Agent';
+                if (bookManuallyBtn) {
+                  bookManuallyBtn.style.background = '#9E9E9E';
+                  bookManuallyBtn.style.cursor = 'not-allowed';
+                }
+                
+                // Add 1 second delay before showing follow-up message
+                setTimeout(() => {
+                  // Add follow-up message
+                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. What will be the full name and email of the main guest?</div>`;
+                  
+                  // Add additional buttons if customer name is present
+                  let additionalButtons = '';
+                  if (bookingData.customerName && bookingData.customerName.trim() !== '') {
+                    additionalButtons = `<div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
+                      <button id="useMyDetails" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">My name and email</button>
+                      <button id="enterManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">I will enter the details</button>
+                    </div>`;
+                  }
+                  
+                  messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage + additionalButtons;
+                  
+                  // Add click event handlers for the new buttons
+                  const useMyDetailsBtn = document.getElementById('useMyDetails');
+                  const enterManuallyBtn = document.getElementById('enterManually');
+                  
+                  if (useMyDetailsBtn) {
+                    useMyDetailsBtn.addEventListener('click', () => {
+                      useMyDetailsBtn.style.background = '#4CAF50';
+                      useMyDetailsBtn.textContent = '✓ My name and email';
+                      if (enterManuallyBtn) {
+                        enterManuallyBtn.style.background = '#9E9E9E';
+                        enterManuallyBtn.style.cursor = 'not-allowed';
+                        enterManuallyBtn.textContent = 'I will enter the details';
+                      }
+                      
+                      // Display confirmation message with customer name and email
+                      const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
+                      messageDiv.innerHTML = messageDiv.innerHTML + confirmationMessage;
+                    });
+                  }
+                  
+                  if (enterManuallyBtn) {
+                    enterManuallyBtn.addEventListener('click', () => {
+                      enterManuallyBtn.style.background = '#4CAF50';
+                      enterManuallyBtn.textContent = '✓ I will enter the details';
+                      if (useMyDetailsBtn) {
+                        useMyDetailsBtn.style.background = '#9E9E9E';
+                        useMyDetailsBtn.style.cursor = 'not-allowed';
+                        useMyDetailsBtn.textContent = 'My name and email';
+                      }
+                    });
+                  }
+                }, 1000);
+              });
+            }
+            
+            // Make second API call for pricing data
+            //const pricingResponse = await fetch("https://autodeal.io/api/pricesIN4-mock?hotelName=Russell%20Hotel%2C%2080%20London%20Road%2C%20Royal%20Tunbridge%20Wells%2C%20TN1%201DZ%2C%20United%20Kingdom&checkInDate=2025-08-22&checkOutDate=2025-08-24&useProxy=true&userCountryCode=US");
+            const pricingResponse = await fetch("https://autodeal.io/api/prices/IN4?hotelName=Russell%20Hotel%2C%2080%20London%20Road%2C%20Royal%20Tunbridge%20Wells%2C%20TN1%201DZ%2C%20United%20Kingdom&checkInDate=2025-08-22&checkOutDate=2025-08-24&useProxy=true&userCountryCode=US");
+            const pricingData = await (async () => {
+              await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
+              return pricingResponse.json();
+            })();
+            
+            console.log('Pricing API response:', pricingData);
+            
+            // Process pricing data and update popup
+            if (Array.isArray(pricingData) && pricingData.length > 0) {
+              // Find the best price (lowest totalPrice)
+              const bestPrice = pricingData.reduce((min, current) => 
+                current.totalPrice < min.totalPrice ? current : min
+              );
+              
+              // Convert USD to GBP (approximate rate: 1 USD = 0.74 GBP)
+              const usdToGbpRate = 0.74;
+              const priceInGbp = bestPrice.userLocalTotalPrice * usdToGbpRate;
+              
+              // Add best price below the existing content
+              const bestPriceHtml = `<div style="background: #4CAF50; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-weight: bold; font-size: 18px;">Best price £${priceInGbp.toFixed(2)}</div>`;
+              messageDiv.innerHTML = messageDiv.innerHTML + bestPriceHtml;
+            }
           }
         }
       }, 'image/png');
