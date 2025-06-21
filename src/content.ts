@@ -209,7 +209,8 @@ async function captureFullPageScreenshot() {
         "What is the check out date? Please keep your answer concise and format dates as YYYY-MM-DD",
         "What is the room type?",
         "Is the booking canceleable with full refund?",
-        "Is the customer signed in to the website? Please answer yes or no"
+        "Is the customer signed in to the website? Please answer yes or no",
+        "What is the total cost of the booking? Please provide a number without any currency symbols"
         
       ];
       canvas.toBlob(async (blob) => {
@@ -683,10 +684,19 @@ async function captureFullPageScreenshot() {
               // Get the hotel name from answers array index 0
               const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
               
+              // Get the country name from the best price data
+              const countryName = bookingData.bestPrice?.apiCountryName || 'Unknown Country';
+              
+              // Calculate the actual savings
+              const bookingComPrice = parseFloat(answersArray[13]?.answer || '0'); // This is in GBP
+              const bestPriceUSD = bookingData.bestPrice?.totalPrice || 0; // This is in USD
+              const bestPriceGBP = bestPriceUSD * 0.74; // Convert USD to GBP (approximate rate)
+              const savingsGBP = bookingComPrice - bestPriceGBP; // Both prices now in GBP
+              
               // Add best price below the existing content without replacing the input form
               const bestPriceDiv = document.createElement('div');
               bestPriceDiv.style.cssText = 'padding: 10px; margin-bottom: 15px; text-align: center;';
-              bestPriceDiv.innerHTML = `The best value for ${hotelName} was found in India. It is £100 better than on booking.com. Here is the link to book <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
+              bestPriceDiv.innerHTML = `The best value for ${hotelName} was found in ${countryName}. It is £${savingsGBP.toFixed(2)} better than on booking.com. Here is the link to book <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
               messageDiv.appendChild(bestPriceDiv);
               
               // Scroll to the bottom to show the newest message with a longer delay
