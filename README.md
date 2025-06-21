@@ -51,3 +51,7 @@ pnpm watch
 - Chrome Extension Manifest V3
 - Webpack
 - pnpm 
+
+## TDOD
+- Remove hardcoded USD => GBP exchange rate conversion
+- Test and Fix Logged out journey

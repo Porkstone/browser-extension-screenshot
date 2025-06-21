@@ -141,7 +141,11 @@ function getFullPageWidth() {
 async function captureFullPageScreenshot() {
   const messageDiv = document.querySelector('.message');
   if (messageDiv) {
-    messageDiv.innerHTML = '<p>Refreshing booking information...</p>';
+    // Add refreshing message without overwriting the original content
+    const refreshingDiv = document.createElement('div');
+    refreshingDiv.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center; color: #666;';
+    refreshingDiv.textContent = 'Refreshing booking information...';
+    messageDiv.appendChild(refreshingDiv);
   }
   // Save original scroll position
   const originalScrollX = window.scrollX;
@@ -245,7 +249,9 @@ async function captureFullPageScreenshot() {
             // Check for customer name and add greeting immediately
             let finalHtml = '';
             if (bookingData.customerName && bookingData.customerName.trim() !== '') {
-              const greetingHtml = `<div style="padding: 10px; margin-bottom: 15px; text-align: center;">Hi ${bookingData.customerName},</div>
+              // Extract first name from full name
+              const firstName = bookingData.customerName.split(' ')[0];
+              const greetingHtml = `<div style="padding: 10px; margin-bottom: 15px; text-align: center;">Hi ${firstName},</div>
 <div style="padding: 10px; margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
   <button id="bookManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book Manually</button>
@@ -257,12 +263,15 @@ async function captureFullPageScreenshot() {
             // Display greeting immediately
             messageDiv.innerHTML = finalHtml;
             
-            // Double the height of the popup after screenshot
+            // Make the popup take up the full page height after screenshot
             const popup = document.getElementById('booking-ai-popup');
             if (popup) {
-              const currentHeight = popup.style.height || '400px';
-              const currentHeightValue = parseInt(currentHeight);
-              popup.style.height = (currentHeightValue * 2) + 'px';
+              popup.style.height = '100vh';
+              popup.style.width = '100vw';
+              popup.style.position = 'fixed';
+              popup.style.top = '0';
+              popup.style.left = '0';
+              popup.style.zIndex = '9999';
             }
             
             // Add click event handlers for the buttons
@@ -629,29 +638,56 @@ async function captureFullPageScreenshot() {
               });
             }
             
-            // Make second API call for pricing data
+            // Make two parallel API calls for pricing data
             const hotelName = encodeURIComponent((answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || ''));
-            const pricingResponse = await fetch(`https://autodeal.io/api/prices/IN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            const pricingData = await (async () => {
-              await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
-              return pricingResponse.json();
-            })();
             
-            console.log('Pricing API response:', pricingData);
+            // First API call
+            const pricingResponseVN = fetch(`https://autodeal.io/api/prices/VN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
             
-            // Update pricing data in context
-            updatePricingData(pricingData);
+            // Second API call (different endpoint)
+            const pricingResponseTH = fetch(`https://autodeal.io/api/prices/TH4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
+            
+            // Wait for both API calls to complete with 5 second delay
+            const [pricingDataVN, pricingDataTH] = await Promise.all([
+              pricingResponseVN.then(async () => {
+                await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
+                return pricingResponseVN.then(response => response.json());
+              }),
+              pricingResponseTH.then(async () => {
+                await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
+                return pricingResponseTH.then(response => response.json());
+              })
+            ]);
+            
+            console.log('Pricing API response 1:', pricingDataVN);
+            console.log('Pricing API response 2:', pricingDataTH);
+            
+            // Compare both responses and use the one with lowest totalPrice
+            let bestPricingData = pricingDataVN;
+            if (pricingDataTH && Array.isArray(pricingDataTH) && pricingDataTH.length > 0) {
+              const bestPrice1 = pricingDataVN && Array.isArray(pricingDataVN) && pricingDataVN.length > 0 
+                ? pricingDataVN.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min)
+                : null;
+                const bestPrice2 = pricingDataTH.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min);
+              
+              if (bestPrice1 && bestPrice2 && bestPrice2.totalPrice < bestPrice1.totalPrice) {
+                bestPricingData = pricingDataTH;
+              }
+            }
+            
+            // Update pricing data in context with the best result
+            updatePricingData(bestPricingData);
             
             // Process pricing data and update popup
             if (bookingData.pricingData.length > 0) {
               // Get the hotel name from answers array index 0
               const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
               
-              // Add best price below the existing content
-              const bestPriceHtml = `<div style="background: #4CAF50; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-weight: bold; font-size: 16px;">
-                The best value for ${hotelName} was found in India. It is £100 better than on booking.com. Here is the link to book <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: white; text-decoration: underline;">Book Now</a>
-              </div>`;
-              messageDiv.innerHTML = messageDiv.innerHTML + bestPriceHtml;
+              // Add best price below the existing content without replacing the input form
+              const bestPriceDiv = document.createElement('div');
+              bestPriceDiv.style.cssText = 'padding: 10px; margin-bottom: 15px; text-align: center;';
+              bestPriceDiv.innerHTML = `The best value for ${hotelName} was found in India. It is £100 better than on booking.com. Here is the link to book <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
+              messageDiv.appendChild(bestPriceDiv);
               
               // Scroll to the bottom to show the newest message with a longer delay
               setTimeout(() => {
@@ -724,7 +760,7 @@ function injectPopup() {
     if (screenshotBtn) {
       screenshotBtn.addEventListener('click', captureFullPageScreenshot);
       // Automatically trigger a click when the popup is first displayed
-      setTimeout(() => screenshotBtn.click(), 0);
+      setTimeout(() => screenshotBtn.click(), 3000);
     }
   }
 }
