@@ -10,13 +10,19 @@ const bookingData: {
   hotelName: string;
   checkInDate: string;
   checkOutDate: string;
+  pricingData: any[];
+  bestPrice: any;
+  priceInGbp: number;
 } = {
   answersArray: [],
   customerName: '',
   customerEmail: '',
   hotelName: '',
   checkInDate: '',
-  checkOutDate: ''
+  checkOutDate: '',
+  pricingData: [],
+  bestPrice: null,
+  priceInGbp: 0
 };
 
 // Function to update booking data from answers
@@ -27,6 +33,25 @@ function updateBookingData(answersArray: Array<{question: string, answer: string
   bookingData.hotelName = (answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || '');
   bookingData.checkInDate = answersArray[8]?.answer || '';
   bookingData.checkOutDate = answersArray[9]?.answer || '';
+}
+
+// Function to update pricing data
+function updatePricingData(pricingData: any[]) {
+  bookingData.pricingData = pricingData;
+  
+  if (Array.isArray(pricingData) && pricingData.length > 0) {
+    // Find the best price (lowest totalPrice)
+    bookingData.bestPrice = pricingData.reduce((min, current) => 
+      current.totalPrice < min.totalPrice ? current : min
+    );
+    
+    // Convert USD to GBP (approximate rate: 1 USD = 0.74 GBP)
+    const usdToGbpRate = 0.74;
+    bookingData.priceInGbp = bookingData.bestPrice.userLocalTotalPrice * usdToGbpRate;
+  } else {
+    bookingData.bestPrice = null;
+    bookingData.priceInGbp = 0;
+  }
 }
 
 // You can add additional functionality here that needs to interact with the page
@@ -180,6 +205,7 @@ async function captureFullPageScreenshot() {
         "What is the check out date? Please keep your answer concise and format dates as YYYY-MM-DD",
         "What is the room type?",
         "Is the booking canceleable with full refund?",
+        "Is the customer signed in to the website? Please answer yes or no"
         
       ];
       canvas.toBlob(async (blob) => {
@@ -283,8 +309,29 @@ async function captureFullPageScreenshot() {
                       }
                       
                       // Display confirmation message with customer name and email
-                      const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
+                      const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Thanks, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
                       messageDiv.innerHTML = messageDiv.innerHTML + confirmationMessage;
+                      
+                      // Scroll to the bottom to show the newest message with a longer delay
+                      setTimeout(() => {
+                        const contentDiv = document.querySelector('.content') as HTMLElement;
+                        if (contentDiv) {
+                          // Use smooth scrolling for the content div
+                          contentDiv.scrollTo({
+                            top: contentDiv.scrollHeight,
+                            behavior: 'smooth'
+                          });
+                          // Also try scrolling the message div into view with longer duration
+                          const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                          if (lastMessage) {
+                            lastMessage.scrollIntoView({ 
+                              behavior: 'smooth', 
+                              block: 'end',
+                              inline: 'nearest'
+                            });
+                          }
+                        }
+                      }, 300);
                     });
                   }
                   
@@ -297,6 +344,96 @@ async function captureFullPageScreenshot() {
                         useMyDetailsBtn.style.cursor = 'not-allowed';
                         useMyDetailsBtn.textContent = 'My name and email';
                       }
+                      
+                      // Display input form for name and email
+                      const inputForm = `<div style="padding: 10px; margin-top: 15px; text-align: center;">
+                        <div style="margin-bottom: 10px;">
+                          <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+                          <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+                        </div>
+                        <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
+                      </div>`;
+                      messageDiv.innerHTML = messageDiv.innerHTML + inputForm;
+                      
+                      // Add click event handler for the save button with a small delay
+                      setTimeout(() => {
+                        const saveDetailsBtn = document.getElementById('saveDetails');
+                        if (saveDetailsBtn) {
+                          saveDetailsBtn.addEventListener('click', () => {
+                            // Get the input values
+                            const nameInput = document.getElementById('guestName') as HTMLInputElement;
+                            const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
+                            const name = nameInput?.value || '';
+                            const email = emailInput?.value || '';
+                            
+                            // Simple email validation
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            const isValidEmail = emailRegex.test(email);
+                            
+                            if (isValidEmail) {
+                              // Valid email - show checkmark
+                              saveDetailsBtn.style.background = '#4CAF50';
+                              saveDetailsBtn.textContent = '✓ Saved';
+                              
+                              // Remove any existing error message
+                              const existingError = document.getElementById('emailError');
+                              if (existingError) {
+                                existingError.remove();
+                              }
+                              
+                              // Display success message
+                              const successMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">I now have everything I need, in a few moments I will display how much you can save compared with booking.com!</div>`;
+                              messageDiv.innerHTML = messageDiv.innerHTML + successMessage;
+                              
+                              // Scroll to the bottom to show the newest message with a longer delay
+                              setTimeout(() => {
+                                const contentDiv = document.querySelector('.content') as HTMLElement;
+                                if (contentDiv) {
+                                  // Use smooth scrolling for the content div
+                                  contentDiv.scrollTo({
+                                    top: contentDiv.scrollHeight,
+                                    behavior: 'smooth'
+                                  });
+                                  // Also try scrolling the message div into view with longer duration
+                                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                  if (lastMessage) {
+                                    lastMessage.scrollIntoView({ 
+                                      behavior: 'smooth', 
+                                      block: 'end',
+                                      inline: 'nearest'
+                                    });
+                                  }
+                                }
+                              }, 300);
+                            } else {
+                              // Invalid email - keep green background and "Save" text
+                              saveDetailsBtn.style.background = '#4CAF50';
+                              saveDetailsBtn.textContent = 'Save';
+                              
+                              // Preserve the entered values
+                              if (nameInput) nameInput.value = name;
+                              if (emailInput) emailInput.value = email;
+                              
+                              // Display error message below email input
+                              const existingError = document.getElementById('emailError');
+                              if (!existingError) {
+                                const errorMessage = document.createElement('div');
+                                errorMessage.id = 'emailError';
+                                errorMessage.textContent = 'Invalid email';
+                                errorMessage.style.color = '#f44336';
+                                errorMessage.style.fontSize = '12px';
+                                errorMessage.style.marginTop = '5px';
+                                errorMessage.style.textAlign = 'center';
+                                
+                                // Insert error message after the email input
+                                if (emailInput && emailInput.parentNode) {
+                                  emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                                }
+                              }
+                            }
+                          });
+                        }
+                      }, 100);
                     });
                   }
                 }, 1000);
@@ -343,8 +480,29 @@ async function captureFullPageScreenshot() {
                       }
                       
                       // Display confirmation message with customer name and email
-                      const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
+                      const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Thanks, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
                       messageDiv.innerHTML = messageDiv.innerHTML + confirmationMessage;
+                      
+                      // Scroll to the bottom to show the newest message with a longer delay
+                      setTimeout(() => {
+                        const contentDiv = document.querySelector('.content') as HTMLElement;
+                        if (contentDiv) {
+                          // Use smooth scrolling for the content div
+                          contentDiv.scrollTo({
+                            top: contentDiv.scrollHeight,
+                            behavior: 'smooth'
+                          });
+                          // Also try scrolling the message div into view with longer duration
+                          const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                          if (lastMessage) {
+                            lastMessage.scrollIntoView({ 
+                              behavior: 'smooth', 
+                              block: 'end',
+                              inline: 'nearest'
+                            });
+                          }
+                        }
+                      }, 300);
                     });
                   }
                   
@@ -357,6 +515,96 @@ async function captureFullPageScreenshot() {
                         useMyDetailsBtn.style.cursor = 'not-allowed';
                         useMyDetailsBtn.textContent = 'My name and email';
                       }
+                      
+                      // Display input form for name and email
+                      const inputForm = `<div style="padding: 10px; margin-top: 15px; text-align: center;">
+                        <div style="margin-bottom: 10px;">
+                          <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+                          <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+                        </div>
+                        <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
+                      </div>`;
+                      messageDiv.innerHTML = messageDiv.innerHTML + inputForm;
+                      
+                      // Add click event handler for the save button with a small delay
+                      setTimeout(() => {
+                        const saveDetailsBtn = document.getElementById('saveDetails');
+                        if (saveDetailsBtn) {
+                          saveDetailsBtn.addEventListener('click', () => {
+                            // Get the input values
+                            const nameInput = document.getElementById('guestName') as HTMLInputElement;
+                            const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
+                            const name = nameInput?.value || '';
+                            const email = emailInput?.value || '';
+                            
+                            // Simple email validation
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            const isValidEmail = emailRegex.test(email);
+                            
+                            if (isValidEmail) {
+                              // Valid email - show checkmark
+                              saveDetailsBtn.style.background = '#4CAF50';
+                              saveDetailsBtn.textContent = '✓ Saved';
+                              
+                              // Remove any existing error message
+                              const existingError = document.getElementById('emailError');
+                              if (existingError) {
+                                existingError.remove();
+                              }
+                              
+                              // Display success message
+                              const successMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">I now have everything I need, in a few moments I will display how much you can save compared with booking.com!</div>`;
+                              messageDiv.innerHTML = messageDiv.innerHTML + successMessage;
+                              
+                              // Scroll to the bottom to show the newest message with a longer delay
+                              setTimeout(() => {
+                                const contentDiv = document.querySelector('.content') as HTMLElement;
+                                if (contentDiv) {
+                                  // Use smooth scrolling for the content div
+                                  contentDiv.scrollTo({
+                                    top: contentDiv.scrollHeight,
+                                    behavior: 'smooth'
+                                  });
+                                  // Also try scrolling the message div into view with longer duration
+                                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                  if (lastMessage) {
+                                    lastMessage.scrollIntoView({ 
+                                      behavior: 'smooth', 
+                                      block: 'end',
+                                      inline: 'nearest'
+                                    });
+                                  }
+                                }
+                              }, 300);
+                            } else {
+                              // Invalid email - keep green background and "Save" text
+                              saveDetailsBtn.style.background = '#4CAF50';
+                              saveDetailsBtn.textContent = 'Save';
+                              
+                              // Preserve the entered values
+                              if (nameInput) nameInput.value = name;
+                              if (emailInput) emailInput.value = email;
+                              
+                              // Display error message below email input
+                              const existingError = document.getElementById('emailError');
+                              if (!existingError) {
+                                const errorMessage = document.createElement('div');
+                                errorMessage.id = 'emailError';
+                                errorMessage.textContent = 'Invalid email';
+                                errorMessage.style.color = '#f44336';
+                                errorMessage.style.fontSize = '12px';
+                                errorMessage.style.marginTop = '5px';
+                                errorMessage.style.textAlign = 'center';
+                                
+                                // Insert error message after the email input
+                                if (emailInput && emailInput.parentNode) {
+                                  emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                                }
+                              }
+                            }
+                          });
+                        }
+                      }, 100);
                     });
                   }
                 }, 1000);
@@ -373,20 +621,35 @@ async function captureFullPageScreenshot() {
             
             console.log('Pricing API response:', pricingData);
             
+            // Update pricing data in context
+            updatePricingData(pricingData);
+            
             // Process pricing data and update popup
-            if (Array.isArray(pricingData) && pricingData.length > 0) {
-              // Find the best price (lowest totalPrice)
-              const bestPrice = pricingData.reduce((min, current) => 
-                current.totalPrice < min.totalPrice ? current : min
-              );
-              
-              // Convert USD to GBP (approximate rate: 1 USD = 0.74 GBP)
-              const usdToGbpRate = 0.74;
-              const priceInGbp = bestPrice.userLocalTotalPrice * usdToGbpRate;
-              
+            if (bookingData.pricingData.length > 0) {
               // Add best price below the existing content
-              const bestPriceHtml = `<div style="background: #4CAF50; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-weight: bold; font-size: 18px;">Best price £${priceInGbp.toFixed(2)}</div>`;
+              const bestPriceHtml = `<div style="background: #4CAF50; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-weight: bold; font-size: 18px;">Best price £${bookingData.priceInGbp.toFixed(2)}</div>`;
               messageDiv.innerHTML = messageDiv.innerHTML + bestPriceHtml;
+              
+              // Scroll to the bottom to show the newest message with a longer delay
+              setTimeout(() => {
+                const contentDiv = document.querySelector('.content') as HTMLElement;
+                if (contentDiv) {
+                  // Use smooth scrolling for the content div
+                  contentDiv.scrollTo({
+                    top: contentDiv.scrollHeight,
+                    behavior: 'smooth'
+                  });
+                  // Also try scrolling the message div into view with longer duration
+                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                  if (lastMessage) {
+                    lastMessage.scrollIntoView({ 
+                      behavior: 'smooth', 
+                      block: 'end',
+                      inline: 'nearest'
+                    });
+                  }
+                }
+              }, 300);
             }
           }
         }
