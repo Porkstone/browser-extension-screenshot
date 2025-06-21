@@ -259,6 +259,15 @@ async function captureFullPageScreenshot() {
   <button id="useAIAgent" style="background: #9C27B0; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Use AI Agent</button>
 </div>`;
               finalHtml = greetingHtml;
+            } else {
+              // Display greeting without name when customer name is blank
+              const greetingHtml = `<div style="padding: 10px; margin-bottom: 15px; text-align: center;">Hi,</div>
+<div style="padding: 10px; margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
+<div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+  <button id="bookManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book Manually</button>
+  <button id="useAIAgent" style="background: #9C27B0; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Use AI Agent</button>
+</div>`;
+              finalHtml = greetingHtml;
             }
             
             // Display greeting immediately
@@ -290,8 +299,15 @@ async function captureFullPageScreenshot() {
                 
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
-                  // Add follow-up message
-                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. What will be the full name and email of the main guest?</div>`;
+                  // Add follow-up message with textboxes
+                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. What will be the full name and email of the main guest?</div>
+<div style="padding: 10px; margin-top: 15px; text-align: center;">
+  <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
+    <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+    <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+  </div>
+  <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
+</div>`;
                   
                   // Add additional buttons if customer name is present
                   let additionalButtons = '';
@@ -307,26 +323,37 @@ async function captureFullPageScreenshot() {
                   // Add click event handlers for the new buttons
                   const useMyDetailsBtn = document.getElementById('useMyDetails');
                   const enterManuallyBtn = document.getElementById('enterManually');
+                  const saveDetailsBtn = document.getElementById('saveDetails');
                   
-                  if (useMyDetailsBtn) {
-                    useMyDetailsBtn.addEventListener('click', () => {
-                      useMyDetailsBtn.style.background = '#4CAF50';
-                      useMyDetailsBtn.textContent = '✓ My name and email';
-                      if (enterManuallyBtn) {
-                        enterManuallyBtn.style.background = '#9E9E9E';
-                        enterManuallyBtn.style.cursor = 'not-allowed';
-                        enterManuallyBtn.textContent = 'I will enter the details';
-                      }
+                  // Add click event handler for the save button
+                  if (saveDetailsBtn) {
+                    saveDetailsBtn.addEventListener('click', () => {
+                      // Get the input values
+                      const nameInput = document.getElementById('guestName') as HTMLInputElement;
+                      const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
+                      const name = nameInput?.value || '';
+                      const email = emailInput?.value || '';
                       
-                      // Display confirmation message with customer name and email
-                      const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Thanks, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
-                      messageDiv.innerHTML = messageDiv.innerHTML + confirmationMessage;
+                      // Simple email validation
+                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                      const isValidEmail = emailRegex.test(email);
                       
-                      // Add 1 second delay before showing follow-up message
-                      setTimeout(() => {
-                        // Add follow-up message
-                        const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">I now have everything I need, in a few moments I will display how much you can save compared with booking.com!</div>`;
-                        messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage;
+                      if (isValidEmail) {
+                        // Valid email - show checkmark
+                        saveDetailsBtn.style.background = '#4CAF50';
+                        saveDetailsBtn.textContent = '✓ Saved';
+                        
+                        // Remove any existing error message
+                        const existingError = document.getElementById('emailError');
+                        if (existingError) {
+                          existingError.remove();
+                        }
+                        
+                        // Display success message without replacing the input form
+                        const successMessage = document.createElement('div');
+                        successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                        successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
+                        messageDiv.appendChild(successMessage);
                         
                         // Scroll to the bottom to show the newest message with a longer delay
                         setTimeout(() => {
@@ -348,111 +375,32 @@ async function captureFullPageScreenshot() {
                             }
                           }
                         }, 300);
-                      }, 1000);
-                    });
-                  }
-                  
-                  if (enterManuallyBtn) {
-                    enterManuallyBtn.addEventListener('click', () => {
-                      enterManuallyBtn.style.background = '#4CAF50';
-                      enterManuallyBtn.textContent = '✓ I will enter the details';
-                      if (useMyDetailsBtn) {
-                        useMyDetailsBtn.style.background = '#9E9E9E';
-                        useMyDetailsBtn.style.cursor = 'not-allowed';
-                        useMyDetailsBtn.textContent = 'My name and email';
-                      }
-                      
-                      // Display input form for name and email
-                      const inputForm = `<div style="padding: 10px; margin-top: 15px; text-align: center;">
-                        <div style="margin-bottom: 10px;">
-                          <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-                          <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-                        </div>
-                        <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
-                      </div>`;
-                      messageDiv.innerHTML = messageDiv.innerHTML + inputForm;
-                      
-                      // Add click event handler for the save button with a small delay
-                      setTimeout(() => {
-                        const saveDetailsBtn = document.getElementById('saveDetails');
-                        if (saveDetailsBtn) {
-                          saveDetailsBtn.addEventListener('click', () => {
-                            // Get the input values
-                            const nameInput = document.getElementById('guestName') as HTMLInputElement;
-                            const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
-                            const name = nameInput?.value || '';
-                            const email = emailInput?.value || '';
-                            
-                            // Simple email validation
-                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                            const isValidEmail = emailRegex.test(email);
-                            
-                            if (isValidEmail) {
-                              // Valid email - show checkmark
-                              saveDetailsBtn.style.background = '#4CAF50';
-                              saveDetailsBtn.textContent = '✓ Saved';
-                              
-                              // Remove any existing error message
-                              const existingError = document.getElementById('emailError');
-                              if (existingError) {
-                                existingError.remove();
-                              }
-                              
-                              // Display success message without replacing the input form
-                              const successMessage = document.createElement('div');
-                              successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
-                              successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
-                              messageDiv.appendChild(successMessage);
-                              
-                              // Scroll to the bottom to show the newest message with a longer delay
-                              setTimeout(() => {
-                                const contentDiv = document.querySelector('.content') as HTMLElement;
-                                if (contentDiv) {
-                                  // Use smooth scrolling for the content div
-                                  contentDiv.scrollTo({
-                                    top: contentDiv.scrollHeight,
-                                    behavior: 'smooth'
-                                  });
-                                  // Also try scrolling the message div into view with longer duration
-                                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                  if (lastMessage) {
-                                    lastMessage.scrollIntoView({ 
-                                      behavior: 'smooth', 
-                                      block: 'end',
-                                      inline: 'nearest'
-                                    });
-                                  }
-                                }
-                              }, 300);
-                            } else {
-                              // Invalid email - keep green background and "Save" text
-                              saveDetailsBtn.style.background = '#4CAF50';
-                              saveDetailsBtn.textContent = 'Save';
-                              
-                              // Preserve the entered values
-                              if (nameInput) nameInput.value = name;
-                              if (emailInput) emailInput.value = email;
-                              
-                              // Display error message below email input
-                              const existingError = document.getElementById('emailError');
-                              if (!existingError) {
-                                const errorMessage = document.createElement('div');
-                                errorMessage.id = 'emailError';
-                                errorMessage.textContent = 'Invalid email';
-                                errorMessage.style.color = '#f44336';
-                                errorMessage.style.fontSize = '12px';
-                                errorMessage.style.marginTop = '5px';
-                                errorMessage.style.textAlign = 'center';
-                                
-                                // Insert error message after the email input
-                                if (emailInput && emailInput.parentNode) {
-                                  emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
-                                }
-                              }
-                            }
-                          });
+                      } else {
+                        // Invalid email - keep green background and "Save" text
+                        saveDetailsBtn.style.background = '#4CAF50';
+                        saveDetailsBtn.textContent = 'Save';
+                        
+                        // Preserve the entered values
+                        if (nameInput) nameInput.value = name;
+                        if (emailInput) emailInput.value = email;
+                        
+                        // Display error message below email input
+                        const existingError = document.getElementById('emailError');
+                        if (!existingError) {
+                          const errorMessage = document.createElement('div');
+                          errorMessage.id = 'emailError';
+                          errorMessage.textContent = 'Invalid email';
+                          errorMessage.style.color = '#f44336';
+                          errorMessage.style.fontSize = '12px';
+                          errorMessage.style.marginTop = '5px';
+                          errorMessage.style.textAlign = 'center';
+                          
+                          // Insert error message after the email input
+                          if (emailInput && emailInput.parentNode) {
+                            emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                          }
                         }
-                      }, 100);
+                      }
                     });
                   }
                 }, 1000);
@@ -470,8 +418,15 @@ async function captureFullPageScreenshot() {
                 
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
-                  // Add follow-up message
-                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. What will be the full name and email of the main guest?</div>`;
+                  // Add follow-up message with textboxes
+                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. What will be the full name and email of the main guest?</div>
+<div style="padding: 10px; margin-top: 15px; text-align: center;">
+  <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
+    <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+    <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+  </div>
+  <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
+</div>`;
                   
                   // Add additional buttons if customer name is present
                   let additionalButtons = '';
@@ -487,26 +442,37 @@ async function captureFullPageScreenshot() {
                   // Add click event handlers for the new buttons
                   const useMyDetailsBtn = document.getElementById('useMyDetails');
                   const enterManuallyBtn = document.getElementById('enterManually');
+                  const saveDetailsBtn = document.getElementById('saveDetails');
                   
-                  if (useMyDetailsBtn) {
-                    useMyDetailsBtn.addEventListener('click', () => {
-                      useMyDetailsBtn.style.background = '#4CAF50';
-                      useMyDetailsBtn.textContent = '✓ My name and email';
-                      if (enterManuallyBtn) {
-                        enterManuallyBtn.style.background = '#9E9E9E';
-                        enterManuallyBtn.style.cursor = 'not-allowed';
-                        enterManuallyBtn.textContent = 'I will enter the details';
-                      }
+                  // Add click event handler for the save button
+                  if (saveDetailsBtn) {
+                    saveDetailsBtn.addEventListener('click', () => {
+                      // Get the input values
+                      const nameInput = document.getElementById('guestName') as HTMLInputElement;
+                      const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
+                      const name = nameInput?.value || '';
+                      const email = emailInput?.value || '';
                       
-                      // Display confirmation message with customer name and email
-                      const confirmationMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Thanks, I will use ${bookingData.customerName} and ${bookingData.customerEmail} when creating the booking</div>`;
-                      messageDiv.innerHTML = messageDiv.innerHTML + confirmationMessage;
+                      // Simple email validation
+                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                      const isValidEmail = emailRegex.test(email);
                       
-                      // Add 1 second delay before showing follow-up message
-                      setTimeout(() => {
-                        // Add follow-up message
-                        const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">I now have everything I need, in a few moments I will display how much you can save compared with booking.com!</div>`;
-                        messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage;
+                      if (isValidEmail) {
+                        // Valid email - show checkmark
+                        saveDetailsBtn.style.background = '#4CAF50';
+                        saveDetailsBtn.textContent = '✓ Saved';
+                        
+                        // Remove any existing error message
+                        const existingError = document.getElementById('emailError');
+                        if (existingError) {
+                          existingError.remove();
+                        }
+                        
+                        // Display success message without replacing the input form
+                        const successMessage = document.createElement('div');
+                        successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                        successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
+                        messageDiv.appendChild(successMessage);
                         
                         // Scroll to the bottom to show the newest message with a longer delay
                         setTimeout(() => {
@@ -528,111 +494,32 @@ async function captureFullPageScreenshot() {
                             }
                           }
                         }, 300);
-                      }, 1000);
-                    });
-                  }
-                  
-                  if (enterManuallyBtn) {
-                    enterManuallyBtn.addEventListener('click', () => {
-                      enterManuallyBtn.style.background = '#4CAF50';
-                      enterManuallyBtn.textContent = '✓ I will enter the details';
-                      if (useMyDetailsBtn) {
-                        useMyDetailsBtn.style.background = '#9E9E9E';
-                        useMyDetailsBtn.style.cursor = 'not-allowed';
-                        useMyDetailsBtn.textContent = 'My name and email';
-                      }
-                      
-                      // Display input form for name and email
-                      const inputForm = `<div style="padding: 10px; margin-top: 15px; text-align: center;">
-                        <div style="margin-bottom: 10px;">
-                          <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-                          <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-                        </div>
-                        <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
-                      </div>`;
-                      messageDiv.innerHTML = messageDiv.innerHTML + inputForm;
-                      
-                      // Add click event handler for the save button with a small delay
-                      setTimeout(() => {
-                        const saveDetailsBtn = document.getElementById('saveDetails');
-                        if (saveDetailsBtn) {
-                          saveDetailsBtn.addEventListener('click', () => {
-                            // Get the input values
-                            const nameInput = document.getElementById('guestName') as HTMLInputElement;
-                            const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
-                            const name = nameInput?.value || '';
-                            const email = emailInput?.value || '';
-                            
-                            // Simple email validation
-                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                            const isValidEmail = emailRegex.test(email);
-                            
-                            if (isValidEmail) {
-                              // Valid email - show checkmark
-                              saveDetailsBtn.style.background = '#4CAF50';
-                              saveDetailsBtn.textContent = '✓ Saved';
-                              
-                              // Remove any existing error message
-                              const existingError = document.getElementById('emailError');
-                              if (existingError) {
-                                existingError.remove();
-                              }
-                              
-                              // Display success message without replacing the input form
-                              const successMessage = document.createElement('div');
-                              successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
-                              successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
-                              messageDiv.appendChild(successMessage);
-                              
-                              // Scroll to the bottom to show the newest message with a longer delay
-                              setTimeout(() => {
-                                const contentDiv = document.querySelector('.content') as HTMLElement;
-                                if (contentDiv) {
-                                  // Use smooth scrolling for the content div
-                                  contentDiv.scrollTo({
-                                    top: contentDiv.scrollHeight,
-                                    behavior: 'smooth'
-                                  });
-                                  // Also try scrolling the message div into view with longer duration
-                                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                  if (lastMessage) {
-                                    lastMessage.scrollIntoView({ 
-                                      behavior: 'smooth', 
-                                      block: 'end',
-                                      inline: 'nearest'
-                                    });
-                                  }
-                                }
-                              }, 300);
-                            } else {
-                              // Invalid email - keep green background and "Save" text
-                              saveDetailsBtn.style.background = '#4CAF50';
-                              saveDetailsBtn.textContent = 'Save';
-                              
-                              // Preserve the entered values
-                              if (nameInput) nameInput.value = name;
-                              if (emailInput) emailInput.value = email;
-                              
-                              // Display error message below email input
-                              const existingError = document.getElementById('emailError');
-                              if (!existingError) {
-                                const errorMessage = document.createElement('div');
-                                errorMessage.id = 'emailError';
-                                errorMessage.textContent = 'Invalid email';
-                                errorMessage.style.color = '#f44336';
-                                errorMessage.style.fontSize = '12px';
-                                errorMessage.style.marginTop = '5px';
-                                errorMessage.style.textAlign = 'center';
-                                
-                                // Insert error message after the email input
-                                if (emailInput && emailInput.parentNode) {
-                                  emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
-                                }
-                              }
-                            }
-                          });
+                      } else {
+                        // Invalid email - keep green background and "Save" text
+                        saveDetailsBtn.style.background = '#4CAF50';
+                        saveDetailsBtn.textContent = 'Save';
+                        
+                        // Preserve the entered values
+                        if (nameInput) nameInput.value = name;
+                        if (emailInput) emailInput.value = email;
+                        
+                        // Display error message below email input
+                        const existingError = document.getElementById('emailError');
+                        if (!existingError) {
+                          const errorMessage = document.createElement('div');
+                          errorMessage.id = 'emailError';
+                          errorMessage.textContent = 'Invalid email';
+                          errorMessage.style.color = '#f44336';
+                          errorMessage.style.fontSize = '12px';
+                          errorMessage.style.marginTop = '5px';
+                          errorMessage.style.textAlign = 'center';
+                          
+                          // Insert error message after the email input
+                          if (emailInput && emailInput.parentNode) {
+                            emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                          }
                         }
-                      }, 100);
+                      }
                     });
                   }
                 }, 1000);
