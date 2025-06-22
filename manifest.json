@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Booking.com AI Assistant",
-  "version": "1.0",
-  "description": "AI-powered assistant for Booking.com",
+  "name": "Zorro Co-Pilot",
+  "version": "0.8",
+  "description": "AI-powered travel booking assistant *beta*",
   "permissions": [
     "storage",
     "activeTab",

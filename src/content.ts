@@ -13,6 +13,8 @@ const bookingData: {
   pricingData: any[];
   bestPrice: any;
   priceInGbp: number;
+  readyMessageDisplayed: boolean;
+  useAiAgentClicked: boolean;
 } = {
   answersArray: [],
   customerName: '',
@@ -22,7 +24,9 @@ const bookingData: {
   checkOutDate: '',
   pricingData: [],
   bestPrice: null,
-  priceInGbp: 0
+  priceInGbp: 0,
+  readyMessageDisplayed: false,
+  useAiAgentClicked: false
 };
 
 // Function to update booking data from answers
@@ -384,6 +388,9 @@ async function startScreenshotProcess() {
                         successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
                         messageDiv.appendChild(successMessage);
                         
+                        // Mark that the ready message has been displayed
+                        bookingData.readyMessageDisplayed = true;
+                        
                         // Scroll to the bottom to show the newest message with a longer delay
                         setTimeout(() => {
                           const contentDiv = document.querySelector('.content') as HTMLElement;
@@ -445,6 +452,9 @@ async function startScreenshotProcess() {
                   bookManuallyBtn.style.cursor = 'not-allowed';
                 }
                 
+                // Set the flag to indicate AI Agent was clicked
+                bookingData.useAiAgentClicked = true;
+                
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
                   // Add follow-up message with textboxes
@@ -502,6 +512,9 @@ async function startScreenshotProcess() {
                         successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
                         successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
                         messageDiv.appendChild(successMessage);
+                        
+                        // Mark that the ready message has been displayed
+                        bookingData.readyMessageDisplayed = true;
                         
                         // Scroll to the bottom to show the newest message with a longer delay
                         setTimeout(() => {
@@ -617,6 +630,12 @@ async function startScreenshotProcess() {
             // Update pricing data in context with the best result
             updatePricingData(bestPricingData);
             
+            // Wait for the ready message to be displayed before showing pricing
+            await waitForReadyMessage();
+            
+            // Add a 3-second delay after the ready message is displayed
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
             // Process pricing data and update popup
             if (bookingData.pricingData.length > 0) {
               // Get the hotel name from answers array index 0
@@ -636,6 +655,13 @@ async function startScreenshotProcess() {
               bestPriceDiv.style.cssText = 'padding: 10px; margin-bottom: 15px; text-align: center;';
               bestPriceDiv.innerHTML = `The best value for ${hotelName} was found in ${countryName}. It is £${savingsGBP.toFixed(2)} better than on booking.com. Here is the link to book <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
               messageDiv.appendChild(bestPriceDiv);
+              
+              // If user clicked "Use AI Agent", automatically open the booking link after 1 second
+              if (bookingData.useAiAgentClicked && bookingData.bestPrice?.bookingLink) {
+                setTimeout(() => {
+                  window.open(bookingData.bestPrice.bookingLink, '_blank');
+                }, 1000);
+              }
               
               // Scroll to the bottom to show the newest message with a longer delay
               setTimeout(() => {
@@ -723,4 +749,18 @@ function ensurePageReady() {
 }
 
 // Start the injection process
-ensurePageReady(); 
+ensurePageReady();
+
+// Function to wait for the ready message to be displayed
+async function waitForReadyMessage(): Promise<void> {
+  return new Promise((resolve) => {
+    const checkReadyMessage = () => {
+      if (bookingData.readyMessageDisplayed) {
+        resolve();
+      } else {
+        setTimeout(checkReadyMessage, 100); // Check every 100ms
+      }
+    };
+    checkReadyMessage();
+  });
+} 
