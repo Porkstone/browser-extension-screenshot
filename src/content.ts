@@ -332,11 +332,10 @@ async function startScreenshotProcess() {
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
                   // Add follow-up message with textboxes
-                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. What will be the full name and email of the main guest?</div>
+                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. Just share full name of the main traveller</div>
 <div style="padding: 10px; margin-top: 15px; text-align: center;">
   <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-    <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
   </div>
   <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
 </div>`;
@@ -362,16 +361,13 @@ async function startScreenshotProcess() {
                     saveDetailsBtn.addEventListener('click', () => {
                       // Get the input values
                       const nameInput = document.getElementById('guestName') as HTMLInputElement;
-                      const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
                       const name = nameInput?.value || '';
-                      const email = emailInput?.value || '';
                       
-                      // Simple email validation
-                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                      const isValidEmail = emailRegex.test(email);
+                      // Simple name validation
+                      const isValidName = name.trim().length > 0;
                       
-                      if (isValidEmail) {
-                        // Valid email - show checkmark
+                      if (isValidName) {
+                        // Valid name - show checkmark
                         saveDetailsBtn.style.background = '#4CAF50';
                         saveDetailsBtn.textContent = '✓ Saved';
                         
@@ -381,25 +377,107 @@ async function startScreenshotProcess() {
                           existingError.remove();
                         }
                         
-                        // Display success message without replacing the input form
-                        const successMessage = document.createElement('div');
-                        successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
-                        successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
-                        messageDiv.appendChild(successMessage);
+                        // Display email request message and textbox
+                        const emailMessage = document.createElement('div');
+                        emailMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                        emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
+                        messageDiv.appendChild(emailMessage);
                         
-                        // Mark that the ready message has been displayed
-                        bookingData.readyMessageDisplayed = true;
+                        const emailInputDiv = document.createElement('div');
+                        emailInputDiv.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                        emailInputDiv.innerHTML = `
+                          <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
+                            <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+                          </div>
+                          <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
+                        `;
+                        messageDiv.appendChild(emailInputDiv);
                         
-                        // Scroll to the bottom to show the newest message with a longer delay
+                        // Add click event handler for the save email button
+                        const saveEmailBtn = document.getElementById('saveEmail');
+                        if (saveEmailBtn) {
+                          saveEmailBtn.addEventListener('click', () => {
+                            const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
+                            const email = emailInput?.value || '';
+                            
+                            // Simple email validation
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            const isValidEmail = emailRegex.test(email);
+                            
+                            if (isValidEmail) {
+                              // Valid email - show checkmark
+                              saveEmailBtn.style.background = '#4CAF50';
+                              saveEmailBtn.textContent = '✓ Email Saved';
+                              
+                              // Remove any existing error message
+                              const existingEmailError = document.getElementById('emailError');
+                              if (existingEmailError) {
+                                existingEmailError.remove();
+                              }
+                              
+                              // Display success message
+                              const successMessage = document.createElement('div');
+                              successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                              successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
+                              messageDiv.appendChild(successMessage);
+                              
+                              // Mark that the ready message has been displayed
+                              bookingData.readyMessageDisplayed = true;
+                              
+                              // Scroll to the bottom to show the newest message
+                              setTimeout(() => {
+                                const contentDiv = document.querySelector('.content') as HTMLElement;
+                                if (contentDiv) {
+                                  contentDiv.scrollTo({
+                                    top: contentDiv.scrollHeight,
+                                    behavior: 'smooth'
+                                  });
+                                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                  if (lastMessage) {
+                                    lastMessage.scrollIntoView({ 
+                                      behavior: 'smooth', 
+                                      block: 'end',
+                                      inline: 'nearest'
+                                    });
+                                  }
+                                }
+                              }, 300);
+                            } else {
+                              // Invalid email - show error
+                              saveEmailBtn.style.background = '#4CAF50';
+                              saveEmailBtn.textContent = 'Save Email';
+                              
+                              // Preserve the entered values
+                              if (emailInput) emailInput.value = email;
+                              
+                              // Display error message
+                              const existingEmailError = document.getElementById('emailError');
+                              if (!existingEmailError) {
+                                const errorMessage = document.createElement('div');
+                                errorMessage.id = 'emailError';
+                                errorMessage.textContent = 'Invalid email';
+                                errorMessage.style.color = '#f44336';
+                                errorMessage.style.fontSize = '12px';
+                                errorMessage.style.marginTop = '5px';
+                                errorMessage.style.textAlign = 'center';
+                                
+                                // Insert error message after the email input
+                                if (emailInput && emailInput.parentNode) {
+                                  emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                                }
+                              }
+                            }
+                          });
+                        }
+                        
+                        // Scroll to the bottom to show the newest message
                         setTimeout(() => {
                           const contentDiv = document.querySelector('.content') as HTMLElement;
                           if (contentDiv) {
-                            // Use smooth scrolling for the content div
                             contentDiv.scrollTo({
                               top: contentDiv.scrollHeight,
                               behavior: 'smooth'
                             });
-                            // Also try scrolling the message div into view with longer duration
                             const lastMessage = messageDiv.lastElementChild as HTMLElement;
                             if (lastMessage) {
                               lastMessage.scrollIntoView({ 
@@ -411,28 +489,27 @@ async function startScreenshotProcess() {
                           }
                         }, 300);
                       } else {
-                        // Invalid email - keep green background and "Save" text
+                        // Invalid name - keep green background and "Save" text
                         saveDetailsBtn.style.background = '#4CAF50';
                         saveDetailsBtn.textContent = 'Save';
                         
                         // Preserve the entered values
                         if (nameInput) nameInput.value = name;
-                        if (emailInput) emailInput.value = email;
                         
-                        // Display error message below email input
+                        // Display error message below name input
                         const existingError = document.getElementById('emailError');
                         if (!existingError) {
                           const errorMessage = document.createElement('div');
                           errorMessage.id = 'emailError';
-                          errorMessage.textContent = 'Invalid email';
+                          errorMessage.textContent = 'Please enter a name';
                           errorMessage.style.color = '#f44336';
                           errorMessage.style.fontSize = '12px';
                           errorMessage.style.marginTop = '5px';
                           errorMessage.style.textAlign = 'center';
                           
-                          // Insert error message after the email input
-                          if (emailInput && emailInput.parentNode) {
-                            emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                          // Insert error message after the name input
+                          if (nameInput && nameInput.parentNode) {
+                            nameInput.parentNode.insertBefore(errorMessage, nameInput.nextSibling);
                           }
                         }
                       }
@@ -457,11 +534,10 @@ async function startScreenshotProcess() {
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
                   // Add follow-up message with textboxes
-                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. What will be the full name and email of the main guest?</div>
+                  const followUpMessage = `<div style="padding: 10px; margin-top: 15px; text-align: center;">Great. Just share full name of the main traveller</div>
 <div style="padding: 10px; margin-top: 15px; text-align: center;">
   <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-    <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
   </div>
   <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
 </div>`;
@@ -487,16 +563,13 @@ async function startScreenshotProcess() {
                     saveDetailsBtn.addEventListener('click', () => {
                       // Get the input values
                       const nameInput = document.getElementById('guestName') as HTMLInputElement;
-                      const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
                       const name = nameInput?.value || '';
-                      const email = emailInput?.value || '';
                       
-                      // Simple email validation
-                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                      const isValidEmail = emailRegex.test(email);
+                      // Simple name validation
+                      const isValidName = name.trim().length > 0;
                       
-                      if (isValidEmail) {
-                        // Valid email - show checkmark
+                      if (isValidName) {
+                        // Valid name - show checkmark
                         saveDetailsBtn.style.background = '#4CAF50';
                         saveDetailsBtn.textContent = '✓ Saved';
                         
@@ -506,25 +579,107 @@ async function startScreenshotProcess() {
                           existingError.remove();
                         }
                         
-                        // Display success message without replacing the input form
-                        const successMessage = document.createElement('div');
-                        successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
-                        successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
-                        messageDiv.appendChild(successMessage);
+                        // Display email request message and textbox
+                        const emailMessage = document.createElement('div');
+                        emailMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                        emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
+                        messageDiv.appendChild(emailMessage);
                         
-                        // Mark that the ready message has been displayed
-                        bookingData.readyMessageDisplayed = true;
+                        const emailInputDiv = document.createElement('div');
+                        emailInputDiv.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                        emailInputDiv.innerHTML = `
+                          <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
+                            <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+                          </div>
+                          <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
+                        `;
+                        messageDiv.appendChild(emailInputDiv);
                         
-                        // Scroll to the bottom to show the newest message with a longer delay
+                        // Add click event handler for the save email button
+                        const saveEmailBtn = document.getElementById('saveEmail');
+                        if (saveEmailBtn) {
+                          saveEmailBtn.addEventListener('click', () => {
+                            const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
+                            const email = emailInput?.value || '';
+                            
+                            // Simple email validation
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            const isValidEmail = emailRegex.test(email);
+                            
+                            if (isValidEmail) {
+                              // Valid email - show checkmark
+                              saveEmailBtn.style.background = '#4CAF50';
+                              saveEmailBtn.textContent = '✓ Email Saved';
+                              
+                              // Remove any existing error message
+                              const existingEmailError = document.getElementById('emailError');
+                              if (existingEmailError) {
+                                existingEmailError.remove();
+                              }
+                              
+                              // Display success message
+                              const successMessage = document.createElement('div');
+                              successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                              successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
+                              messageDiv.appendChild(successMessage);
+                              
+                              // Mark that the ready message has been displayed
+                              bookingData.readyMessageDisplayed = true;
+                              
+                              // Scroll to the bottom to show the newest message
+                              setTimeout(() => {
+                                const contentDiv = document.querySelector('.content') as HTMLElement;
+                                if (contentDiv) {
+                                  contentDiv.scrollTo({
+                                    top: contentDiv.scrollHeight,
+                                    behavior: 'smooth'
+                                  });
+                                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                  if (lastMessage) {
+                                    lastMessage.scrollIntoView({ 
+                                      behavior: 'smooth', 
+                                      block: 'end',
+                                      inline: 'nearest'
+                                    });
+                                  }
+                                }
+                              }, 300);
+                            } else {
+                              // Invalid email - show error
+                              saveEmailBtn.style.background = '#4CAF50';
+                              saveEmailBtn.textContent = 'Save Email';
+                              
+                              // Preserve the entered values
+                              if (emailInput) emailInput.value = email;
+                              
+                              // Display error message
+                              const existingEmailError = document.getElementById('emailError');
+                              if (!existingEmailError) {
+                                const errorMessage = document.createElement('div');
+                                errorMessage.id = 'emailError';
+                                errorMessage.textContent = 'Invalid email';
+                                errorMessage.style.color = '#f44336';
+                                errorMessage.style.fontSize = '12px';
+                                errorMessage.style.marginTop = '5px';
+                                errorMessage.style.textAlign = 'center';
+                                
+                                // Insert error message after the email input
+                                if (emailInput && emailInput.parentNode) {
+                                  emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                                }
+                              }
+                            }
+                          });
+                        }
+                        
+                        // Scroll to the bottom to show the newest message
                         setTimeout(() => {
                           const contentDiv = document.querySelector('.content') as HTMLElement;
                           if (contentDiv) {
-                            // Use smooth scrolling for the content div
                             contentDiv.scrollTo({
                               top: contentDiv.scrollHeight,
                               behavior: 'smooth'
                             });
-                            // Also try scrolling the message div into view with longer duration
                             const lastMessage = messageDiv.lastElementChild as HTMLElement;
                             if (lastMessage) {
                               lastMessage.scrollIntoView({ 
@@ -536,28 +691,27 @@ async function startScreenshotProcess() {
                           }
                         }, 300);
                       } else {
-                        // Invalid email - keep green background and "Save" text
+                        // Invalid name - keep green background and "Save" text
                         saveDetailsBtn.style.background = '#4CAF50';
                         saveDetailsBtn.textContent = 'Save';
                         
                         // Preserve the entered values
                         if (nameInput) nameInput.value = name;
-                        if (emailInput) emailInput.value = email;
                         
-                        // Display error message below email input
+                        // Display error message below name input
                         const existingError = document.getElementById('emailError');
                         if (!existingError) {
                           const errorMessage = document.createElement('div');
                           errorMessage.id = 'emailError';
-                          errorMessage.textContent = 'Invalid email';
+                          errorMessage.textContent = 'Please enter a name';
                           errorMessage.style.color = '#f44336';
                           errorMessage.style.fontSize = '12px';
                           errorMessage.style.marginTop = '5px';
                           errorMessage.style.textAlign = 'center';
                           
-                          // Insert error message after the email input
-                          if (emailInput && emailInput.parentNode) {
-                            emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                          // Insert error message after the name input
+                          if (nameInput && nameInput.parentNode) {
+                            nameInput.parentNode.insertBefore(errorMessage, nameInput.nextSibling);
                           }
                         }
                       }
@@ -567,7 +721,7 @@ async function startScreenshotProcess() {
               });
             }
             
-            // Make three parallel API calls for pricing data
+            // Make four parallel API calls for pricing data
             const hotelName = encodeURIComponent((answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || ''));
             
             // First API call - Vietnam
@@ -579,8 +733,11 @@ async function startScreenshotProcess() {
             // Third API call - UK
             const pricingResponseUK = fetch(`https://autodeal.io/api/prices/UK4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
             
-            // Wait for all three API calls to complete with 5 second delay
-            const [pricingDataVN, pricingDataTH, pricingDataUK] = await Promise.all([
+            // Fourth API call - US
+            const pricingResponseUS = fetch(`https://autodeal.io/api/prices/US4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
+            
+            // Wait for all four API calls to complete with 5 second delay
+            const [pricingDataVN, pricingDataTH, pricingDataUK, pricingDataUS] = await Promise.all([
               pricingResponseVN.then(async () => {
                 await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
                 return pricingResponseVN.then(response => response.json());
@@ -592,12 +749,17 @@ async function startScreenshotProcess() {
               pricingResponseUK.then(async () => {
                 await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
                 return pricingResponseUK.then(response => response.json());
+              }),
+              pricingResponseUS.then(async () => {
+                await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
+                return pricingResponseUS.then(response => response.json());
               })
             ]);
             
             console.log('Pricing API response VN:', pricingDataVN);
             console.log('Pricing API response TH:', pricingDataTH);
             console.log('Pricing API response UK:', pricingDataUK);
+            console.log('Pricing API response US:', pricingDataUS);
             
             // Helper function to get best price from data
             const getBestPrice = (data: any) => {
@@ -614,8 +776,9 @@ async function startScreenshotProcess() {
             const bestPriceVN = getBestPrice(pricingDataVN);
             const bestPriceTH = getBestPrice(pricingDataTH);
             const bestPriceUK = getBestPrice(pricingDataUK);
+            const bestPriceUS = getBestPrice(pricingDataUS);
             
-            // Find the lowest price among all three (only consider valid prices > 0)
+            // Find the lowest price among all four (only consider valid prices > 0)
             let bestPricingData = null;
             let bestCountry = '';
             
@@ -623,7 +786,8 @@ async function startScreenshotProcess() {
             const validPrices = [
               { data: pricingDataVN, price: bestPriceVN, country: 'Vietnam' },
               { data: pricingDataTH, price: bestPriceTH, country: 'Thailand' },
-              { data: pricingDataUK, price: bestPriceUK, country: 'UK' }
+              { data: pricingDataUK, price: bestPriceUK, country: 'UK' },
+              { data: pricingDataUS, price: bestPriceUS, country: 'US' }
             ].filter(item => item.price !== null);
             
             if (validPrices.length > 0) {

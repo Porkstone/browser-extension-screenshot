@@ -53,5 +53,7 @@ pnpm watch
 - pnpm 
 
 ## TDOD
-- Remove hardcoded USD => GBP exchange rate conversion
-- Test and Fix Logged out journey
+[] Remove hardcoded USD => GBP exchange rate conversion
+[] Test that amount saved is correct when one of countries returns totalPrice = 0
+[*] Test and Fix Logged out journey
+
