@@ -286,7 +286,7 @@ async function startScreenshotProcess() {
               // Extract first name from full name
               const firstName = bookingData.customerName.split(' ')[0];
               const greetingHtml = `<div style="margin-bottom: 15px; text-align: center;">Hi ${firstName},</div>
-<div style="margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
+<div style="margin-bottom: 15px; text-align: center;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
@@ -294,7 +294,7 @@ async function startScreenshotProcess() {
               finalHtml = greetingHtml;
             } else {
               // Display message without greeting when customer name is blank
-              const greetingHtml = `<div style="margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
+              const greetingHtml = `<div style="margin-bottom: 15px; text-align: center;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
@@ -442,7 +442,14 @@ async function startScreenshotProcess() {
                                   setTimeout(() => {
                                     const thirdMessage = document.createElement('div');
                                     thirdMessage.style.cssText = 'margin-top: 15px; text-align: center;';
-                                    thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
+                                    
+                                    // Check if bestPrice data is available
+                                    if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
+                                      thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
+                                    } else {
+                                      thirdMessage.textContent = 'I will provide you with the best booking options once the data is loaded.';
+                                    }
+                                    
                                     messageDiv.appendChild(thirdMessage);
                                     
                                     // Scroll to the bottom to show the newest message
@@ -461,7 +468,7 @@ async function startScreenshotProcess() {
                                         });
                                       }
                                     }
-                                  }, 1000);
+                                  }, 2000);
                                   
                                   // Scroll to the bottom to show the second message
                                   const contentDiv = document.querySelector('.content') as HTMLElement;
@@ -479,8 +486,8 @@ async function startScreenshotProcess() {
                                       });
                                     }
                                   }
-                                }, 1000);
-                              }, 1000);
+                                }, 2000);
+                              }, 2000);
                             } else {
                               // Invalid email - show error
                               saveEmailBtn.style.background = '#4CAF50';
@@ -683,7 +690,14 @@ async function startScreenshotProcess() {
                                   setTimeout(() => {
                                     const thirdMessage = document.createElement('div');
                                     thirdMessage.style.cssText = 'margin-top: 15px; text-align: center;';
-                                    thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
+                                    
+                                    // Check if bestPrice data is available
+                                    if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
+                                      thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
+                                    } else {
+                                      thirdMessage.textContent = 'I will provide you with the best booking options once the data is loaded.';
+                                    }
+                                    
                                     messageDiv.appendChild(thirdMessage);
                                     
                                     // Scroll to the bottom to show the newest message
@@ -702,7 +716,7 @@ async function startScreenshotProcess() {
                                         });
                                       }
                                     }
-                                  }, 1000);
+                                  }, 2000);
                                   
                                   // Scroll to the bottom to show the second message
                                   const contentDiv = document.querySelector('.content') as HTMLElement;
@@ -720,8 +734,8 @@ async function startScreenshotProcess() {
                                       });
                                     }
                                   }
-                                }, 1000);
-                              }, 1000);
+                                }, 2000);
+                              }, 2000);
                             } else {
                               // Invalid email - show error
                               saveEmailBtn.style.background = '#4CAF50';
@@ -883,7 +897,7 @@ async function startScreenshotProcess() {
             await waitForReadyMessage();
             
             // Add a 1-second delay after the ready message is displayed
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Process pricing data and update popup (only if we have valid pricing data)
             if (bestPricingData && bookingData.pricingData.length > 0) {
@@ -935,7 +949,7 @@ async function startScreenshotProcess() {
                       });
                     }
                   }
-                }, 1000);
+                }, 2000);
                 
                 // Scroll to the bottom to show the second message
                 const contentDiv = document.querySelector('.content') as HTMLElement;
@@ -953,7 +967,7 @@ async function startScreenshotProcess() {
                     });
                   }
                 }
-              }, 1000);
+              }, 2000);
             }
           }
         }
