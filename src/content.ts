@@ -418,14 +418,45 @@ async function startScreenshotProcess() {
                               // Display success message
                               const successMessage = document.createElement('div');
                               successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
-                              successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
+                              successMessage.textContent = 'I have everything I need now. Let me load your results';
                               messageDiv.appendChild(successMessage);
                               
                               // Mark that the ready message has been displayed
                               bookingData.readyMessageDisplayed = true;
                               
-                              // Scroll to the bottom to show the newest message
+                              // Add additional message after 1 second
                               setTimeout(() => {
+                                const additionalMessage = document.createElement('div');
+                                additionalMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                                additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
+                                messageDiv.appendChild(additionalMessage);
+                                
+                                // Add second additional message after 1 more second
+                                setTimeout(() => {
+                                  const secondMessage = document.createElement('div');
+                                  secondMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                                  secondMessage.textContent = 'and how much it is better vs Booking.com';
+                                  messageDiv.appendChild(secondMessage);
+                                  
+                                  // Scroll to the bottom to show the newest message
+                                  const contentDiv = document.querySelector('.content') as HTMLElement;
+                                  if (contentDiv) {
+                                    contentDiv.scrollTo({
+                                      top: contentDiv.scrollHeight,
+                                      behavior: 'smooth'
+                                    });
+                                    const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                    if (lastMessage) {
+                                      lastMessage.scrollIntoView({ 
+                                        behavior: 'smooth', 
+                                        block: 'end',
+                                        inline: 'nearest'
+                                      });
+                                    }
+                                  }
+                                }, 1000);
+                                
+                                // Scroll to the bottom to show the newest message
                                 const contentDiv = document.querySelector('.content') as HTMLElement;
                                 if (contentDiv) {
                                   contentDiv.scrollTo({
@@ -441,7 +472,7 @@ async function startScreenshotProcess() {
                                     });
                                   }
                                 }
-                              }, 300);
+                              }, 1000);
                             } else {
                               // Invalid email - show error
                               saveEmailBtn.style.background = '#4CAF50';
@@ -620,14 +651,45 @@ async function startScreenshotProcess() {
                               // Display success message
                               const successMessage = document.createElement('div');
                               successMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
-                              successMessage.textContent = 'I now have everything I need, in a few moments I will display how much you can save compared with booking.com!';
+                              successMessage.textContent = 'I have everything I need now. Let me load your results';
                               messageDiv.appendChild(successMessage);
                               
                               // Mark that the ready message has been displayed
                               bookingData.readyMessageDisplayed = true;
                               
-                              // Scroll to the bottom to show the newest message
+                              // Add additional message after 1 second
                               setTimeout(() => {
+                                const additionalMessage = document.createElement('div');
+                                additionalMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                                additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
+                                messageDiv.appendChild(additionalMessage);
+                                
+                                // Add second additional message after 1 more second
+                                setTimeout(() => {
+                                  const secondMessage = document.createElement('div');
+                                  secondMessage.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+                                  secondMessage.textContent = 'and how much it is better vs Booking.com';
+                                  messageDiv.appendChild(secondMessage);
+                                  
+                                  // Scroll to the bottom to show the newest message
+                                  const contentDiv = document.querySelector('.content') as HTMLElement;
+                                  if (contentDiv) {
+                                    contentDiv.scrollTo({
+                                      top: contentDiv.scrollHeight,
+                                      behavior: 'smooth'
+                                    });
+                                    const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                    if (lastMessage) {
+                                      lastMessage.scrollIntoView({ 
+                                        behavior: 'smooth', 
+                                        block: 'end',
+                                        inline: 'nearest'
+                                      });
+                                    }
+                                  }
+                                }, 1000);
+                                
+                                // Scroll to the bottom to show the newest message
                                 const contentDiv = document.querySelector('.content') as HTMLElement;
                                 if (contentDiv) {
                                   contentDiv.scrollTo({
@@ -643,7 +705,7 @@ async function startScreenshotProcess() {
                                     });
                                   }
                                 }
-                              }, 300);
+                              }, 1000);
                             } else {
                               // Invalid email - show error
                               saveEmailBtn.style.background = '#4CAF50';
