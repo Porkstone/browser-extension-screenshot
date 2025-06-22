@@ -4,77 +4,167 @@
   right: 1rem;
   width: 24rem;
   height: 24rem;
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  background-color: #343541;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
   display: flex;
   flex-direction: column;
   z-index: 9999;
   font-size: 14pt;
+  border: 1px solid #565869;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 }
 
 #booking-ai-popup .header {
-  background-color: #2563eb;
-  color: white;
+  background-color: #202123;
+  color: #ececf1;
   padding: 1rem;
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid #565869;
 }
 
 #booking-ai-popup .header h1 {
   font-size: 1.25rem;
-  font-weight: bold;
+  font-weight: 600;
+  color: #ececf1;
 }
 
 #booking-ai-popup .close-button {
-  color: white;
+  color: #ececf1;
   cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
 }
 
 #booking-ai-popup .close-button:hover {
-  color: #e5e7eb;
+  background-color: #565869;
 }
 
 #booking-ai-popup .content {
   flex: 1;
   padding: 1.5rem;
   overflow-y: auto;
+  background-color: #343541;
+  color: #ececf1;
 }
 
 #booking-ai-popup .message {
-  background-color: #f3f4f6;
+  background-color: #444654;
   border-radius: 0.5rem;
   padding: 0.75rem;
   margin-bottom: 1rem;
+  border: 1px solid #565869;
 }
 
 #booking-ai-popup .message p {
-  color: #1f2937;
+  color: #ececf1;
+  margin: 0;
+  line-height: 1.5;
 }
 
 #booking-ai-popup .footer {
   padding: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #565869;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #202123;
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
 }
 
 #booking-ai-popup .screenshot-button {
   width: auto;
   min-width: 100px;
-  background-color: #2563eb;
+  background-color: #10a37f;
   color: white;
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   cursor: pointer;
   transition: background-color 0.2s;
   text-align: center;
+  border: none;
+  font-weight: 500;
 }
 
 #booking-ai-popup .screenshot-button:hover {
-  background-color: #1d4ed8;
+  background-color: #0d8a6f;
+}
+
+/* ChatGPT-style input styling */
+#booking-ai-popup input[type="text"],
+#booking-ai-popup input[type="email"] {
+  background-color: #40414f;
+  border: 1px solid #565869;
+  color: #ececf1;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: border-color 0.2s;
+}
+
+#booking-ai-popup input[type="text"]:focus,
+#booking-ai-popup input[type="email"]:focus {
+  outline: none;
+  border-color: #10a37f;
+  box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.2);
+}
+
+#booking-ai-popup input[type="text"]::placeholder,
+#booking-ai-popup input[type="email"]::placeholder {
+  color: #8e8ea0;
+}
+
+/* ChatGPT-style button styling */
+#booking-ai-popup button {
+  background-color: #10a37f;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 0.875rem;
+}
+
+#booking-ai-popup button:hover {
+  background-color: #0d8a6f;
+}
+
+#booking-ai-popup button:disabled {
+  background-color: #565869;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling */
+#booking-ai-popup .content::-webkit-scrollbar {
+  width: 6px;
+}
+
+#booking-ai-popup .content::-webkit-scrollbar-track {
+  background: #343541;
+}
+
+#booking-ai-popup .content::-webkit-scrollbar-thumb {
+  background: #565869;
+  border-radius: 3px;
+}
+
+#booking-ai-popup .content::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 } 

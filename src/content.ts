@@ -143,10 +143,39 @@ async function captureFullPageScreenshot() {
   if (messageDiv) {
     // Add refreshing message without overwriting the original content
     const refreshingDiv = document.createElement('div');
-    refreshingDiv.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center; color: #666;';
-    refreshingDiv.textContent = 'Refreshing booking information...';
+    refreshingDiv.style.cssText = 'padding: 10px; margin-top: 15px; text-align: center;';
+    refreshingDiv.textContent = 'There is a better value than yours available for this hotel';
     messageDiv.appendChild(refreshingDiv);
+    
+    // Add Reveal button
+    const revealButton = document.createElement('button');
+    revealButton.textContent = 'Reveal';
+    revealButton.style.cssText = 'background: #10a37f; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; display: block; margin-left: auto; margin-right: auto;';
+    messageDiv.appendChild(revealButton);
+    
+    // Add click handler for Reveal button
+    revealButton.addEventListener('click', async () => {
+      // Show spinner
+      const spinner = document.createElement('div');
+      spinner.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; padding: 20px;">
+          <div style="width: 20px; height: 20px; border: 2px solid #565869; border-top: 2px solid #10a37f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <span style="margin-left: 10px; color: #ececf1;">Processing...</span>
+        </div>
+      `;
+      messageDiv.appendChild(spinner);
+      
+      // Hide the Reveal button
+      revealButton.style.display = 'none';
+      
+      // Start the screenshot process
+      await startScreenshotProcess();
+    });
   }
+}
+
+// Function to handle the actual screenshot process
+async function startScreenshotProcess() {
   // Save original scroll position
   const originalScrollX = window.scrollX;
   const originalScrollY = window.scrollY;
@@ -222,7 +251,7 @@ async function captureFullPageScreenshot() {
           formData.append("questions", JSON.stringify(questions));
           
           // Make first API call and display greeting immediately
-          const apiResponse = await fetch("http://localhost:3001/api/ask", {
+          const apiResponse = await fetch("https://capture-booking-data-api.vercel.app/api/ask", {
             method: "POST",
             body: formData
           });
@@ -256,7 +285,7 @@ async function captureFullPageScreenshot() {
 <div style="padding: 10px; margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
   <button id="bookManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book Manually</button>
-  <button id="useAIAgent" style="background: #9C27B0; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Use AI Agent</button>
+  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Use AI Agent</button>
 </div>`;
               finalHtml = greetingHtml;
             } else {
@@ -265,7 +294,7 @@ async function captureFullPageScreenshot() {
 <div style="padding: 10px; margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
   <button id="bookManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book Manually</button>
-  <button id="useAIAgent" style="background: #9C27B0; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Use AI Agent</button>
+  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Use AI Agent</button>
 </div>`;
               finalHtml = greetingHtml;
             }
@@ -277,7 +306,7 @@ async function captureFullPageScreenshot() {
             const popup = document.getElementById('booking-ai-popup');
             if (popup) {
               popup.style.height = '100vh';
-              popup.style.width = '100vw';
+              popup.style.width = 'calc(100vw - 17px)';
               popup.style.position = 'fixed';
               popup.style.top = '0';
               popup.style.left = '0';
@@ -526,17 +555,20 @@ async function captureFullPageScreenshot() {
               });
             }
             
-            // Make two parallel API calls for pricing data
+            // Make three parallel API calls for pricing data
             const hotelName = encodeURIComponent((answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || ''));
             
-            // First API call
+            // First API call - Vietnam
             const pricingResponseVN = fetch(`https://autodeal.io/api/prices/VN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
             
-            // Second API call (different endpoint)
+            // Second API call - Thailand
             const pricingResponseTH = fetch(`https://autodeal.io/api/prices/TH4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
             
-            // Wait for both API calls to complete with 5 second delay
-            const [pricingDataVN, pricingDataTH] = await Promise.all([
+            // Third API call - UK
+            const pricingResponseUK = fetch(`https://autodeal.io/api/prices/UK4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
+            
+            // Wait for all three API calls to complete with 5 second delay
+            const [pricingDataVN, pricingDataTH, pricingDataUK] = await Promise.all([
               pricingResponseVN.then(async () => {
                 await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
                 return pricingResponseVN.then(response => response.json());
@@ -544,23 +576,42 @@ async function captureFullPageScreenshot() {
               pricingResponseTH.then(async () => {
                 await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
                 return pricingResponseTH.then(response => response.json());
+              }),
+              pricingResponseUK.then(async () => {
+                await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
+                return pricingResponseUK.then(response => response.json());
               })
             ]);
             
-            console.log('Pricing API response 1:', pricingDataVN);
-            console.log('Pricing API response 2:', pricingDataTH);
+            console.log('Pricing API response VN:', pricingDataVN);
+            console.log('Pricing API response TH:', pricingDataTH);
+            console.log('Pricing API response UK:', pricingDataUK);
             
-            // Compare both responses and use the one with lowest totalPrice
+            // Compare all three responses and use the one with lowest totalPrice
             let bestPricingData = pricingDataVN;
-            if (pricingDataTH && Array.isArray(pricingDataTH) && pricingDataTH.length > 0) {
-              const bestPrice1 = pricingDataVN && Array.isArray(pricingDataVN) && pricingDataVN.length > 0 
-                ? pricingDataVN.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min)
-                : null;
-                const bestPrice2 = pricingDataTH.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min);
-              
-              if (bestPrice1 && bestPrice2 && bestPrice2.totalPrice < bestPrice1.totalPrice) {
-                bestPricingData = pricingDataTH;
+            let bestCountry = 'Vietnam';
+            
+            // Helper function to get best price from data
+            const getBestPrice = (data: any) => {
+              if (data && Array.isArray(data) && data.length > 0) {
+                return data.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min);
               }
+              return null;
+            };
+            
+            const bestPriceVN = getBestPrice(pricingDataVN);
+            const bestPriceTH = getBestPrice(pricingDataTH);
+            const bestPriceUK = getBestPrice(pricingDataUK);
+            
+            // Find the lowest price among all three
+            if (bestPriceTH && (!bestPriceVN || bestPriceTH.totalPrice < bestPriceVN.totalPrice)) {
+              bestPricingData = pricingDataTH;
+              bestCountry = 'Thailand';
+            }
+            
+            if (bestPriceUK && (!bestPricingData || bestPriceUK.totalPrice < getBestPrice(bestPricingData)?.totalPrice)) {
+              bestPricingData = pricingDataUK;
+              bestCountry = 'UK';
             }
             
             // Update pricing data in context with the best result
@@ -630,12 +681,12 @@ function injectPopup() {
   popupContainer.innerHTML = `
     <div id="booking-ai-popup">
       <div class="header">
-        <h1>Zorro AI</h1>
+        <h1>Zorro Co-pilot</h1>
         <button id="close-popup" class="close-button">×</button>
       </div>
       <div class="content">
         <div class="message">
-          <p>Hello! I'm your Zorro AI assistant. I can find you the best price in the world...</p>
+          <p>Hello, I am your co-pilot for this payment. </p>
         </div>
       </div>
       <div class="footer">
@@ -656,8 +707,8 @@ function injectPopup() {
     }
     if (screenshotBtn) {
       screenshotBtn.addEventListener('click', captureFullPageScreenshot);
-      // Automatically trigger a click when the popup is first displayed
-      setTimeout(() => screenshotBtn.click(), 3000);
+      // Automatically trigger the message and button display when the popup is first displayed
+      setTimeout(() => captureFullPageScreenshot(), 3000);
     }
   }
 }
