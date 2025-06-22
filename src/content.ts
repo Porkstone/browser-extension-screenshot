@@ -288,17 +288,16 @@ async function startScreenshotProcess() {
               const greetingHtml = `<div style="padding: 10px; margin-bottom: 15px; text-align: center;">Hi ${firstName},</div>
 <div style="padding: 10px; margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
-  <button id="bookManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book Manually</button>
-  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Use AI Agent</button>
+  <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
+  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
 </div>`;
               finalHtml = greetingHtml;
             } else {
-              // Display greeting without name when customer name is blank
-              const greetingHtml = `<div style="padding: 10px; margin-bottom: 15px; text-align: center;">Hi,</div>
-<div style="padding: 10px; margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
+              // Display message without greeting when customer name is blank
+              const greetingHtml = `<div style="padding: 10px; margin-bottom: 15px; text-align: center;">After I show you the best deal globally, do you want to complete the booking yourself or let me do it for you? If you choose me, I'll bring you to the checkout where you insert your payment details yourself?</div>
 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
-  <button id="bookManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book Manually</button>
-  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Use AI Agent</button>
+  <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
+  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
 </div>`;
               finalHtml = greetingHtml;
             }
@@ -318,13 +317,13 @@ async function startScreenshotProcess() {
             }
             
             // Add click event handlers for the buttons
-            const bookManuallyBtn = document.getElementById('bookManually');
+            const bookMyselfBtn = document.getElementById('bookMyself');
             const useAIAgentBtn = document.getElementById('useAIAgent');
             
-            if (bookManuallyBtn) {
-              bookManuallyBtn.addEventListener('click', () => {
-                bookManuallyBtn.style.background = '#4CAF50';
-                bookManuallyBtn.textContent = '✓ Book Manually';
+            if (bookMyselfBtn) {
+              bookMyselfBtn.addEventListener('click', () => {
+                bookMyselfBtn.style.background = '#4CAF50';
+                bookMyselfBtn.textContent = '✓ Book myself';
                 if (useAIAgentBtn) {
                   useAIAgentBtn.style.background = '#9E9E9E';
                   useAIAgentBtn.style.cursor = 'not-allowed';
@@ -446,10 +445,10 @@ async function startScreenshotProcess() {
             if (useAIAgentBtn) {
               useAIAgentBtn.addEventListener('click', () => {
                 useAIAgentBtn.style.background = '#4CAF50';
-                useAIAgentBtn.textContent = '✓ Use AI Agent';
-                if (bookManuallyBtn) {
-                  bookManuallyBtn.style.background = '#9E9E9E';
-                  bookManuallyBtn.style.cursor = 'not-allowed';
+                useAIAgentBtn.textContent = '✓ Agentic AI booking';
+                if (bookMyselfBtn) {
+                  bookMyselfBtn.style.background = '#9E9E9E';
+                  bookMyselfBtn.style.cursor = 'not-allowed';
                 }
                 
                 // Set the flag to indicate AI Agent was clicked
@@ -600,14 +599,14 @@ async function startScreenshotProcess() {
             console.log('Pricing API response TH:', pricingDataTH);
             console.log('Pricing API response UK:', pricingDataUK);
             
-            // Compare all three responses and use the one with lowest totalPrice
-            let bestPricingData = pricingDataVN;
-            let bestCountry = 'Vietnam';
-            
             // Helper function to get best price from data
             const getBestPrice = (data: any) => {
               if (data && Array.isArray(data) && data.length > 0) {
-                return data.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min);
+                // Filter out prices that are 0 or less, then find the minimum
+                const validPrices = data.filter(item => item.totalPrice > 0);
+                if (validPrices.length > 0) {
+                  return validPrices.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min);
+                }
               }
               return null;
             };
@@ -616,15 +615,23 @@ async function startScreenshotProcess() {
             const bestPriceTH = getBestPrice(pricingDataTH);
             const bestPriceUK = getBestPrice(pricingDataUK);
             
-            // Find the lowest price among all three
-            if (bestPriceTH && (!bestPriceVN || bestPriceTH.totalPrice < bestPriceVN.totalPrice)) {
-              bestPricingData = pricingDataTH;
-              bestCountry = 'Thailand';
-            }
+            // Find the lowest price among all three (only consider valid prices > 0)
+            let bestPricingData = null;
+            let bestCountry = '';
             
-            if (bestPriceUK && (!bestPricingData || bestPriceUK.totalPrice < getBestPrice(bestPricingData)?.totalPrice)) {
-              bestPricingData = pricingDataUK;
-              bestCountry = 'UK';
+            // Compare all valid prices and find the lowest
+            const validPrices = [
+              { data: pricingDataVN, price: bestPriceVN, country: 'Vietnam' },
+              { data: pricingDataTH, price: bestPriceTH, country: 'Thailand' },
+              { data: pricingDataUK, price: bestPriceUK, country: 'UK' }
+            ].filter(item => item.price !== null);
+            
+            if (validPrices.length > 0) {
+              const bestOption = validPrices.reduce((min, current) => 
+                current.price.totalPrice < min.price.totalPrice ? current : min
+              );
+              bestPricingData = bestOption.data;
+              bestCountry = bestOption.country;
             }
             
             // Update pricing data in context with the best result
@@ -636,8 +643,8 @@ async function startScreenshotProcess() {
             // Add a 3-second delay after the ready message is displayed
             await new Promise(resolve => setTimeout(resolve, 3000));
             
-            // Process pricing data and update popup
-            if (bookingData.pricingData.length > 0) {
+            // Process pricing data and update popup (only if we have valid pricing data)
+            if (bestPricingData && bookingData.pricingData.length > 0) {
               // Get the hotel name from answers array index 0
               const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
               
@@ -656,7 +663,7 @@ async function startScreenshotProcess() {
               bestPriceDiv.innerHTML = `The best value for ${hotelName} was found in ${countryName}. It is £${savingsGBP.toFixed(2)} better than on booking.com. Here is the link to book <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
               messageDiv.appendChild(bestPriceDiv);
               
-              // If user clicked "Use AI Agent", automatically open the booking link after 1 second
+              // If user clicked "Agentic AI booking", automatically open the booking link after 1 second
               if (bookingData.useAiAgentClicked && bookingData.bestPrice?.bookingLink) {
                 setTimeout(() => {
                   window.open(bookingData.bestPrice.bookingLink, '_blank');
