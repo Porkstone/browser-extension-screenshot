@@ -147,14 +147,14 @@ async function captureFullPageScreenshot() {
   if (messageDiv) {
     // Add refreshing message without overwriting the original content
     const refreshingDiv = document.createElement('div');
-    refreshingDiv.style.cssText = 'margin-top: 15px; text-align: center;';
+    refreshingDiv.style.cssText = 'margin-top: 15px;';
     refreshingDiv.textContent = 'There is a better value than yours available for this hotel';
     messageDiv.appendChild(refreshingDiv);
     
     // Add Reveal button
     const revealButton = document.createElement('button');
     revealButton.textContent = 'Reveal';
-    revealButton.style.cssText = 'background: #10a37f; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; display: block; margin-left: auto; margin-right: auto;';
+    revealButton.style.cssText = 'background: #10a37f; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; display: block; margin-left: auto; margin-right: auto;';
     messageDiv.appendChild(revealButton);
     
     // Add click handler for Reveal button
@@ -983,7 +983,7 @@ function injectPopup() {
       </div>
       <div class="content">
         <div class="message">
-          <p>Hello, I am your co-pilot for this payment. </p>
+          <div>Hello, I am your co-pilot for this payment. </div>
         </div>
       </div>
       <div class="footer">
