@@ -295,7 +295,7 @@ async function startScreenshotProcess() {
             } else {
               // Display message without greeting when customer name is blank
               const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
-<div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+<div style="display: flex; justify-content: left; gap: 15px; margin-bottom: 30px;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
 </div>`;
@@ -334,7 +334,7 @@ async function startScreenshotProcess() {
                   // Add follow-up message with textboxes
                   const followUpMessage = `<div style="margin-top: 15px; margin-bottom: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
 <div style="margin-top: 15px; text-align: left;">
-  <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
+  <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
   </div>
   <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
@@ -343,7 +343,7 @@ async function startScreenshotProcess() {
                   // Add additional buttons if customer name is present
                   let additionalButtons = '';
                   if (bookingData.customerName && bookingData.customerName.trim() !== '') {
-                    additionalButtons = `<div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
+                    additionalButtons = `<div style="display: flex; justify-content: left; gap: 15px; margin-top: 15px;">
                       <button id="useMyDetails" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">My name and email</button>
                       <button id="enterManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">I will enter the details</button>
                     </div>`;
@@ -386,7 +386,7 @@ async function startScreenshotProcess() {
                         const emailInputDiv = document.createElement('div');
                         emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
                         emailInputDiv.innerHTML = `
-                          <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
+                          <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
                             <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
                           </div>
                           <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
@@ -561,7 +561,7 @@ async function startScreenshotProcess() {
                   // Add follow-up message with textboxes
                   const followUpMessage = `<div style="margin-top: 15px; margin-bottom: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
 <div style="margin-top: 15px; text-align: left;">
-  <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
+  <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
   </div>
   <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
@@ -570,7 +570,7 @@ async function startScreenshotProcess() {
                   // Add additional buttons if customer name is present
                   let additionalButtons = '';
                   if (bookingData.customerName && bookingData.customerName.trim() !== '') {
-                    additionalButtons = `<div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
+                    additionalButtons = `<div style="display: flex; justify-content: left; gap: 15px; margin-top: 15px;">
                       <button id="useMyDetails" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">My name and email</button>
                       <button id="enterManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">I will enter the details</button>
                     </div>`;
@@ -613,7 +613,7 @@ async function startScreenshotProcess() {
                         const emailInputDiv = document.createElement('div');
                         emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
                         emailInputDiv.innerHTML = `
-                          <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
+                          <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
                             <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
                           </div>
                           <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
