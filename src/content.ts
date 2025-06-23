@@ -141,6 +141,27 @@ function getFullPageWidth() {
   return Math.max(maxWidth, rightmost) + buffer;
 }
 
+// Function to create typing animation effect
+function typeText(element: HTMLElement, text: string, speed: number = 25, callback?: () => void) {
+  element.textContent = '';
+  let index = 0;
+  
+  function typeNextChar() {
+    if (index < text.length) {
+      element.textContent += text.charAt(index);
+      index++;
+      setTimeout(typeNextChar, speed);
+    } else {
+      // Animation complete, call callback if provided
+      if (callback) {
+        callback();
+      }
+    }
+  }
+  
+  typeNextChar();
+}
+
 // Function to capture full page screenshot
 async function captureFullPageScreenshot() {
   const messageDiv = document.querySelector('.message');
@@ -148,14 +169,19 @@ async function captureFullPageScreenshot() {
     // Add refreshing message without overwriting the original content
     const refreshingDiv = document.createElement('div');
     refreshingDiv.style.cssText = 'margin-top: 15px;';
-    refreshingDiv.textContent = 'There is a better value than yours available for this hotel';
     messageDiv.appendChild(refreshingDiv);
     
-    // Add Reveal button
+    // Add Reveal button (initially hidden)
     const revealButton = document.createElement('button');
     revealButton.textContent = 'Reveal';
-    revealButton.style.cssText = 'background: #10a37f; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; display: block; margin-left: auto; margin-right: auto;';
+    revealButton.style.cssText = 'background: #10a37f; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; display: none; margin-left: auto; margin-right: auto;';
     messageDiv.appendChild(revealButton);
+    
+    // Apply typing animation to the message
+    typeText(refreshingDiv, 'There is a better value than yours available for this hotel', 25, () => {
+      // Show Reveal button after typing animation completes
+      revealButton.style.display = 'block';
+    });
     
     // Add click handler for Reveal button
     revealButton.addEventListener('click', async () => {
@@ -286,16 +312,16 @@ async function startScreenshotProcess() {
               // Extract first name from full name
               const firstName = bookingData.customerName.split(' ')[0];
               const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>
-<div style="margin-bottom: 15px; text-align: left;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
-<div style="display: flex; justify-content: left; gap: 15px;">
+<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
+<div id="booking-buttons" style="display: flex; justify-content: left; gap: 15px; display: none;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
 </div>`;
               finalHtml = greetingHtml;
             } else {
               // Display message without greeting when customer name is blank
-              const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
-<div style="display: flex; justify-content: left; gap: 15px;">
+              const greetingHtml = `<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
+<div id="booking-buttons" style="display: flex; justify-content: left; gap: 15px; display: none;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
 </div>`;
@@ -304,6 +330,18 @@ async function startScreenshotProcess() {
             
             // Display greeting immediately
             messageDiv.innerHTML = finalHtml;
+            
+            // Apply typing animation to the booking choice message
+            const bookingChoiceMessage = document.getElementById('booking-choice-message');
+            const bookingButtons = document.getElementById('booking-buttons');
+            if (bookingChoiceMessage) {
+              typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', 25, () => {
+                // Show buttons after typing animation completes
+                if (bookingButtons) {
+                  bookingButtons.style.display = 'flex';
+                }
+              });
+            }
             
             // Make the popup take up the full page height after screenshot
             const popup = document.getElementById('booking-ai-popup');
@@ -322,7 +360,7 @@ async function startScreenshotProcess() {
             
             if (bookMyselfBtn) {
               bookMyselfBtn.addEventListener('click', () => {
-                bookMyselfBtn.style.background = '#4CAF50';
+                bookMyselfBtn.style.background = 'rgb(16, 163, 127)';
                 bookMyselfBtn.textContent = '✓ Book myself';
                 if (useAIAgentBtn) {
                   useAIAgentBtn.style.background = '#9E9E9E';
@@ -332,24 +370,42 @@ async function startScreenshotProcess() {
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
                   // Add follow-up message with textboxes
-                  const followUpMessage = `<div style="margin-top: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
-<div style="margin-top: 15px; text-align: left;">
+                  const followUpMessage = `<div id="traveller-name-message" style="margin-top: 30px; text-align: left;"></div>
+<div id="traveller-input-container" style="margin-top: 15px; text-align: left; display: none;">
   <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
   </div>
-  <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
+  <button id="saveDetails" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
 </div>`;
                   
                   // Add additional buttons if customer name is present
                   let additionalButtons = '';
                   if (bookingData.customerName && bookingData.customerName.trim() !== '') {
-                    additionalButtons = `<div style="display: flex; justify-content: left; gap: 15px; margin-top: 15px;">
+                    additionalButtons = `<div id="additional-buttons" style="display: flex; justify-content: left; gap: 15px; margin-top: 15px; display: none;">
                       <button id="useMyDetails" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">My name and email</button>
                       <button id="enterManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">I will enter the details</button>
                     </div>`;
                   }
                   
                   messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage + additionalButtons;
+                  
+                  // Apply typing animation to the traveller name message
+                  const travellerNameMessage = document.getElementById('traveller-name-message');
+                  const travellerInputContainer = document.getElementById('traveller-input-container');
+                  const additionalButtonsContainer = document.getElementById('additional-buttons');
+                  
+                  if (travellerNameMessage) {
+                    typeText(travellerNameMessage, 'Great. Just share full name of the main traveller', 25, () => {
+                      // Show input container after typing animation completes
+                      if (travellerInputContainer) {
+                        travellerInputContainer.style.display = 'block';
+                      }
+                      // Show additional buttons if they exist
+                      if (additionalButtonsContainer) {
+                        additionalButtonsContainer.style.display = 'flex';
+                      }
+                    });
+                  }
                   
                   // Add click event handlers for the new buttons
                   const useMyDetailsBtn = document.getElementById('useMyDetails');
@@ -368,7 +424,7 @@ async function startScreenshotProcess() {
                       
                       if (isValidName) {
                         // Valid name - show checkmark
-                        saveDetailsBtn.style.background = '#4CAF50';
+                        saveDetailsBtn.style.background = 'rgb(16, 163, 127)';
                         saveDetailsBtn.textContent = '✓ Saved';
                         
                         // Remove any existing error message
@@ -382,18 +438,23 @@ async function startScreenshotProcess() {
                           // Display email request message and textbox
                           const emailMessage = document.createElement('div');
                           emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
-                          emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
                           messageDiv.appendChild(emailMessage);
                           
                           const emailInputDiv = document.createElement('div');
-                          emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
+                          emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left; display: none;';
                           emailInputDiv.innerHTML = `
                             <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
                               <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
                             </div>
-                            <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
+                            <button id="saveEmail" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
                           `;
                           messageDiv.appendChild(emailInputDiv);
+                          
+                          // Apply typing animation to the email message
+                          typeText(emailMessage, 'Thanks. Let me know which email I send the confirmation to', 25, () => {
+                            // Show email input after typing animation completes
+                            emailInputDiv.style.display = 'block';
+                          });
                           
                           // Add click event handler for the save email button
                           const saveEmailBtn = document.getElementById('saveEmail');
@@ -408,7 +469,7 @@ async function startScreenshotProcess() {
                               
                               if (isValidEmail) {
                                 // Valid email - show checkmark
-                                saveEmailBtn.style.background = '#4CAF50';
+                                saveEmailBtn.style.background = 'rgb(16, 163, 127)';
                                 saveEmailBtn.textContent = '✓ Email Saved';
                                 
                                 // Remove any existing error message
@@ -422,48 +483,54 @@ async function startScreenshotProcess() {
                                   // Display success message
                                   const successMessage = document.createElement('div');
                                   successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
-                                  successMessage.textContent = 'I have everything I need now. Let me load your results';
                                   messageDiv.appendChild(successMessage);
                                   
                                   // Mark that the ready message has been displayed
                                   bookingData.readyMessageDisplayed = true;
                                   
-                                  // Add additional message after 1 second
-                                  setTimeout(() => {
-                                    const additionalMessage = document.createElement('div');
-                                    additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                    additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
-                                    messageDiv.appendChild(additionalMessage);
-                                    
-                                    // Add second additional message after 1 more second
+                                  // Apply typing animation to the success message
+                                  typeText(successMessage, 'I have everything I need now. Let me load your results', 25, () => {
+                                    // Add additional message after success message typing completes
                                     setTimeout(() => {
-                                      const secondMessage = document.createElement('div');
-                                      secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                      secondMessage.textContent = 'and how much it is better vs Booking.com';
-                                      messageDiv.appendChild(secondMessage);
+                                      const additionalMessage = document.createElement('div');
+                                      additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                                      messageDiv.appendChild(additionalMessage);
                                       
-                                      // Scroll to the bottom to show the second message
-                                      const contentDiv = document.querySelector('.content') as HTMLElement;
-                                      if (contentDiv) {
-                                        contentDiv.scrollTo({
-                                          top: contentDiv.scrollHeight,
-                                          behavior: 'smooth'
-                                        });
-                                        const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                        if (lastMessage) {
-                                          lastMessage.scrollIntoView({ 
-                                            behavior: 'smooth', 
-                                            block: 'end',
-                                            inline: 'nearest'
+                                      // Apply typing animation to the additional message
+                                      typeText(additionalMessage, 'I will show you the country that offers the best value for your hotel', 25, () => {
+                                        // Add second additional message after additional message typing completes
+                                        setTimeout(() => {
+                                          const secondMessage = document.createElement('div');
+                                          secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                                          messageDiv.appendChild(secondMessage);
+                                          
+                                          // Apply typing animation to the second message
+                                          typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
+                                            // Scroll to the bottom to show the second message after typing completes
+                                            const contentDiv = document.querySelector('.content') as HTMLElement;
+                                            if (contentDiv) {
+                                              contentDiv.scrollTo({
+                                                top: contentDiv.scrollHeight,
+                                                behavior: 'smooth'
+                                              });
+                                              const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                              if (lastMessage) {
+                                                lastMessage.scrollIntoView({ 
+                                                  behavior: 'smooth', 
+                                                  block: 'end',
+                                                  inline: 'nearest'
+                                                });
+                                              }
+                                            }
                                           });
-                                        }
-                                      }
+                                        }, 2000);
+                                      });
                                     }, 2000);
-                                  }, 2000);
+                                  });
                                 }, 2000);
                               } else {
                                 // Invalid email - show error
-                                saveEmailBtn.style.background = '#4CAF50';
+                                saveEmailBtn.style.background = '#FF9800';
                                 saveEmailBtn.textContent = 'Save Email';
                                 
                                 // Preserve the entered values
@@ -490,8 +557,8 @@ async function startScreenshotProcess() {
                           }
                         }, 2000);
                       } else {
-                        // Invalid name - keep green background and "Save" text
-                        saveDetailsBtn.style.background = '#4CAF50';
+                        // Invalid name - keep orange background and "Save" text
+                        saveDetailsBtn.style.background = '#FF9800';
                         saveDetailsBtn.textContent = 'Save';
                         
                         // Preserve the entered values
@@ -522,7 +589,7 @@ async function startScreenshotProcess() {
             
             if (useAIAgentBtn) {
               useAIAgentBtn.addEventListener('click', () => {
-                useAIAgentBtn.style.background = '#4CAF50';
+                useAIAgentBtn.style.background = 'rgb(16, 163, 127)';
                 useAIAgentBtn.textContent = '✓ Agentic AI booking';
                 if (bookMyselfBtn) {
                   bookMyselfBtn.style.background = '#9E9E9E';
@@ -535,24 +602,42 @@ async function startScreenshotProcess() {
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
                   // Add follow-up message with textboxes
-                  const followUpMessage = `<div style="margin-top: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
-<div style="margin-top: 15px; text-align: left;">
+                  const followUpMessage = `<div id="traveller-name-message" style="margin-top: 30px; text-align: left;"></div>
+<div id="traveller-input-container" style="margin-top: 15px; text-align: left; display: none;">
   <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
   </div>
-  <button id="saveDetails" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
+  <button id="saveDetails" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
 </div>`;
                   
                   // Add additional buttons if customer name is present
                   let additionalButtons = '';
                   if (bookingData.customerName && bookingData.customerName.trim() !== '') {
-                    additionalButtons = `<div style="display: flex; justify-content: left; gap: 15px; margin-top: 15px;">
+                    additionalButtons = `<div id="additional-buttons" style="display: flex; justify-content: left; gap: 15px; margin-top: 15px; display: none;">
                       <button id="useMyDetails" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">My name and email</button>
                       <button id="enterManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">I will enter the details</button>
                     </div>`;
                   }
                   
                   messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage + additionalButtons;
+                  
+                  // Apply typing animation to the traveller name message
+                  const travellerNameMessage = document.getElementById('traveller-name-message');
+                  const travellerInputContainer = document.getElementById('traveller-input-container');
+                  const additionalButtonsContainer = document.getElementById('additional-buttons');
+                  
+                  if (travellerNameMessage) {
+                    typeText(travellerNameMessage, 'Great. Just share full name of the main traveller', 25, () => {
+                      // Show input container after typing animation completes
+                      if (travellerInputContainer) {
+                        travellerInputContainer.style.display = 'block';
+                      }
+                      // Show additional buttons if they exist
+                      if (additionalButtonsContainer) {
+                        additionalButtonsContainer.style.display = 'flex';
+                      }
+                    });
+                  }
                   
                   // Add click event handlers for the new buttons
                   const useMyDetailsBtn = document.getElementById('useMyDetails');
@@ -571,7 +656,7 @@ async function startScreenshotProcess() {
                       
                       if (isValidName) {
                         // Valid name - show checkmark
-                        saveDetailsBtn.style.background = '#4CAF50';
+                        saveDetailsBtn.style.background = 'rgb(16, 163, 127)';
                         saveDetailsBtn.textContent = '✓ Saved';
                         
                         // Remove any existing error message
@@ -585,18 +670,23 @@ async function startScreenshotProcess() {
                           // Display email request message and textbox
                           const emailMessage = document.createElement('div');
                           emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
-                          emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
                           messageDiv.appendChild(emailMessage);
                           
                           const emailInputDiv = document.createElement('div');
-                          emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
+                          emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left; display: none;';
                           emailInputDiv.innerHTML = `
                             <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
                               <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
                             </div>
-                            <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
+                            <button id="saveEmail" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
                           `;
                           messageDiv.appendChild(emailInputDiv);
+                          
+                          // Apply typing animation to the email message
+                          typeText(emailMessage, 'Thanks. Let me know which email I send the confirmation to', 25, () => {
+                            // Show email input after typing animation completes
+                            emailInputDiv.style.display = 'block';
+                          });
                           
                           // Add click event handler for the save email button
                           const saveEmailBtn = document.getElementById('saveEmail');
@@ -611,7 +701,7 @@ async function startScreenshotProcess() {
                               
                               if (isValidEmail) {
                                 // Valid email - show checkmark
-                                saveEmailBtn.style.background = '#4CAF50';
+                                saveEmailBtn.style.background = 'rgb(16, 163, 127)';
                                 saveEmailBtn.textContent = '✓ Email Saved';
                                 
                                 // Remove any existing error message
@@ -625,48 +715,54 @@ async function startScreenshotProcess() {
                                   // Display success message
                                   const successMessage = document.createElement('div');
                                   successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
-                                  successMessage.textContent = 'I have everything I need now. Let me load your results';
                                   messageDiv.appendChild(successMessage);
                                   
                                   // Mark that the ready message has been displayed
                                   bookingData.readyMessageDisplayed = true;
                                   
-                                  // Add additional message after 1 second
-                                  setTimeout(() => {
-                                    const additionalMessage = document.createElement('div');
-                                    additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                    additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
-                                    messageDiv.appendChild(additionalMessage);
-                                    
-                                    // Add second additional message after 1 more second
+                                  // Apply typing animation to the success message
+                                  typeText(successMessage, 'I have everything I need now. Let me load your results', 25, () => {
+                                    // Add additional message after success message typing completes
                                     setTimeout(() => {
-                                      const secondMessage = document.createElement('div');
-                                      secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                      secondMessage.textContent = 'and how much it is better vs Booking.com';
-                                      messageDiv.appendChild(secondMessage);
+                                      const additionalMessage = document.createElement('div');
+                                      additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                                      messageDiv.appendChild(additionalMessage);
                                       
-                                      // Scroll to the bottom to show the second message
-                                      const contentDiv = document.querySelector('.content') as HTMLElement;
-                                      if (contentDiv) {
-                                        contentDiv.scrollTo({
-                                          top: contentDiv.scrollHeight,
-                                          behavior: 'smooth'
-                                        });
-                                        const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                        if (lastMessage) {
-                                          lastMessage.scrollIntoView({ 
-                                            behavior: 'smooth', 
-                                            block: 'end',
-                                            inline: 'nearest'
+                                      // Apply typing animation to the additional message
+                                      typeText(additionalMessage, 'I will show you the country that offers the best value for your hotel', 25, () => {
+                                        // Add second additional message after additional message typing completes
+                                        setTimeout(() => {
+                                          const secondMessage = document.createElement('div');
+                                          secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                                          messageDiv.appendChild(secondMessage);
+                                          
+                                          // Apply typing animation to the second message
+                                          typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
+                                            // Scroll to the bottom to show the second message after typing completes
+                                            const contentDiv = document.querySelector('.content') as HTMLElement;
+                                            if (contentDiv) {
+                                              contentDiv.scrollTo({
+                                                top: contentDiv.scrollHeight,
+                                                behavior: 'smooth'
+                                              });
+                                              const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                              if (lastMessage) {
+                                                lastMessage.scrollIntoView({ 
+                                                  behavior: 'smooth', 
+                                                  block: 'end',
+                                                  inline: 'nearest'
+                                                });
+                                              }
+                                            }
                                           });
-                                        }
-                                      }
+                                        }, 2000);
+                                      });
                                     }, 2000);
-                                  }, 2000);
+                                  });
                                 }, 2000);
                               } else {
                                 // Invalid email - show error
-                                saveEmailBtn.style.background = '#4CAF50';
+                                saveEmailBtn.style.background = '#FF9800';
                                 saveEmailBtn.textContent = 'Save Email';
                                 
                                 // Preserve the entered values
@@ -693,8 +789,8 @@ async function startScreenshotProcess() {
                           }
                         }, 2000);
                       } else {
-                        // Invalid name - keep green background and "Save" text
-                        saveDetailsBtn.style.background = '#4CAF50';
+                        // Invalid name - keep orange background and "Save" text
+                        saveDetailsBtn.style.background = '#FF9800';
                         saveDetailsBtn.textContent = 'Save';
                         
                         // Preserve the entered values
@@ -826,44 +922,58 @@ async function startScreenshotProcess() {
               // Display first message immediately
               const firstMessage = document.createElement('div');
               firstMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-              firstMessage.textContent = `I found the best value for ${hotelName} in ${countryName}`;
               messageDiv.appendChild(firstMessage);
               
-              // Display second message after 1 second
-              setTimeout(() => {
-                const secondMessage = document.createElement('div');
-                secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                secondMessage.textContent = `It is £${savingsGBP.toFixed(2)} better than on Booking.com`;
-                messageDiv.appendChild(secondMessage);
-                
-                // Display third message after another 1 second
+              // Apply typing animation to the first message
+              typeText(firstMessage, `I found the best value for ${hotelName} in ${countryName}`, 25, () => {
+                // Display second message after first message typing completes
                 setTimeout(() => {
-                  // Check if bestPrice data is available
-                  if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
-                    const thirdMessage = document.createElement('div');
-                    thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                    thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
-                    messageDiv.appendChild(thirdMessage);
-                    
-                    // Scroll to the bottom to show the newest message
-                    const contentDiv = document.querySelector('.content') as HTMLElement;
-                    if (contentDiv) {
-                      contentDiv.scrollTo({
-                        top: contentDiv.scrollHeight,
-                        behavior: 'smooth'
-                      });
-                      const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                      if (lastMessage) {
-                        lastMessage.scrollIntoView({ 
-                          behavior: 'smooth', 
-                          block: 'end',
-                          inline: 'nearest'
+                  const secondMessage = document.createElement('div');
+                  secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                  messageDiv.appendChild(secondMessage);
+                  
+                  // Apply typing animation to the second message
+                  typeText(secondMessage, `It is £${savingsGBP.toFixed(2)} better than on Booking.com`, 25, () => {
+                    // Display third message after second message typing completes
+                    setTimeout(() => {
+                      // Check if bestPrice data is available
+                      if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
+                        const thirdMessage = document.createElement('div');
+                        thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                        messageDiv.appendChild(thirdMessage);
+                        
+                        // Apply typing animation to the third message
+                        typeText(thirdMessage, `Here is the booking link for you, happy to help with this payment `, 25, () => {
+                          // Add the link after the text is typed
+                          const linkElement = document.createElement('a');
+                          linkElement.href = bookingData.bestPrice.bookingLink;
+                          linkElement.target = '_blank';
+                          linkElement.style.cssText = 'color: #007bff; text-decoration: underline;';
+                          linkElement.textContent = 'Book Now';
+                          thirdMessage.appendChild(linkElement);
+                          
+                          // Scroll to the bottom to show the newest message
+                          const contentDiv = document.querySelector('.content') as HTMLElement;
+                          if (contentDiv) {
+                            contentDiv.scrollTo({
+                              top: contentDiv.scrollHeight,
+                              behavior: 'smooth'
+                            });
+                            const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                            if (lastMessage) {
+                              lastMessage.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'end',
+                                inline: 'nearest'
+                              });
+                            }
+                          }
                         });
                       }
-                    }
-                  }
+                    }, 2000);
+                  });
                 }, 2000);
-              }, 2000);
+              });
             }
           }
         }
@@ -893,7 +1003,7 @@ function injectPopup() {
       </div>
       <div class="content">
         <div class="message">
-          <div>Hello, I am your co-pilot for this payment. </div>
+          <div id="greeting-message"></div>
         </div>
       </div>
       <div class="footer">
@@ -907,6 +1017,13 @@ function injectPopup() {
     const closeButton = document.getElementById('close-popup');
     const screenshotBtn = document.getElementById('screenshotBtn');
     const popup = document.getElementById('booking-ai-popup');
+    const greetingMessage = document.getElementById('greeting-message');
+    
+    // Start typing animation for the greeting message
+    if (greetingMessage) {
+      typeText(greetingMessage, 'Hello, I am your co-pilot for this payment.', 25);
+    }
+    
     if (closeButton) {
       closeButton.addEventListener('click', () => {
         if (popup) popup.style.display = 'none';
