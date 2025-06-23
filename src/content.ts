@@ -285,16 +285,16 @@ async function startScreenshotProcess() {
             if (bookingData.customerName && bookingData.customerName.trim() !== '') {
               // Extract first name from full name
               const firstName = bookingData.customerName.split(' ')[0];
-              const greetingHtml = `<div style="margin-bottom: 15px; text-align: center;">Hi ${firstName},</div>
-<div style="margin-bottom: 15px; text-align: center;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
-<div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+              const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>
+<div style="margin-bottom: 15px; text-align: left;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
+<div style="display: flex; justify-content: left; gap: 15px; margin-bottom: 30px;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
 </div>`;
               finalHtml = greetingHtml;
             } else {
               // Display message without greeting when customer name is blank
-              const greetingHtml = `<div style="margin-bottom: 15px; text-align: center;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
+              const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
@@ -332,8 +332,8 @@ async function startScreenshotProcess() {
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
                   // Add follow-up message with textboxes
-                  const followUpMessage = `<div style="margin-top: 15px; text-align: center;">Great. Just share full name of the main traveller</div>
-<div style="margin-top: 15px; text-align: center;">
+                  const followUpMessage = `<div style="margin-top: 15px; margin-bottom: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
+<div style="margin-top: 15px; text-align: left;">
   <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
   </div>
@@ -379,12 +379,12 @@ async function startScreenshotProcess() {
                         
                         // Display email request message and textbox
                         const emailMessage = document.createElement('div');
-                        emailMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+                        emailMessage.style.cssText = 'margin-top: 15px; margin-bottom: 30px; text-align: left;';
                         emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
                         messageDiv.appendChild(emailMessage);
                         
                         const emailInputDiv = document.createElement('div');
-                        emailInputDiv.style.cssText = 'margin-top: 15px; text-align: center;';
+                        emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
                         emailInputDiv.innerHTML = `
                           <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
                             <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
@@ -417,7 +417,7 @@ async function startScreenshotProcess() {
                               
                               // Display success message
                               const successMessage = document.createElement('div');
-                              successMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+                              successMessage.style.cssText = 'margin-top: 15px; text-align: left;';
                               successMessage.textContent = 'I have everything I need now. Let me load your results';
                               messageDiv.appendChild(successMessage);
                               
@@ -427,65 +427,44 @@ async function startScreenshotProcess() {
                               // Add additional message after 1 second
                               setTimeout(() => {
                                 const additionalMessage = document.createElement('div');
-                                additionalMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+                                additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
                                 additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
                                 messageDiv.appendChild(additionalMessage);
                                 
                                 // Add second additional message after 1 more second
                                 setTimeout(() => {
                                   const secondMessage = document.createElement('div');
-                                  secondMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+                                  secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
                                   secondMessage.textContent = 'and how much it is better vs Booking.com';
                                   messageDiv.appendChild(secondMessage);
                                   
                                   // Display third message after another 1 second
                                   setTimeout(() => {
-                                    const thirdMessage = document.createElement('div');
-                                    thirdMessage.style.cssText = 'margin-top: 15px; text-align: center;';
-                                    
                                     // Check if bestPrice data is available
                                     if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
+                                      const thirdMessage = document.createElement('div');
+                                      thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
                                       thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
-                                    } else {
-                                      thirdMessage.textContent = 'I will provide you with the best booking options once the data is loaded.';
-                                    }
-                                    
-                                    messageDiv.appendChild(thirdMessage);
-                                    
-                                    // Scroll to the bottom to show the newest message
-                                    const contentDiv = document.querySelector('.content') as HTMLElement;
-                                    if (contentDiv) {
-                                      contentDiv.scrollTo({
-                                        top: contentDiv.scrollHeight,
-                                        behavior: 'smooth'
-                                      });
-                                      const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                      if (lastMessage) {
-                                        lastMessage.scrollIntoView({ 
-                                          behavior: 'smooth', 
-                                          block: 'end',
-                                          inline: 'nearest'
+                                      messageDiv.appendChild(thirdMessage);
+                                      
+                                      // Scroll to the bottom to show the newest message
+                                      const contentDiv = document.querySelector('.content') as HTMLElement;
+                                      if (contentDiv) {
+                                        contentDiv.scrollTo({
+                                          top: contentDiv.scrollHeight,
+                                          behavior: 'smooth'
                                         });
+                                        const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                        if (lastMessage) {
+                                          lastMessage.scrollIntoView({ 
+                                            behavior: 'smooth', 
+                                            block: 'end',
+                                            inline: 'nearest'
+                                          });
+                                        }
                                       }
                                     }
                                   }, 2000);
-                                  
-                                  // Scroll to the bottom to show the second message
-                                  const contentDiv = document.querySelector('.content') as HTMLElement;
-                                  if (contentDiv) {
-                                    contentDiv.scrollTo({
-                                      top: contentDiv.scrollHeight,
-                                      behavior: 'smooth'
-                                    });
-                                    const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                    if (lastMessage) {
-                                      lastMessage.scrollIntoView({ 
-                                        behavior: 'smooth', 
-                                        block: 'end',
-                                        inline: 'nearest'
-                                      });
-                                    }
-                                  }
                                 }, 2000);
                               }, 2000);
                             } else {
@@ -505,7 +484,7 @@ async function startScreenshotProcess() {
                                 errorMessage.style.color = '#f44336';
                                 errorMessage.style.fontSize = '12px';
                                 errorMessage.style.marginTop = '5px';
-                                errorMessage.style.textAlign = 'center';
+                                errorMessage.style.textAlign = 'left';
                                 
                                 // Insert error message after the email input
                                 if (emailInput && emailInput.parentNode) {
@@ -551,7 +530,7 @@ async function startScreenshotProcess() {
                           errorMessage.style.color = '#f44336';
                           errorMessage.style.fontSize = '12px';
                           errorMessage.style.marginTop = '5px';
-                          errorMessage.style.textAlign = 'center';
+                          errorMessage.style.textAlign = 'left';
                           
                           // Insert error message after the name input
                           if (nameInput && nameInput.parentNode) {
@@ -580,8 +559,8 @@ async function startScreenshotProcess() {
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
                   // Add follow-up message with textboxes
-                  const followUpMessage = `<div style="margin-top: 15px; text-align: center;">Great. Just share full name of the main traveller</div>
-<div style="margin-top: 15px; text-align: center;">
+                  const followUpMessage = `<div style="margin-top: 15px; margin-bottom: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
+<div style="margin-top: 15px; text-align: left;">
   <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
   </div>
@@ -627,12 +606,12 @@ async function startScreenshotProcess() {
                         
                         // Display email request message and textbox
                         const emailMessage = document.createElement('div');
-                        emailMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+                        emailMessage.style.cssText = 'margin-top: 15px; margin-bottom: 30px; text-align: left;';
                         emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
                         messageDiv.appendChild(emailMessage);
                         
                         const emailInputDiv = document.createElement('div');
-                        emailInputDiv.style.cssText = 'margin-top: 15px; text-align: center;';
+                        emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
                         emailInputDiv.innerHTML = `
                           <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center;">
                             <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
@@ -665,7 +644,7 @@ async function startScreenshotProcess() {
                               
                               // Display success message
                               const successMessage = document.createElement('div');
-                              successMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+                              successMessage.style.cssText = 'margin-top: 15px; text-align: left;';
                               successMessage.textContent = 'I have everything I need now. Let me load your results';
                               messageDiv.appendChild(successMessage);
                               
@@ -675,65 +654,44 @@ async function startScreenshotProcess() {
                               // Add additional message after 1 second
                               setTimeout(() => {
                                 const additionalMessage = document.createElement('div');
-                                additionalMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+                                additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
                                 additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
                                 messageDiv.appendChild(additionalMessage);
                                 
                                 // Add second additional message after 1 more second
                                 setTimeout(() => {
                                   const secondMessage = document.createElement('div');
-                                  secondMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+                                  secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
                                   secondMessage.textContent = 'and how much it is better vs Booking.com';
                                   messageDiv.appendChild(secondMessage);
                                   
                                   // Display third message after another 1 second
                                   setTimeout(() => {
-                                    const thirdMessage = document.createElement('div');
-                                    thirdMessage.style.cssText = 'margin-top: 15px; text-align: center;';
-                                    
                                     // Check if bestPrice data is available
                                     if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
+                                      const thirdMessage = document.createElement('div');
+                                      thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
                                       thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
-                                    } else {
-                                      thirdMessage.textContent = 'I will provide you with the best booking options once the data is loaded.';
-                                    }
-                                    
-                                    messageDiv.appendChild(thirdMessage);
-                                    
-                                    // Scroll to the bottom to show the newest message
-                                    const contentDiv = document.querySelector('.content') as HTMLElement;
-                                    if (contentDiv) {
-                                      contentDiv.scrollTo({
-                                        top: contentDiv.scrollHeight,
-                                        behavior: 'smooth'
-                                      });
-                                      const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                      if (lastMessage) {
-                                        lastMessage.scrollIntoView({ 
-                                          behavior: 'smooth', 
-                                          block: 'end',
-                                          inline: 'nearest'
+                                      messageDiv.appendChild(thirdMessage);
+                                      
+                                      // Scroll to the bottom to show the newest message
+                                      const contentDiv = document.querySelector('.content') as HTMLElement;
+                                      if (contentDiv) {
+                                        contentDiv.scrollTo({
+                                          top: contentDiv.scrollHeight,
+                                          behavior: 'smooth'
                                         });
+                                        const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                        if (lastMessage) {
+                                          lastMessage.scrollIntoView({ 
+                                            behavior: 'smooth', 
+                                            block: 'end',
+                                            inline: 'nearest'
+                                          });
+                                        }
                                       }
                                     }
                                   }, 2000);
-                                  
-                                  // Scroll to the bottom to show the second message
-                                  const contentDiv = document.querySelector('.content') as HTMLElement;
-                                  if (contentDiv) {
-                                    contentDiv.scrollTo({
-                                      top: contentDiv.scrollHeight,
-                                      behavior: 'smooth'
-                                    });
-                                    const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                    if (lastMessage) {
-                                      lastMessage.scrollIntoView({ 
-                                        behavior: 'smooth', 
-                                        block: 'end',
-                                        inline: 'nearest'
-                                      });
-                                    }
-                                  }
                                 }, 2000);
                               }, 2000);
                             } else {
@@ -753,7 +711,7 @@ async function startScreenshotProcess() {
                                 errorMessage.style.color = '#f44336';
                                 errorMessage.style.fontSize = '12px';
                                 errorMessage.style.marginTop = '5px';
-                                errorMessage.style.textAlign = 'center';
+                                errorMessage.style.textAlign = 'left';
                                 
                                 // Insert error message after the email input
                                 if (emailInput && emailInput.parentNode) {
@@ -799,7 +757,7 @@ async function startScreenshotProcess() {
                           errorMessage.style.color = '#f44336';
                           errorMessage.style.fontSize = '12px';
                           errorMessage.style.marginTop = '5px';
-                          errorMessage.style.textAlign = 'center';
+                          errorMessage.style.textAlign = 'left';
                           
                           // Insert error message after the name input
                           if (nameInput && nameInput.parentNode) {
@@ -915,58 +873,44 @@ async function startScreenshotProcess() {
               
               // Display first message immediately
               const firstMessage = document.createElement('div');
-              firstMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+              firstMessage.style.cssText = 'margin-top: 15px; text-align: left;';
               firstMessage.textContent = `I found the best value for ${hotelName} in ${countryName}`;
               messageDiv.appendChild(firstMessage);
               
               // Display second message after 1 second
               setTimeout(() => {
                 const secondMessage = document.createElement('div');
-                secondMessage.style.cssText = 'margin-top: 15px; text-align: center;';
+                secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
                 secondMessage.textContent = `It is £${savingsGBP.toFixed(2)} better than on Booking.com`;
                 messageDiv.appendChild(secondMessage);
                 
                 // Display third message after another 1 second
                 setTimeout(() => {
-                  const thirdMessage = document.createElement('div');
-                  thirdMessage.style.cssText = 'margin-top: 15px; text-align: center;';
-                  thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink || '#'}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
-                  messageDiv.appendChild(thirdMessage);
-                  
-                  // Scroll to the bottom to show the newest message
-                  const contentDiv = document.querySelector('.content') as HTMLElement;
-                  if (contentDiv) {
-                    contentDiv.scrollTo({
-                      top: contentDiv.scrollHeight,
-                      behavior: 'smooth'
-                    });
-                    const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                    if (lastMessage) {
-                      lastMessage.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'end',
-                        inline: 'nearest'
+                  // Check if bestPrice data is available
+                  if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
+                    const thirdMessage = document.createElement('div');
+                    thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                    thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
+                    messageDiv.appendChild(thirdMessage);
+                    
+                    // Scroll to the bottom to show the newest message
+                    const contentDiv = document.querySelector('.content') as HTMLElement;
+                    if (contentDiv) {
+                      contentDiv.scrollTo({
+                        top: contentDiv.scrollHeight,
+                        behavior: 'smooth'
                       });
+                      const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                      if (lastMessage) {
+                        lastMessage.scrollIntoView({ 
+                          behavior: 'smooth', 
+                          block: 'end',
+                          inline: 'nearest'
+                        });
+                      }
                     }
                   }
                 }, 2000);
-                
-                // Scroll to the bottom to show the second message
-                const contentDiv = document.querySelector('.content') as HTMLElement;
-                if (contentDiv) {
-                  contentDiv.scrollTo({
-                    top: contentDiv.scrollHeight,
-                    behavior: 'smooth'
-                  });
-                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                  if (lastMessage) {
-                    lastMessage.scrollIntoView({ 
-                      behavior: 'smooth', 
-                      block: 'end',
-                      inline: 'nearest'
-                    });
-                  }
-                }
               }, 2000);
             }
           }

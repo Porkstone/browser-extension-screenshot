@@ -69,20 +69,23 @@
   overflow-y: auto;
   background-color: #343541;
   color: #ececf1;
+  text-align: left;
 }
 
 #booking-ai-popup .message {
   background-color: #444654;
   border-radius: 0.5rem;
-  padding: 0.75rem;
+  padding: 1.5rem;
   margin-bottom: 1rem;
   border: 1px solid #565869;
+  text-align: left;
 }
 
 #booking-ai-popup .message p {
   color: #ececf1;
   margin: 0;
   line-height: 1.5;
+  text-align: left;
 }
 
 #booking-ai-popup .footer {
