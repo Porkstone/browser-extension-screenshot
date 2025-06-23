@@ -29,6 +29,15 @@ const bookingData: {
   useAiAgentClicked: false
 };
 
+// Global variable to store pricing results
+let pricingResults: {
+  hotelName: string;
+  countryName: string;
+  savingsGBP: number;
+  bookingLink: string;
+  hasCheaperPrice: boolean;
+} | null = null;
+
 // Function to update booking data from answers
 function updateBookingData(answersArray: Array<{question: string, answer: string}>) {
   bookingData.answersArray = answersArray;
@@ -506,6 +515,11 @@ async function startScreenshotProcess() {
                                           
                                           // Apply typing animation to the second message
                                           typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
+                                            // Display pricing results after this message finishes typing
+                                            setTimeout(() => {
+                                              displayPricingResults();
+                                            }, 2000);
+                                            
                                             // Scroll to the bottom to show the second message after typing completes
                                             const contentDiv = document.querySelector('.content') as HTMLElement;
                                             if (contentDiv) {
@@ -738,6 +752,11 @@ async function startScreenshotProcess() {
                                           
                                           // Apply typing animation to the second message
                                           typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
+                                            // Display pricing results after this message finishes typing
+                                            setTimeout(() => {
+                                              displayPricingResults();
+                                            }, 2000);
+                                            
                                             // Scroll to the bottom to show the second message after typing completes
                                             const contentDiv = document.querySelector('.content') as HTMLElement;
                                             if (contentDiv) {
@@ -905,7 +924,7 @@ async function startScreenshotProcess() {
             // Add a 1-second delay after the ready message is displayed
             await new Promise(resolve => setTimeout(resolve, 0));
             
-            // Process pricing data and update popup (only if we have valid pricing data)
+            // Process pricing data and store results (only if we have valid pricing data)
             if (bestPricingData && bookingData.pricingData.length > 0) {
               // Get the hotel name from answers array index 0
               const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
@@ -919,61 +938,23 @@ async function startScreenshotProcess() {
               const bestPriceGBP = bestPriceUSD * 0.74; // Convert USD to GBP (approximate rate)
               const savingsGBP = bookingComPrice - bestPriceGBP; // Both prices now in GBP
               
-              // Display first message immediately
-              const firstMessage = document.createElement('div');
-              firstMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-              messageDiv.appendChild(firstMessage);
-              
-              // Apply typing animation to the first message
-              typeText(firstMessage, `I found the best value for ${hotelName} in ${countryName}`, 25, () => {
-                // Display second message after first message typing completes
-                setTimeout(() => {
-                  const secondMessage = document.createElement('div');
-                  secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                  messageDiv.appendChild(secondMessage);
-                  
-                  // Apply typing animation to the second message
-                  typeText(secondMessage, `It is £${savingsGBP.toFixed(2)} better than on Booking.com`, 25, () => {
-                    // Display third message after second message typing completes
-                    setTimeout(() => {
-                      // Check if bestPrice data is available
-                      if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
-                        const thirdMessage = document.createElement('div');
-                        thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                        messageDiv.appendChild(thirdMessage);
-                        
-                        // Apply typing animation to the third message
-                        typeText(thirdMessage, `Here is the booking link for you, happy to help with this payment `, 25, () => {
-                          // Add the link after the text is typed
-                          const linkElement = document.createElement('a');
-                          linkElement.href = bookingData.bestPrice.bookingLink;
-                          linkElement.target = '_blank';
-                          linkElement.style.cssText = 'color: #007bff; text-decoration: underline;';
-                          linkElement.textContent = 'Book Now';
-                          thirdMessage.appendChild(linkElement);
-                          
-                          // Scroll to the bottom to show the newest message
-                          const contentDiv = document.querySelector('.content') as HTMLElement;
-                          if (contentDiv) {
-                            contentDiv.scrollTo({
-                              top: contentDiv.scrollHeight,
-                              behavior: 'smooth'
-                            });
-                            const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                            if (lastMessage) {
-                              lastMessage.scrollIntoView({ 
-                                behavior: 'smooth', 
-                                block: 'end',
-                                inline: 'nearest'
-                              });
-                            }
-                          }
-                        });
-                      }
-                    }, 2000);
-                  });
-                }, 2000);
-              });
+              // Store the pricing results for later display
+              pricingResults = {
+                hotelName,
+                countryName,
+                savingsGBP,
+                bookingLink: bookingData.bestPrice?.bookingLink || '',
+                hasCheaperPrice: true
+              };
+            } else {
+              // No cheaper price found
+              pricingResults = {
+                hotelName: answersArray[0]?.answer || 'Unknown Hotel',
+                countryName: 'Unknown Country',
+                savingsGBP: 0,
+                bookingLink: '',
+                hasCheaperPrice: false
+              };
             }
           }
         }
@@ -1061,4 +1042,78 @@ async function waitForReadyMessage(): Promise<void> {
     };
     checkReadyMessage();
   });
+}
+
+// Function to display pricing results
+function displayPricingResults() {
+  if (!pricingResults) return;
+  
+  const messageDiv = document.querySelector('.message');
+  if (!messageDiv) return;
+  
+  if (pricingResults.hasCheaperPrice) {
+    // Display first message immediately
+    const firstMessage = document.createElement('div');
+    firstMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+    messageDiv.appendChild(firstMessage);
+    
+    // Apply typing animation to the first message
+    typeText(firstMessage, `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}`, 25, () => {
+      // Display second message after first message typing completes
+      setTimeout(() => {
+        const secondMessage = document.createElement('div');
+        secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+        messageDiv.appendChild(secondMessage);
+        
+        // Apply typing animation to the second message
+        typeText(secondMessage, `It is £${pricingResults!.savingsGBP.toFixed(2)} better than on Booking.com`, 25, () => {
+          // Display third message after second message typing completes
+          setTimeout(() => {
+            // Check if bestPrice data is available
+            if (pricingResults!.bookingLink) {
+              const thirdMessage = document.createElement('div');
+              thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+              messageDiv.appendChild(thirdMessage);
+              
+              // Apply typing animation to the third message
+              typeText(thirdMessage, `Here is the booking link for you, happy to help with this payment `, 25, () => {
+                // Add the link after the text is typed
+                const linkElement = document.createElement('a');
+                linkElement.href = pricingResults!.bookingLink;
+                linkElement.target = '_blank';
+                linkElement.style.cssText = 'color: #007bff; text-decoration: underline;';
+                linkElement.textContent = 'Book Now';
+                thirdMessage.appendChild(linkElement);
+                
+                // Scroll to the bottom to show the newest message
+                const contentDiv = document.querySelector('.content') as HTMLElement;
+                if (contentDiv) {
+                  contentDiv.scrollTo({
+                    top: contentDiv.scrollHeight,
+                    behavior: 'smooth'
+                  });
+                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                  if (lastMessage) {
+                    lastMessage.scrollIntoView({ 
+                      behavior: 'smooth', 
+                      block: 'end',
+                      inline: 'nearest'
+                    });
+                  }
+                }
+              });
+            }
+          }, 2000);
+        });
+      }, 2000);
+    });
+  } else {
+    // No cheaper price found - display alternative message
+    const noCheaperMessage = document.createElement('div');
+    noCheaperMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+    messageDiv.appendChild(noCheaperMessage);
+    
+    // Apply typing animation to the no cheaper price message
+    typeText(noCheaperMessage, 'On this occasion I was unable to locate a cheaper price, please refresh this page to try again.', 25);
+  }
 }
