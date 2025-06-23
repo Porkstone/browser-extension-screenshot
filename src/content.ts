@@ -377,131 +377,118 @@ async function startScreenshotProcess() {
                           existingError.remove();
                         }
                         
-                        // Display email request message and textbox
-                        const emailMessage = document.createElement('div');
-                        emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
-                        emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
-                        messageDiv.appendChild(emailMessage);
-                        
-                        const emailInputDiv = document.createElement('div');
-                        emailInputDiv.style.cssText = 'margin-top: 30x; text-align: left;';
-                        emailInputDiv.innerHTML = `
-                          <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
-                            <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-                          </div>
-                          <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
-                        `;
-                        messageDiv.appendChild(emailInputDiv);
-                        
-                        // Add click event handler for the save email button
-                        const saveEmailBtn = document.getElementById('saveEmail');
-                        if (saveEmailBtn) {
-                          saveEmailBtn.addEventListener('click', () => {
-                            const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
-                            const email = emailInput?.value || '';
-                            
-                            // Simple email validation
-                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                            const isValidEmail = emailRegex.test(email);
-                            
-                            if (isValidEmail) {
-                              // Valid email - show checkmark
-                              saveEmailBtn.style.background = '#4CAF50';
-                              saveEmailBtn.textContent = '✓ Email Saved';
+                        // Add 2-second delay before displaying email request
+                        setTimeout(() => {
+                          // Display email request message and textbox
+                          const emailMessage = document.createElement('div');
+                          emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
+                          emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
+                          messageDiv.appendChild(emailMessage);
+                          
+                          const emailInputDiv = document.createElement('div');
+                          emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
+                          emailInputDiv.innerHTML = `
+                            <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
+                              <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+                            </div>
+                            <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
+                          `;
+                          messageDiv.appendChild(emailInputDiv);
+                          
+                          // Add click event handler for the save email button
+                          const saveEmailBtn = document.getElementById('saveEmail');
+                          if (saveEmailBtn) {
+                            saveEmailBtn.addEventListener('click', () => {
+                              const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
+                              const email = emailInput?.value || '';
                               
-                              // Remove any existing error message
-                              const existingEmailError = document.getElementById('emailError');
-                              if (existingEmailError) {
-                                existingEmailError.remove();
-                              }
+                              // Simple email validation
+                              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                              const isValidEmail = emailRegex.test(email);
                               
-                              // Display success message
-                              const successMessage = document.createElement('div');
-                              successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
-                              successMessage.textContent = 'I have everything I need now. Let me load your results';
-                              messageDiv.appendChild(successMessage);
-                              
-                              // Mark that the ready message has been displayed
-                              bookingData.readyMessageDisplayed = true;
-                              
-                              // Add additional message after 1 second
-                              setTimeout(() => {
-                                const additionalMessage = document.createElement('div');
-                                additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
-                                messageDiv.appendChild(additionalMessage);
+                              if (isValidEmail) {
+                                // Valid email - show checkmark
+                                saveEmailBtn.style.background = '#4CAF50';
+                                saveEmailBtn.textContent = '✓ Email Saved';
                                 
-                                // Add second additional message after 1 more second
+                                // Remove any existing error message
+                                const existingEmailError = document.getElementById('emailError');
+                                if (existingEmailError) {
+                                  existingEmailError.remove();
+                                }
+                                
+                                // Add 2-second delay before displaying success message
                                 setTimeout(() => {
-                                  const secondMessage = document.createElement('div');
-                                  secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                  secondMessage.textContent = 'and how much it is better vs Booking.com';
-                                  messageDiv.appendChild(secondMessage);
+                                  // Display success message
+                                  const successMessage = document.createElement('div');
+                                  successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
+                                  successMessage.textContent = 'I have everything I need now. Let me load your results';
+                                  messageDiv.appendChild(successMessage);
                                   
-                                  // Scroll to the bottom to show the second message
-                                  const contentDiv = document.querySelector('.content') as HTMLElement;
-                                  if (contentDiv) {
-                                    contentDiv.scrollTo({
-                                      top: contentDiv.scrollHeight,
-                                      behavior: 'smooth'
-                                    });
-                                    const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                    if (lastMessage) {
-                                      lastMessage.scrollIntoView({ 
-                                        behavior: 'smooth', 
-                                        block: 'end',
-                                        inline: 'nearest'
-                                      });
-                                    }
-                                  }
+                                  // Mark that the ready message has been displayed
+                                  bookingData.readyMessageDisplayed = true;
+                                  
+                                  // Add additional message after 1 second
+                                  setTimeout(() => {
+                                    const additionalMessage = document.createElement('div');
+                                    additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                                    additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
+                                    messageDiv.appendChild(additionalMessage);
+                                    
+                                    // Add second additional message after 1 more second
+                                    setTimeout(() => {
+                                      const secondMessage = document.createElement('div');
+                                      secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                                      secondMessage.textContent = 'and how much it is better vs Booking.com';
+                                      messageDiv.appendChild(secondMessage);
+                                      
+                                      // Scroll to the bottom to show the second message
+                                      const contentDiv = document.querySelector('.content') as HTMLElement;
+                                      if (contentDiv) {
+                                        contentDiv.scrollTo({
+                                          top: contentDiv.scrollHeight,
+                                          behavior: 'smooth'
+                                        });
+                                        const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                        if (lastMessage) {
+                                          lastMessage.scrollIntoView({ 
+                                            behavior: 'smooth', 
+                                            block: 'end',
+                                            inline: 'nearest'
+                                          });
+                                        }
+                                      }
+                                    }, 2000);
+                                  }, 2000);
                                 }, 2000);
-                              }, 2000);
-                            } else {
-                              // Invalid email - show error
-                              saveEmailBtn.style.background = '#4CAF50';
-                              saveEmailBtn.textContent = 'Save Email';
-                              
-                              // Preserve the entered values
-                              if (emailInput) emailInput.value = email;
-                              
-                              // Display error message
-                              const existingEmailError = document.getElementById('emailError');
-                              if (!existingEmailError) {
-                                const errorMessage = document.createElement('div');
-                                errorMessage.id = 'emailError';
-                                errorMessage.textContent = 'Invalid email';
-                                errorMessage.style.color = '#f44336';
-                                errorMessage.style.fontSize = '12px';
-                                errorMessage.style.marginTop = '5px';
-                                errorMessage.style.textAlign = 'left';
+                              } else {
+                                // Invalid email - show error
+                                saveEmailBtn.style.background = '#4CAF50';
+                                saveEmailBtn.textContent = 'Save Email';
                                 
-                                // Insert error message after the email input
-                                if (emailInput && emailInput.parentNode) {
-                                  emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                                // Preserve the entered values
+                                if (emailInput) emailInput.value = email;
+                                
+                                // Display error message
+                                const existingEmailError = document.getElementById('emailError');
+                                if (!existingEmailError) {
+                                  const errorMessage = document.createElement('div');
+                                  errorMessage.id = 'emailError';
+                                  errorMessage.textContent = 'Invalid email';
+                                  errorMessage.style.color = '#f44336';
+                                  errorMessage.style.fontSize = '12px';
+                                  errorMessage.style.marginTop = '5px';
+                                  errorMessage.style.textAlign = 'left';
+                                  
+                                  // Insert error message after the email input
+                                  if (emailInput && emailInput.parentNode) {
+                                    emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                                  }
                                 }
                               }
-                            }
-                          });
-                        }
-                        
-                        // Scroll to the bottom to show the second message
-                        setTimeout(() => {
-                          const contentDiv = document.querySelector('.content') as HTMLElement;
-                          if (contentDiv) {
-                            contentDiv.scrollTo({
-                              top: contentDiv.scrollHeight,
-                              behavior: 'smooth'
                             });
-                            const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                            if (lastMessage) {
-                              lastMessage.scrollIntoView({ 
-                                behavior: 'smooth', 
-                                block: 'end',
-                                inline: 'nearest'
-                              });
-                            }
                           }
-                        }, 300);
+                        }, 2000);
                       } else {
                         // Invalid name - keep green background and "Save" text
                         saveDetailsBtn.style.background = '#4CAF50';
@@ -593,131 +580,118 @@ async function startScreenshotProcess() {
                           existingError.remove();
                         }
                         
-                        // Display email request message and textbox
-                        const emailMessage = document.createElement('div');
-                        emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
-                        emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
-                        messageDiv.appendChild(emailMessage);
-                        
-                        const emailInputDiv = document.createElement('div');
-                        emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
-                        emailInputDiv.innerHTML = `
-                          <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
-                            <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-                          </div>
-                          <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
-                        `;
-                        messageDiv.appendChild(emailInputDiv);
-                        
-                        // Add click event handler for the save email button
-                        const saveEmailBtn = document.getElementById('saveEmail');
-                        if (saveEmailBtn) {
-                          saveEmailBtn.addEventListener('click', () => {
-                            const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
-                            const email = emailInput?.value || '';
-                            
-                            // Simple email validation
-                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                            const isValidEmail = emailRegex.test(email);
-                            
-                            if (isValidEmail) {
-                              // Valid email - show checkmark
-                              saveEmailBtn.style.background = '#4CAF50';
-                              saveEmailBtn.textContent = '✓ Email Saved';
+                        // Add 2-second delay before displaying email request
+                        setTimeout(() => {
+                          // Display email request message and textbox
+                          const emailMessage = document.createElement('div');
+                          emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
+                          emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
+                          messageDiv.appendChild(emailMessage);
+                          
+                          const emailInputDiv = document.createElement('div');
+                          emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
+                          emailInputDiv.innerHTML = `
+                            <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
+                              <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
+                            </div>
+                            <button id="saveEmail" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
+                          `;
+                          messageDiv.appendChild(emailInputDiv);
+                          
+                          // Add click event handler for the save email button
+                          const saveEmailBtn = document.getElementById('saveEmail');
+                          if (saveEmailBtn) {
+                            saveEmailBtn.addEventListener('click', () => {
+                              const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
+                              const email = emailInput?.value || '';
                               
-                              // Remove any existing error message
-                              const existingEmailError = document.getElementById('emailError');
-                              if (existingEmailError) {
-                                existingEmailError.remove();
-                              }
+                              // Simple email validation
+                              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                              const isValidEmail = emailRegex.test(email);
                               
-                              // Display success message
-                              const successMessage = document.createElement('div');
-                              successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
-                              successMessage.textContent = 'I have everything I need now. Let me load your results';
-                              messageDiv.appendChild(successMessage);
-                              
-                              // Mark that the ready message has been displayed
-                              bookingData.readyMessageDisplayed = true;
-                              
-                              // Add additional message after 1 second
-                              setTimeout(() => {
-                                const additionalMessage = document.createElement('div');
-                                additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
-                                messageDiv.appendChild(additionalMessage);
+                              if (isValidEmail) {
+                                // Valid email - show checkmark
+                                saveEmailBtn.style.background = '#4CAF50';
+                                saveEmailBtn.textContent = '✓ Email Saved';
                                 
-                                // Add second additional message after 1 more second
+                                // Remove any existing error message
+                                const existingEmailError = document.getElementById('emailError');
+                                if (existingEmailError) {
+                                  existingEmailError.remove();
+                                }
+                                
+                                // Add 2-second delay before displaying success message
                                 setTimeout(() => {
-                                  const secondMessage = document.createElement('div');
-                                  secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                  secondMessage.textContent = 'and how much it is better vs Booking.com';
-                                  messageDiv.appendChild(secondMessage);
+                                  // Display success message
+                                  const successMessage = document.createElement('div');
+                                  successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
+                                  successMessage.textContent = 'I have everything I need now. Let me load your results';
+                                  messageDiv.appendChild(successMessage);
                                   
-                                  // Scroll to the bottom to show the second message
-                                  const contentDiv = document.querySelector('.content') as HTMLElement;
-                                  if (contentDiv) {
-                                    contentDiv.scrollTo({
-                                      top: contentDiv.scrollHeight,
-                                      behavior: 'smooth'
-                                    });
-                                    const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                    if (lastMessage) {
-                                      lastMessage.scrollIntoView({ 
-                                        behavior: 'smooth', 
-                                        block: 'end',
-                                        inline: 'nearest'
-                                      });
-                                    }
-                                  }
+                                  // Mark that the ready message has been displayed
+                                  bookingData.readyMessageDisplayed = true;
+                                  
+                                  // Add additional message after 1 second
+                                  setTimeout(() => {
+                                    const additionalMessage = document.createElement('div');
+                                    additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                                    additionalMessage.textContent = 'I will show you the country that offers the best value for your hotel';
+                                    messageDiv.appendChild(additionalMessage);
+                                    
+                                    // Add second additional message after 1 more second
+                                    setTimeout(() => {
+                                      const secondMessage = document.createElement('div');
+                                      secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                                      secondMessage.textContent = 'and how much it is better vs Booking.com';
+                                      messageDiv.appendChild(secondMessage);
+                                      
+                                      // Scroll to the bottom to show the second message
+                                      const contentDiv = document.querySelector('.content') as HTMLElement;
+                                      if (contentDiv) {
+                                        contentDiv.scrollTo({
+                                          top: contentDiv.scrollHeight,
+                                          behavior: 'smooth'
+                                        });
+                                        const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                        if (lastMessage) {
+                                          lastMessage.scrollIntoView({ 
+                                            behavior: 'smooth', 
+                                            block: 'end',
+                                            inline: 'nearest'
+                                          });
+                                        }
+                                      }
+                                    }, 2000);
+                                  }, 2000);
                                 }, 2000);
-                              }, 2000);
-                            } else {
-                              // Invalid email - show error
-                              saveEmailBtn.style.background = '#4CAF50';
-                              saveEmailBtn.textContent = 'Save Email';
-                              
-                              // Preserve the entered values
-                              if (emailInput) emailInput.value = email;
-                              
-                              // Display error message
-                              const existingEmailError = document.getElementById('emailError');
-                              if (!existingEmailError) {
-                                const errorMessage = document.createElement('div');
-                                errorMessage.id = 'emailError';
-                                errorMessage.textContent = 'Invalid email';
-                                errorMessage.style.color = '#f44336';
-                                errorMessage.style.fontSize = '12px';
-                                errorMessage.style.marginTop = '5px';
-                                errorMessage.style.textAlign = 'left';
+                              } else {
+                                // Invalid email - show error
+                                saveEmailBtn.style.background = '#4CAF50';
+                                saveEmailBtn.textContent = 'Save Email';
                                 
-                                // Insert error message after the email input
-                                if (emailInput && emailInput.parentNode) {
-                                  emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                                // Preserve the entered values
+                                if (emailInput) emailInput.value = email;
+                                
+                                // Display error message
+                                const existingEmailError = document.getElementById('emailError');
+                                if (!existingEmailError) {
+                                  const errorMessage = document.createElement('div');
+                                  errorMessage.id = 'emailError';
+                                  errorMessage.textContent = 'Invalid email';
+                                  errorMessage.style.color = '#f44336';
+                                  errorMessage.style.fontSize = '12px';
+                                  errorMessage.style.marginTop = '5px';
+                                  errorMessage.style.textAlign = 'left';
+                                  
+                                  // Insert error message after the email input
+                                  if (emailInput && emailInput.parentNode) {
+                                    emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
+                                  }
                                 }
                               }
-                            }
-                          });
-                        }
-                        
-                        // Scroll to the bottom to show the second message
-                        setTimeout(() => {
-                          const contentDiv = document.querySelector('.content') as HTMLElement;
-                          if (contentDiv) {
-                            contentDiv.scrollTo({
-                              top: contentDiv.scrollHeight,
-                              behavior: 'smooth'
                             });
-                            const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                            if (lastMessage) {
-                              lastMessage.scrollIntoView({ 
-                                behavior: 'smooth', 
-                                block: 'end',
-                                inline: 'nearest'
-                              });
-                            }
                           }
-                        }, 300);
+                        }, 2000);
                       } else {
                         // Invalid name - keep green background and "Save" text
                         saveDetailsBtn.style.background = '#4CAF50';
