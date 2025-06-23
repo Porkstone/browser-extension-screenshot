@@ -38,6 +38,9 @@ let pricingResults: {
   hasCheaperPrice: boolean;
 } | null = null;
 
+// Global flag to track if setup messages are complete
+let setupMessagesComplete = false;
+
 // Function to update booking data from answers
 function updateBookingData(answersArray: Array<{question: string, answer: string}>) {
   bookingData.answersArray = answersArray;
@@ -516,7 +519,16 @@ async function startScreenshotProcess() {
                                           // Apply typing animation to the second message
                                           typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
                                             console.log('"and how much it is better vs Booking.com" message finished typing');
-                                            // Pricing results will be displayed after API processing completes
+                                            // Mark setup messages as complete
+                                            setupMessagesComplete = true;
+                                            
+                                            // Display pricing results if they're available
+                                            if (pricingResults) {
+                                              console.log('Setup messages complete and pricing results available, calling displayPricingResults');
+                                              displayPricingResults();
+                                            } else {
+                                              console.log('Setup messages complete but no pricing results available yet');
+                                            }
                                             
                                             // Scroll to the bottom to show the second message after typing completes
                                             const contentDiv = document.querySelector('.content') as HTMLElement;
@@ -751,7 +763,16 @@ async function startScreenshotProcess() {
                                           // Apply typing animation to the second message
                                           typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
                                             console.log('"and how much it is better vs Booking.com" message finished typing');
-                                            // Pricing results will be displayed after API processing completes
+                                            // Mark setup messages as complete
+                                            setupMessagesComplete = true;
+                                            
+                                            // Display pricing results if they're available
+                                            if (pricingResults) {
+                                              console.log('Setup messages complete and pricing results available, calling displayPricingResults');
+                                              displayPricingResults();
+                                            } else {
+                                              console.log('Setup messages complete but no pricing results available yet');
+                                            }
                                             
                                             // Scroll to the bottom to show the second message after typing completes
                                             const contentDiv = document.querySelector('.content') as HTMLElement;
@@ -851,22 +872,10 @@ async function startScreenshotProcess() {
             
             // Wait for all four API calls to complete with 5 second delay
             const [pricingDataVN, pricingDataTH, pricingDataUK, pricingDataUS] = await Promise.all([
-              pricingResponseVN.then(async () => {
-                await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
-                return pricingResponseVN.then(response => response.json());
-              }),
-              pricingResponseTH.then(async () => {
-                await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
-                return pricingResponseTH.then(response => response.json());
-              }),
-              pricingResponseUK.then(async () => {
-                await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
-                return pricingResponseUK.then(response => response.json());
-              }),
-              pricingResponseUS.then(async () => {
-                await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
-                return pricingResponseUS.then(response => response.json());
-              })
+              pricingResponseVN.then(response => response.json()),
+              pricingResponseTH.then(response => response.json()),
+              pricingResponseUK.then(response => response.json()),
+              pricingResponseUS.then(response => response.json())
             ]);
             
             console.log('Pricing API response VN:', pricingDataVN);
@@ -943,8 +952,13 @@ async function startScreenshotProcess() {
                 hasCheaperPrice: true
               };
               
-              console.log('Pricing results stored, calling displayPricingResults');
-              displayPricingResults();
+              console.log('Pricing results stored, checking if setup messages are complete');
+              if (setupMessagesComplete) {
+                console.log('Setup messages complete, calling displayPricingResults');
+                displayPricingResults();
+              } else {
+                console.log('Setup messages not complete, pricing results will be displayed later');
+              }
             } else {
               // No cheaper price found
               pricingResults = {
@@ -955,8 +969,13 @@ async function startScreenshotProcess() {
                 hasCheaperPrice: false
               };
               
-              console.log('No pricing data found, calling displayPricingResults');
-              displayPricingResults();
+              console.log('No pricing data found, checking if setup messages are complete');
+              if (setupMessagesComplete) {
+                console.log('Setup messages complete, calling displayPricingResults');
+                displayPricingResults();
+              } else {
+                console.log('Setup messages not complete, pricing results will be displayed later');
+              }
             }
           }
         }
