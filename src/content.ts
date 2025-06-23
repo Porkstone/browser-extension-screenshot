@@ -515,10 +515,8 @@ async function startScreenshotProcess() {
                                           
                                           // Apply typing animation to the second message
                                           typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
-                                            // Display pricing results after this message finishes typing
-                                            setTimeout(() => {
-                                              displayPricingResults();
-                                            }, 2000);
+                                            console.log('"and how much it is better vs Booking.com" message finished typing');
+                                            // Pricing results will be displayed after API processing completes
                                             
                                             // Scroll to the bottom to show the second message after typing completes
                                             const contentDiv = document.querySelector('.content') as HTMLElement;
@@ -752,10 +750,8 @@ async function startScreenshotProcess() {
                                           
                                           // Apply typing animation to the second message
                                           typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
-                                            // Display pricing results after this message finishes typing
-                                            setTimeout(() => {
-                                              displayPricingResults();
-                                            }, 2000);
+                                            console.log('"and how much it is better vs Booking.com" message finished typing');
+                                            // Pricing results will be displayed after API processing completes
                                             
                                             // Scroll to the bottom to show the second message after typing completes
                                             const contentDiv = document.querySelector('.content') as HTMLElement;
@@ -946,6 +942,9 @@ async function startScreenshotProcess() {
                 bookingLink: bookingData.bestPrice?.bookingLink || '',
                 hasCheaperPrice: true
               };
+              
+              console.log('Pricing results stored, calling displayPricingResults');
+              displayPricingResults();
             } else {
               // No cheaper price found
               pricingResults = {
@@ -955,6 +954,9 @@ async function startScreenshotProcess() {
                 bookingLink: '',
                 hasCheaperPrice: false
               };
+              
+              console.log('No pricing data found, calling displayPricingResults');
+              displayPricingResults();
             }
           }
         }
@@ -1046,12 +1048,24 @@ async function waitForReadyMessage(): Promise<void> {
 
 // Function to display pricing results
 function displayPricingResults() {
-  if (!pricingResults) return;
+  console.log('displayPricingResults called');
+  console.log('pricingResults:', pricingResults);
+  
+  if (!pricingResults) {
+    console.log('No pricing results available');
+    return;
+  }
   
   const messageDiv = document.querySelector('.message');
-  if (!messageDiv) return;
+  if (!messageDiv) {
+    console.log('No message div found');
+    return;
+  }
+  
+  console.log('hasCheaperPrice:', pricingResults.hasCheaperPrice);
   
   if (pricingResults.hasCheaperPrice) {
+    console.log('Displaying pricing messages');
     // Display first message immediately
     const firstMessage = document.createElement('div');
     firstMessage.style.cssText = 'margin-top: 15px; text-align: left;';
@@ -1108,6 +1122,7 @@ function displayPricingResults() {
       }, 2000);
     });
   } else {
+    console.log('Displaying no better price message');
     // No cheaper price found - display alternative message
     const noCheaperMessage = document.createElement('div');
     noCheaperMessage.style.cssText = 'margin-top: 15px; text-align: left;';
