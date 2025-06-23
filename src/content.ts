@@ -287,7 +287,7 @@ async function startScreenshotProcess() {
               const firstName = bookingData.customerName.split(' ')[0];
               const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>
 <div style="margin-bottom: 15px; text-align: left;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
-<div style="display: flex; justify-content: left; gap: 15px; margin-bottom: 30px;">
+<div style="display: flex; justify-content: left; gap: 15px;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
 </div>`;
@@ -295,7 +295,7 @@ async function startScreenshotProcess() {
             } else {
               // Display message without greeting when customer name is blank
               const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?</div>
-<div style="display: flex; justify-content: left; gap: 15px; margin-bottom: 30px;">
+<div style="display: flex; justify-content: left; gap: 15px;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
 </div>`;
@@ -332,7 +332,7 @@ async function startScreenshotProcess() {
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
                   // Add follow-up message with textboxes
-                  const followUpMessage = `<div style="margin-top: 15px; margin-bottom: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
+                  const followUpMessage = `<div style="margin-top: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
 <div style="margin-top: 15px; text-align: left;">
   <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
@@ -379,12 +379,12 @@ async function startScreenshotProcess() {
                         
                         // Display email request message and textbox
                         const emailMessage = document.createElement('div');
-                        emailMessage.style.cssText = 'margin-top: 15px; margin-bottom: 30px; text-align: left;';
+                        emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
                         emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
                         messageDiv.appendChild(emailMessage);
                         
                         const emailInputDiv = document.createElement('div');
-                        emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left;';
+                        emailInputDiv.style.cssText = 'margin-top: 30x; text-align: left;';
                         emailInputDiv.innerHTML = `
                           <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
                             <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
@@ -417,7 +417,7 @@ async function startScreenshotProcess() {
                               
                               // Display success message
                               const successMessage = document.createElement('div');
-                              successMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                              successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
                               successMessage.textContent = 'I have everything I need now. Let me load your results';
                               messageDiv.appendChild(successMessage);
                               
@@ -438,33 +438,22 @@ async function startScreenshotProcess() {
                                   secondMessage.textContent = 'and how much it is better vs Booking.com';
                                   messageDiv.appendChild(secondMessage);
                                   
-                                  // Display third message after another 1 second
-                                  setTimeout(() => {
-                                    // Check if bestPrice data is available
-                                    if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
-                                      const thirdMessage = document.createElement('div');
-                                      thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                      thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
-                                      messageDiv.appendChild(thirdMessage);
-                                      
-                                      // Scroll to the bottom to show the newest message
-                                      const contentDiv = document.querySelector('.content') as HTMLElement;
-                                      if (contentDiv) {
-                                        contentDiv.scrollTo({
-                                          top: contentDiv.scrollHeight,
-                                          behavior: 'smooth'
-                                        });
-                                        const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                        if (lastMessage) {
-                                          lastMessage.scrollIntoView({ 
-                                            behavior: 'smooth', 
-                                            block: 'end',
-                                            inline: 'nearest'
-                                          });
-                                        }
-                                      }
+                                  // Scroll to the bottom to show the second message
+                                  const contentDiv = document.querySelector('.content') as HTMLElement;
+                                  if (contentDiv) {
+                                    contentDiv.scrollTo({
+                                      top: contentDiv.scrollHeight,
+                                      behavior: 'smooth'
+                                    });
+                                    const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                    if (lastMessage) {
+                                      lastMessage.scrollIntoView({ 
+                                        behavior: 'smooth', 
+                                        block: 'end',
+                                        inline: 'nearest'
+                                      });
                                     }
-                                  }, 2000);
+                                  }
                                 }, 2000);
                               }, 2000);
                             } else {
@@ -559,7 +548,7 @@ async function startScreenshotProcess() {
                 // Add 1 second delay before showing follow-up message
                 setTimeout(() => {
                   // Add follow-up message with textboxes
-                  const followUpMessage = `<div style="margin-top: 15px; margin-bottom: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
+                  const followUpMessage = `<div style="margin-top: 30px; text-align: left;">Great. Just share full name of the main traveller</div>
 <div style="margin-top: 15px; text-align: left;">
   <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
     <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
@@ -606,7 +595,7 @@ async function startScreenshotProcess() {
                         
                         // Display email request message and textbox
                         const emailMessage = document.createElement('div');
-                        emailMessage.style.cssText = 'margin-top: 15px; margin-bottom: 30px; text-align: left;';
+                        emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
                         emailMessage.textContent = 'Thanks. Let me know which email I send the confirmation to';
                         messageDiv.appendChild(emailMessage);
                         
@@ -644,7 +633,7 @@ async function startScreenshotProcess() {
                               
                               // Display success message
                               const successMessage = document.createElement('div');
-                              successMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+                              successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
                               successMessage.textContent = 'I have everything I need now. Let me load your results';
                               messageDiv.appendChild(successMessage);
                               
@@ -665,33 +654,22 @@ async function startScreenshotProcess() {
                                   secondMessage.textContent = 'and how much it is better vs Booking.com';
                                   messageDiv.appendChild(secondMessage);
                                   
-                                  // Display third message after another 1 second
-                                  setTimeout(() => {
-                                    // Check if bestPrice data is available
-                                    if (bookingData.bestPrice && bookingData.bestPrice.bookingLink) {
-                                      const thirdMessage = document.createElement('div');
-                                      thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                      thirdMessage.innerHTML = `Here is the booking link for you, happy to help with this payment <a href="${bookingData.bestPrice.bookingLink}" target="_blank" style="color: #007bff; text-decoration: underline;">Book Now</a>`;
-                                      messageDiv.appendChild(thirdMessage);
-                                      
-                                      // Scroll to the bottom to show the newest message
-                                      const contentDiv = document.querySelector('.content') as HTMLElement;
-                                      if (contentDiv) {
-                                        contentDiv.scrollTo({
-                                          top: contentDiv.scrollHeight,
-                                          behavior: 'smooth'
-                                        });
-                                        const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                        if (lastMessage) {
-                                          lastMessage.scrollIntoView({ 
-                                            behavior: 'smooth', 
-                                            block: 'end',
-                                            inline: 'nearest'
-                                          });
-                                        }
-                                      }
+                                  // Scroll to the bottom to show the second message
+                                  const contentDiv = document.querySelector('.content') as HTMLElement;
+                                  if (contentDiv) {
+                                    contentDiv.scrollTo({
+                                      top: contentDiv.scrollHeight,
+                                      behavior: 'smooth'
+                                    });
+                                    const lastMessage = messageDiv.lastElementChild as HTMLElement;
+                                    if (lastMessage) {
+                                      lastMessage.scrollIntoView({ 
+                                        behavior: 'smooth', 
+                                        block: 'end',
+                                        inline: 'nearest'
+                                      });
                                     }
-                                  }, 2000);
+                                  }
                                 }, 2000);
                               }, 2000);
                             } else {
@@ -855,7 +833,7 @@ async function startScreenshotProcess() {
             await waitForReadyMessage();
             
             // Add a 1-second delay after the ready message is displayed
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 0));
             
             // Process pricing data and update popup (only if we have valid pricing data)
             if (bestPricingData && bookingData.pricingData.length > 0) {
@@ -992,4 +970,4 @@ async function waitForReadyMessage(): Promise<void> {
     };
     checkReadyMessage();
   });
-} 
+}
