@@ -4,6 +4,7 @@ console.log('Content script loaded');
 
 // Constants
 const TYPING_SPEED_MS = 37;
+const DEV_LOCAL_MODE = false;
 
 // Data context to store booking information
 const bookingData: {
@@ -296,7 +297,7 @@ async function startScreenshotProcess() {
           formData.append("questions", JSON.stringify(questions));
           
           // Make first API call and display greeting immediately
-          const apiResponse = await fetch("https://capture-booking-data-api.vercel.app/api/ask", {
+          const apiResponse = await fetch(DEV_LOCAL_MODE ? "http://localhost:3001/api/ask" : "https://capture-booking-data-api.vercel.app/api/ask", {
             method: "POST",
             body: formData
           });
@@ -1003,7 +1004,7 @@ function injectPopup() {
   popupContainer.innerHTML = `
     <div id="booking-ai-popup">
       <div class="header">
-        <h1>Zorro Co-pilot</h1>
+        <h1>Zorro Co-pilot${DEV_LOCAL_MODE ? ' (Dev Local)' : ''}</h1>
         <button id="close-popup" class="close-button">×</button>
       </div>
       <div class="content">
