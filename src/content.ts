@@ -1095,6 +1095,11 @@ function displayPricingResults() {
     
     // Apply typing animation to the first message
     typeText(firstMessage, `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}`, TYPING_SPEED_MS, () => {
+      // After typing animation completes, replace with HTML to color the country name
+      if (pricingResults) {
+        firstMessage.innerHTML = `I found the best value for ${pricingResults.hotelName} in <span style="color: rgb(16, 163, 127);">${pricingResults.countryName}</span>`;
+      }
+      
       // Display second message after first message typing completes
       setTimeout(() => {
         const secondMessage = document.createElement('div');
