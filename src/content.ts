@@ -2,6 +2,9 @@
 console.log('Booking.com AI Assistant is active');
 console.log('Content script loaded');
 
+// Constants
+const TYPING_SPEED_MS = 37;
+
 // Data context to store booking information
 const bookingData: {
   answersArray: Array<{question: string, answer: string}>;
@@ -154,7 +157,7 @@ function getFullPageWidth() {
 }
 
 // Function to create typing animation effect
-function typeText(element: HTMLElement, text: string, speed: number = 25, callback?: () => void) {
+function typeText(element: HTMLElement, text: string, speed: number = TYPING_SPEED_MS, callback?: () => void) {
   element.textContent = '';
   let index = 0;
   
@@ -190,7 +193,7 @@ async function captureFullPageScreenshot() {
     messageDiv.appendChild(revealButton);
     
     // Apply typing animation to the message
-    typeText(refreshingDiv, 'There is a better value than yours available for this hotel', 25, () => {
+    typeText(refreshingDiv, 'There is a better value than yours available for this hotel', TYPING_SPEED_MS, () => {
       // Show Reveal button after typing animation completes
       revealButton.style.display = 'block';
     });
@@ -347,7 +350,7 @@ async function startScreenshotProcess() {
             const bookingChoiceMessage = document.getElementById('booking-choice-message');
             const bookingButtons = document.getElementById('booking-buttons');
             if (bookingChoiceMessage) {
-              typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', 25, () => {
+              typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
                 // Show buttons after typing animation completes
                 if (bookingButtons) {
                   bookingButtons.style.display = 'flex';
@@ -407,7 +410,7 @@ async function startScreenshotProcess() {
                   const additionalButtonsContainer = document.getElementById('additional-buttons');
                   
                   if (travellerNameMessage) {
-                    typeText(travellerNameMessage, 'Great. Just share full name of the main traveller', 25, () => {
+                    typeText(travellerNameMessage, 'Great. Just share full name of the main traveller', TYPING_SPEED_MS, () => {
                       // Show input container after typing animation completes
                       if (travellerInputContainer) {
                         travellerInputContainer.style.display = 'block';
@@ -463,7 +466,7 @@ async function startScreenshotProcess() {
                           messageDiv.appendChild(emailInputDiv);
                           
                           // Apply typing animation to the email message
-                          typeText(emailMessage, 'Thanks. Let me know which email I send the confirmation to', 25, () => {
+                          typeText(emailMessage, 'Thanks. Let me know which email I send the confirmation to', TYPING_SPEED_MS, () => {
                             // Show email input after typing animation completes
                             emailInputDiv.style.display = 'block';
                           });
@@ -501,7 +504,7 @@ async function startScreenshotProcess() {
                                   bookingData.readyMessageDisplayed = true;
                                   
                                   // Apply typing animation to the success message
-                                  typeText(successMessage, 'I have everything I need now. Let me load your results', 25, () => {
+                                  typeText(successMessage, 'I have everything I need now. Let me load your results', TYPING_SPEED_MS, () => {
                                     // Add additional message after success message typing completes
                                     setTimeout(() => {
                                       const additionalMessage = document.createElement('div');
@@ -509,7 +512,7 @@ async function startScreenshotProcess() {
                                       messageDiv.appendChild(additionalMessage);
                                       
                                       // Apply typing animation to the additional message
-                                      typeText(additionalMessage, 'I will show you the country that offers the best value for your hotel', 25, () => {
+                                      typeText(additionalMessage, 'I will show you the country that offers the best value for your hotel', TYPING_SPEED_MS, () => {
                                         // Add second additional message after additional message typing completes
                                         setTimeout(() => {
                                           const secondMessage = document.createElement('div');
@@ -517,7 +520,7 @@ async function startScreenshotProcess() {
                                           messageDiv.appendChild(secondMessage);
                                           
                                           // Apply typing animation to the second message
-                                          typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
+                                          typeText(secondMessage, 'and how much it is better vs Booking.com', TYPING_SPEED_MS, () => {
                                             console.log('"and how much it is better vs Booking.com" message finished typing');
                                             // Mark setup messages as complete
                                             setupMessagesComplete = true;
@@ -651,7 +654,7 @@ async function startScreenshotProcess() {
                   const additionalButtonsContainer = document.getElementById('additional-buttons');
                   
                   if (travellerNameMessage) {
-                    typeText(travellerNameMessage, 'Great. Just share full name of the main traveller', 25, () => {
+                    typeText(travellerNameMessage, 'Great. Just share full name of the main traveller', TYPING_SPEED_MS, () => {
                       // Show input container after typing animation completes
                       if (travellerInputContainer) {
                         travellerInputContainer.style.display = 'block';
@@ -707,7 +710,7 @@ async function startScreenshotProcess() {
                           messageDiv.appendChild(emailInputDiv);
                           
                           // Apply typing animation to the email message
-                          typeText(emailMessage, 'Thanks. Let me know which email I send the confirmation to', 25, () => {
+                          typeText(emailMessage, 'Thanks. Let me know which email I send the confirmation to', TYPING_SPEED_MS, () => {
                             // Show email input after typing animation completes
                             emailInputDiv.style.display = 'block';
                           });
@@ -745,7 +748,7 @@ async function startScreenshotProcess() {
                                   bookingData.readyMessageDisplayed = true;
                                   
                                   // Apply typing animation to the success message
-                                  typeText(successMessage, 'I have everything I need now. Let me load your results', 25, () => {
+                                  typeText(successMessage, 'I have everything I need now. Let me load your results', TYPING_SPEED_MS, () => {
                                     // Add additional message after success message typing completes
                                     setTimeout(() => {
                                       const additionalMessage = document.createElement('div');
@@ -753,7 +756,7 @@ async function startScreenshotProcess() {
                                       messageDiv.appendChild(additionalMessage);
                                       
                                       // Apply typing animation to the additional message
-                                      typeText(additionalMessage, 'I will show you the country that offers the best value for your hotel', 25, () => {
+                                      typeText(additionalMessage, 'I will show you the country that offers the best value for your hotel', TYPING_SPEED_MS, () => {
                                         // Add second additional message after additional message typing completes
                                         setTimeout(() => {
                                           const secondMessage = document.createElement('div');
@@ -761,7 +764,7 @@ async function startScreenshotProcess() {
                                           messageDiv.appendChild(secondMessage);
                                           
                                           // Apply typing animation to the second message
-                                          typeText(secondMessage, 'and how much it is better vs Booking.com', 25, () => {
+                                          typeText(secondMessage, 'and how much it is better vs Booking.com', TYPING_SPEED_MS, () => {
                                             console.log('"and how much it is better vs Booking.com" message finished typing');
                                             // Mark setup messages as complete
                                             setupMessagesComplete = true;
@@ -859,10 +862,10 @@ async function startScreenshotProcess() {
             const hotelName = encodeURIComponent((answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || ''));
             
             // First API call - Vietnam
-            const pricingResponseVN = fetch(`https://autodeal.io/api/prices/VN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
+            const pricingResponseVN = fetch(`https://sp.autodeal.io/api/prices/VN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
             
             // Second API call - Thailand
-            const pricingResponseTH = fetch(`https://autodeal.io/api/prices/TH4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
+            const pricingResponseTH = fetch(`https://sp.autodeal.io/api/prices/TH4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
             
             // Third API call - UK
             const pricingResponseUK = fetch(`https://autodeal.io/api/prices/UK4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
@@ -1023,7 +1026,7 @@ function injectPopup() {
     
     // Start typing animation for the greeting message
     if (greetingMessage) {
-      typeText(greetingMessage, 'Hello, I am your co-pilot for this payment.', 25);
+      typeText(greetingMessage, 'Hello, I am your co-pilot for this payment.', TYPING_SPEED_MS);
     }
     
     if (closeButton) {
@@ -1091,7 +1094,7 @@ function displayPricingResults() {
     messageDiv.appendChild(firstMessage);
     
     // Apply typing animation to the first message
-    typeText(firstMessage, `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}`, 25, () => {
+    typeText(firstMessage, `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}`, TYPING_SPEED_MS, () => {
       // Display second message after first message typing completes
       setTimeout(() => {
         const secondMessage = document.createElement('div');
@@ -1099,7 +1102,7 @@ function displayPricingResults() {
         messageDiv.appendChild(secondMessage);
         
         // Apply typing animation to the second message
-        typeText(secondMessage, `It is £${pricingResults!.savingsGBP.toFixed(2)} better than on Booking.com`, 25, () => {
+        typeText(secondMessage, `It is £${pricingResults!.savingsGBP.toFixed(2)} better than on Booking.com`, TYPING_SPEED_MS, () => {
           // Display third message after second message typing completes
           setTimeout(() => {
             // Check if bestPrice data is available
@@ -1109,7 +1112,7 @@ function displayPricingResults() {
               messageDiv.appendChild(thirdMessage);
               
               // Apply typing animation to the third message
-              typeText(thirdMessage, `Here is the booking link for you, happy to help with this payment `, 25, () => {
+              typeText(thirdMessage, `Here is the booking link for you, happy to help with this payment `, TYPING_SPEED_MS, () => {
                 // Add the link after the text is typed
                 const linkElement = document.createElement('a');
                 linkElement.href = pricingResults!.bookingLink;
@@ -1148,6 +1151,6 @@ function displayPricingResults() {
     messageDiv.appendChild(noCheaperMessage);
     
     // Apply typing animation to the no cheaper price message
-    typeText(noCheaperMessage, 'On this occasion I was unable to locate a cheaper price, please refresh this page to try again.', 25);
+    typeText(noCheaperMessage, 'On this occasion I was unable to locate a cheaper price, please refresh this page to try again.', TYPING_SPEED_MS);
   }
 }
