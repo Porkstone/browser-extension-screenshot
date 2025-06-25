@@ -1078,11 +1078,17 @@ function displayPricingResults() {
     return;
   }
   
-  const messageDiv = document.querySelector('.message');
-  if (!messageDiv) {
-    console.log('No message div found');
+  const contentDiv = document.querySelector('.content');
+  if (!contentDiv) {
+    console.log('No content div found');
     return;
   }
+  
+  // Create a second message div for pricing results
+  const pricingMessageDiv = document.createElement('div');
+  pricingMessageDiv.className = 'message';
+  pricingMessageDiv.style.cssText = 'margin-top: 30px; border-top: 1px solid #565869; padding-top: 20px; min-height: 200px;';
+  contentDiv.appendChild(pricingMessageDiv);
   
   console.log('hasCheaperPrice:', pricingResults.hasCheaperPrice);
   
@@ -1091,7 +1097,7 @@ function displayPricingResults() {
     // Display first message immediately
     const firstMessage = document.createElement('div');
     firstMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-    messageDiv.appendChild(firstMessage);
+    pricingMessageDiv.appendChild(firstMessage);
     
     // Apply typing animation to the first message
     typeText(firstMessage, `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}`, TYPING_SPEED_MS, () => {
@@ -1100,11 +1106,19 @@ function displayPricingResults() {
         firstMessage.innerHTML = `I found the best value for ${pricingResults.hotelName} in <span style="color: rgb(16, 163, 127);">${pricingResults.countryName}</span>`;
       }
       
+      // Scroll to the bottom of the page after first message is displayed
+      if (contentDiv) {
+        contentDiv.scrollTo({
+          top: contentDiv.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+      
       // Display second message after first message typing completes
       setTimeout(() => {
         const secondMessage = document.createElement('div');
         secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-        messageDiv.appendChild(secondMessage);
+        pricingMessageDiv.appendChild(secondMessage);
         
         // Apply typing animation to the second message
         typeText(secondMessage, `It is £${pricingResults!.savingsGBP.toFixed(2)} better than on Booking.com`, TYPING_SPEED_MS, () => {
@@ -1114,7 +1128,7 @@ function displayPricingResults() {
             if (pricingResults!.bookingLink) {
               const thirdMessage = document.createElement('div');
               thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-              messageDiv.appendChild(thirdMessage);
+              pricingMessageDiv.appendChild(thirdMessage);
               
               // Apply typing animation to the third message
               typeText(thirdMessage, `Here is the booking link for you, happy to help with this payment `, TYPING_SPEED_MS, () => {
@@ -1125,23 +1139,6 @@ function displayPricingResults() {
                 linkElement.style.cssText = 'color: #007bff; text-decoration: underline;';
                 linkElement.textContent = 'Book Now';
                 thirdMessage.appendChild(linkElement);
-                
-                // Scroll to the bottom to show the newest message
-                const contentDiv = document.querySelector('.content') as HTMLElement;
-                if (contentDiv) {
-                  contentDiv.scrollTo({
-                    top: contentDiv.scrollHeight,
-                    behavior: 'smooth'
-                  });
-                  const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                  if (lastMessage) {
-                    lastMessage.scrollIntoView({ 
-                      behavior: 'smooth', 
-                      block: 'end',
-                      inline: 'nearest'
-                    });
-                  }
-                }
               });
             }
           }, 2000);
@@ -1153,7 +1150,7 @@ function displayPricingResults() {
     // No cheaper price found - display alternative message
     const noCheaperMessage = document.createElement('div');
     noCheaperMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-    messageDiv.appendChild(noCheaperMessage);
+    pricingMessageDiv.appendChild(noCheaperMessage);
     
     // Apply typing animation to the no cheaper price message
     typeText(noCheaperMessage, 'On this occasion I was unable to locate a cheaper price, please refresh this page to try again.', TYPING_SPEED_MS);
