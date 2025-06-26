@@ -45,6 +45,9 @@ let pricingResults: {
 // Global flag to track if setup messages are complete
 let setupMessagesComplete = false;
 
+// Global flag to track if chat window has been expanded
+let chatWindowExpanded = false;
+
 // Function to update booking data from answers
 function updateBookingData(answersArray: Array<{question: string, answer: string}>) {
   bookingData.answersArray = answersArray;
@@ -199,23 +202,116 @@ async function captureFullPageScreenshot() {
       revealButton.style.display = 'block';
     });
     
-    // Add click handler for Reveal button
+    // Add click handler for Reveal button - only expands the chat window
     revealButton.addEventListener('click', async () => {
-      // Show spinner
-      const spinner = document.createElement('div');
-      spinner.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; padding: 20px;">
-          <div style="width: 20px; height: 20px; border: 2px solid #565869; border-top: 2px solid #10a37f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-          <span style="margin-left: 10px; color: #ececf1;">Processing...</span>
-        </div>
-      `;
-      messageDiv.appendChild(spinner);
-      
       // Hide the Reveal button
       revealButton.style.display = 'none';
       
-      // Start the screenshot process
-      await startScreenshotProcess();
+      // Clear the message div contents
+      const messageDiv = document.querySelector('.message');
+      if (messageDiv) {
+        messageDiv.innerHTML = '';
+      }
+      
+      // Expand the popup to full page height
+      const popup = document.getElementById('booking-ai-popup');
+      if (popup) {
+        popup.style.height = '100vh';
+        popup.style.width = 'calc(100vw - 17px)';
+        popup.style.position = 'fixed';
+        popup.style.top = '0';
+        popup.style.left = '0';
+        popup.style.zIndex = '9999';
+      }
+      
+      // Set the chat window expanded flag
+      chatWindowExpanded = true;
+      
+      // If the API response has already been processed, display the messages now
+      if (bookingData.customerName || bookingData.answersArray.length > 0) {
+        // Display the greeting and booking choice messages
+        if (bookingData.customerName && bookingData.customerName.trim() !== '') {
+          const firstName = bookingData.customerName.split(' ')[0];
+          const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>`;
+          if (messageDiv) {
+            messageDiv.innerHTML = greetingHtml;
+          }
+        }
+        
+        // Display the booking choice message and buttons
+        const bookingChoiceHtml = `<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
+<div id="booking-buttons" style="display: flex; justify-content: left; gap: 15px; display: none;">
+  <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
+  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
+</div>`;
+        
+        if (messageDiv) {
+          messageDiv.innerHTML = messageDiv.innerHTML + bookingChoiceHtml;
+        }
+        
+        // Apply typing animation to the booking choice message
+        const bookingChoiceMessage = document.getElementById('booking-choice-message');
+        const bookingButtons = document.getElementById('booking-buttons');
+        if (bookingChoiceMessage) {
+          typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
+            // Show buttons after typing animation completes
+            if (bookingButtons) {
+              bookingButtons.style.display = 'flex';
+            }
+          });
+        }
+        
+        // Add click event handlers for the buttons
+        const bookMyselfBtn = document.getElementById('bookMyself');
+        const useAIAgentBtn = document.getElementById('useAIAgent');
+        
+        if (bookMyselfBtn) {
+          bookMyselfBtn.addEventListener('click', () => {
+            bookMyselfBtn.style.background = 'rgb(16, 163, 127)';
+            bookMyselfBtn.textContent = '✓ Book myself';
+            if (useAIAgentBtn) {
+              useAIAgentBtn.style.background = '#9E9E9E';
+              useAIAgentBtn.style.cursor = 'not-allowed';
+            }
+            
+            // Mark setup messages as complete when user makes a choice
+            setupMessagesComplete = true;
+            
+            // Display pricing results if they're available
+            if (pricingResults) {
+              console.log('User made choice and pricing results available, calling displayPricingResults');
+              displayPricingResults();
+            } else {
+              console.log('User made choice but no pricing results available yet');
+            }
+          });
+        }
+        
+        if (useAIAgentBtn) {
+          useAIAgentBtn.addEventListener('click', () => {
+            useAIAgentBtn.style.background = 'rgb(16, 163, 127)';
+            useAIAgentBtn.textContent = '✓ Agentic AI booking';
+            if (bookMyselfBtn) {
+              bookMyselfBtn.style.background = '#9E9E9E';
+              bookMyselfBtn.style.cursor = 'not-allowed';
+            }
+            
+            // Mark setup messages as complete when user makes a choice
+            setupMessagesComplete = true;
+            
+            // Display pricing results if they're available
+            if (pricingResults) {
+              console.log('User made choice and pricing results available, calling displayPricingResults');
+              displayPricingResults();
+            } else {
+              console.log('User made choice but no pricing results available yet');
+            }
+          });
+        }
+      }
+      
+      // The screenshot process is now handled automatically when the popup first loads
+      // No need to call startScreenshotProcess() here anymore
     });
   }
 }
@@ -327,536 +423,90 @@ async function startScreenshotProcess() {
             if (bookingData.customerName && bookingData.customerName.trim() !== '') {
               // Extract first name from full name
               const firstName = bookingData.customerName.split(' ')[0];
-              const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>
-<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
-<div id="booking-buttons" style="display: flex; justify-content: left; gap: 15px; display: none;">
-  <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
-  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
-</div>`;
+              const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>`;
               finalHtml = greetingHtml;
             } else {
               // Display message without greeting when customer name is blank
-              const greetingHtml = `<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
+              const greetingHtml = ``;
+              finalHtml = greetingHtml;
+            }
+            
+            // Only display messages if the chat window has been expanded
+            if (chatWindowExpanded) {
+              // Preserve the original greeting message and only add new content if needed
+              if (finalHtml) {
+                // Only add the greeting if there's content to add
+                messageDiv.innerHTML = messageDiv.innerHTML + finalHtml;
+              }
+              
+              // Display the booking choice message and buttons after the greeting
+              const bookingChoiceHtml = `<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
 <div id="booking-buttons" style="display: flex; justify-content: left; gap: 15px; display: none;">
   <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
   <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
 </div>`;
-              finalHtml = greetingHtml;
-            }
-            
-            // Display greeting immediately
-            messageDiv.innerHTML = finalHtml;
-            
-            // Apply typing animation to the booking choice message
-            const bookingChoiceMessage = document.getElementById('booking-choice-message');
-            const bookingButtons = document.getElementById('booking-buttons');
-            if (bookingChoiceMessage) {
-              typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
-                // Show buttons after typing animation completes
-                if (bookingButtons) {
-                  bookingButtons.style.display = 'flex';
-                }
-              });
-            }
-            
-            // Make the popup take up the full page height after screenshot
-            const popup = document.getElementById('booking-ai-popup');
-            if (popup) {
-              popup.style.height = '100vh';
-              popup.style.width = 'calc(100vw - 17px)';
-              popup.style.position = 'fixed';
-              popup.style.top = '0';
-              popup.style.left = '0';
-              popup.style.zIndex = '9999';
-            }
-            
-            // Add click event handlers for the buttons
-            const bookMyselfBtn = document.getElementById('bookMyself');
-            const useAIAgentBtn = document.getElementById('useAIAgent');
-            
-            if (bookMyselfBtn) {
-              bookMyselfBtn.addEventListener('click', () => {
-                bookMyselfBtn.style.background = 'rgb(16, 163, 127)';
-                bookMyselfBtn.textContent = '✓ Book myself';
-                if (useAIAgentBtn) {
-                  useAIAgentBtn.style.background = '#9E9E9E';
-                  useAIAgentBtn.style.cursor = 'not-allowed';
-                }
-                
-                // Add 1 second delay before showing follow-up message
-                setTimeout(() => {
-                  // Add follow-up message with textboxes
-                  const followUpMessage = `<div id="traveller-name-message" style="margin-top: 30px; text-align: left;"></div>
-<div id="traveller-input-container" style="margin-top: 15px; text-align: left; display: none;">
-  <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
-    <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-  </div>
-  <button id="saveDetails" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
-</div>`;
-                  
-                  // Add additional buttons if customer name is present
-                  let additionalButtons = '';
-                  if (bookingData.customerName && bookingData.customerName.trim() !== '') {
-                    additionalButtons = `<div id="additional-buttons" style="display: flex; justify-content: left; gap: 15px; margin-top: 15px; display: none;">
-                      <button id="useMyDetails" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">My name and email</button>
-                      <button id="enterManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">I will enter the details</button>
-                    </div>`;
+              
+              messageDiv.innerHTML = messageDiv.innerHTML + bookingChoiceHtml;
+              
+              // Apply typing animation to the booking choice message
+              const bookingChoiceMessage = document.getElementById('booking-choice-message');
+              const bookingButtons = document.getElementById('booking-buttons');
+              if (bookingChoiceMessage) {
+                typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
+                  // Show buttons after typing animation completes
+                  if (bookingButtons) {
+                    bookingButtons.style.display = 'flex';
+                  }
+                });
+              }
+              
+              // Add click event handlers for the buttons
+              const bookMyselfBtn = document.getElementById('bookMyself');
+              const useAIAgentBtn = document.getElementById('useAIAgent');
+              
+              if (bookMyselfBtn) {
+                bookMyselfBtn.addEventListener('click', () => {
+                  bookMyselfBtn.style.background = 'rgb(16, 163, 127)';
+                  bookMyselfBtn.textContent = '✓ Book myself';
+                  if (useAIAgentBtn) {
+                    useAIAgentBtn.style.background = '#9E9E9E';
+                    useAIAgentBtn.style.cursor = 'not-allowed';
                   }
                   
-                  messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage + additionalButtons;
+                  // Mark setup messages as complete when user makes a choice
+                  setupMessagesComplete = true;
                   
-                  // Apply typing animation to the traveller name message
-                  const travellerNameMessage = document.getElementById('traveller-name-message');
-                  const travellerInputContainer = document.getElementById('traveller-input-container');
-                  const additionalButtonsContainer = document.getElementById('additional-buttons');
-                  
-                  if (travellerNameMessage) {
-                    typeText(travellerNameMessage, 'Great. Just share full name of the main traveller', TYPING_SPEED_MS, () => {
-                      // Show input container after typing animation completes
-                      if (travellerInputContainer) {
-                        travellerInputContainer.style.display = 'block';
-                      }
-                      // Show additional buttons if they exist
-                      if (additionalButtonsContainer) {
-                        additionalButtonsContainer.style.display = 'flex';
-                      }
-                    });
+                  // Display pricing results if they're available
+                  if (pricingResults) {
+                    console.log('User made choice and pricing results available, calling displayPricingResults');
+                    displayPricingResults();
+                  } else {
+                    console.log('User made choice but no pricing results available yet');
+                  }
+                });
+              }
+              
+              if (useAIAgentBtn) {
+                useAIAgentBtn.addEventListener('click', () => {
+                  useAIAgentBtn.style.background = 'rgb(16, 163, 127)';
+                  useAIAgentBtn.textContent = '✓ Agentic AI booking';
+                  if (bookMyselfBtn) {
+                    bookMyselfBtn.style.background = '#9E9E9E';
+                    bookMyselfBtn.style.cursor = 'not-allowed';
                   }
                   
-                  // Add click event handlers for the new buttons
-                  const useMyDetailsBtn = document.getElementById('useMyDetails');
-                  const enterManuallyBtn = document.getElementById('enterManually');
-                  const saveDetailsBtn = document.getElementById('saveDetails');
+                  // Mark setup messages as complete when user makes a choice
+                  setupMessagesComplete = true;
                   
-                  // Add click event handler for the save button
-                  if (saveDetailsBtn) {
-                    saveDetailsBtn.addEventListener('click', () => {
-                      // Get the input values
-                      const nameInput = document.getElementById('guestName') as HTMLInputElement;
-                      const name = nameInput?.value || '';
-                      
-                      // Simple name validation
-                      const isValidName = name.trim().length > 0;
-                      
-                      if (isValidName) {
-                        // Valid name - show checkmark
-                        saveDetailsBtn.style.background = 'rgb(16, 163, 127)';
-                        saveDetailsBtn.textContent = '✓ Saved';
-                        
-                        // Remove any existing error message
-                        const existingError = document.getElementById('emailError');
-                        if (existingError) {
-                          existingError.remove();
-                        }
-                        
-                        // Add 2-second delay before displaying email request
-                        setTimeout(() => {
-                          // Display email request message and textbox
-                          const emailMessage = document.createElement('div');
-                          emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
-                          messageDiv.appendChild(emailMessage);
-                          
-                          const emailInputDiv = document.createElement('div');
-                          emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left; display: none;';
-                          emailInputDiv.innerHTML = `
-                            <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
-                              <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-                            </div>
-                            <button id="saveEmail" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
-                          `;
-                          messageDiv.appendChild(emailInputDiv);
-                          
-                          // Apply typing animation to the email message
-                          typeText(emailMessage, 'Thanks. Let me know which email I send the confirmation to', TYPING_SPEED_MS, () => {
-                            // Show email input after typing animation completes
-                            emailInputDiv.style.display = 'block';
-                          });
-                          
-                          // Add click event handler for the save email button
-                          const saveEmailBtn = document.getElementById('saveEmail');
-                          if (saveEmailBtn) {
-                            saveEmailBtn.addEventListener('click', () => {
-                              const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
-                              const email = emailInput?.value || '';
-                              
-                              // Simple email validation
-                              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                              const isValidEmail = emailRegex.test(email);
-                              
-                              if (isValidEmail) {
-                                // Valid email - show checkmark
-                                saveEmailBtn.style.background = 'rgb(16, 163, 127)';
-                                saveEmailBtn.textContent = '✓ Email Saved';
-                                
-                                // Remove any existing error message
-                                const existingEmailError = document.getElementById('emailError');
-                                if (existingEmailError) {
-                                  existingEmailError.remove();
-                                }
-                                
-                                // Add 2-second delay before displaying success message
-                                setTimeout(() => {
-                                  // Display success message
-                                  const successMessage = document.createElement('div');
-                                  successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
-                                  messageDiv.appendChild(successMessage);
-                                  
-                                  // Mark that the ready message has been displayed
-                                  bookingData.readyMessageDisplayed = true;
-                                  
-                                  // Apply typing animation to the success message
-                                  typeText(successMessage, 'I have everything I need now. Let me load your results', TYPING_SPEED_MS, () => {
-                                    // Add additional message after success message typing completes
-                                    setTimeout(() => {
-                                      const additionalMessage = document.createElement('div');
-                                      additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                      messageDiv.appendChild(additionalMessage);
-                                      
-                                      // Apply typing animation to the additional message
-                                      typeText(additionalMessage, 'I will show you the country that offers the best value for your hotel', TYPING_SPEED_MS, () => {
-                                        // Add second additional message after additional message typing completes
-                                        setTimeout(() => {
-                                          const secondMessage = document.createElement('div');
-                                          secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                          messageDiv.appendChild(secondMessage);
-                                          
-                                          // Apply typing animation to the second message
-                                          typeText(secondMessage, 'and how much it is better vs Booking.com', TYPING_SPEED_MS, () => {
-                                            console.log('"and how much it is better vs Booking.com" message finished typing');
-                                            // Mark setup messages as complete
-                                            setupMessagesComplete = true;
-                                            
-                                            // Display pricing results if they're available
-                                            if (pricingResults) {
-                                              console.log('Setup messages complete and pricing results available, calling displayPricingResults');
-                                              displayPricingResults();
-                                            } else {
-                                              console.log('Setup messages complete but no pricing results available yet');
-                                            }
-                                            
-                                            // Scroll to the bottom to show the second message after typing completes
-                                            const contentDiv = document.querySelector('.content') as HTMLElement;
-                                            if (contentDiv) {
-                                              contentDiv.scrollTo({
-                                                top: contentDiv.scrollHeight,
-                                                behavior: 'smooth'
-                                              });
-                                              const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                              if (lastMessage) {
-                                                lastMessage.scrollIntoView({ 
-                                                  behavior: 'smooth', 
-                                                  block: 'end',
-                                                  inline: 'nearest'
-                                                });
-                                              }
-                                            }
-                                          });
-                                        }, 2000);
-                                      });
-                                    }, 2000);
-                                  });
-                                }, 2000);
-                              } else {
-                                // Invalid email - show error
-                                saveEmailBtn.style.background = '#FF9800';
-                                saveEmailBtn.textContent = 'Save Email';
-                                
-                                // Preserve the entered values
-                                if (emailInput) emailInput.value = email;
-                                
-                                // Display error message
-                                const existingEmailError = document.getElementById('emailError');
-                                if (!existingEmailError) {
-                                  const errorMessage = document.createElement('div');
-                                  errorMessage.id = 'emailError';
-                                  errorMessage.textContent = 'Invalid email';
-                                  errorMessage.style.color = '#f44336';
-                                  errorMessage.style.fontSize = '12px';
-                                  errorMessage.style.marginTop = '5px';
-                                  errorMessage.style.textAlign = 'left';
-                                  
-                                  // Insert error message after the email input
-                                  if (emailInput && emailInput.parentNode) {
-                                    emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
-                                  }
-                                }
-                              }
-                            });
-                          }
-                        }, 2000);
-                      } else {
-                        // Invalid name - keep orange background and "Save" text
-                        saveDetailsBtn.style.background = '#FF9800';
-                        saveDetailsBtn.textContent = 'Save';
-                        
-                        // Preserve the entered values
-                        if (nameInput) nameInput.value = name;
-                        
-                        // Display error message below name input
-                        const existingError = document.getElementById('emailError');
-                        if (!existingError) {
-                          const errorMessage = document.createElement('div');
-                          errorMessage.id = 'emailError';
-                          errorMessage.textContent = 'Please enter a name';
-                          errorMessage.style.color = '#f44336';
-                          errorMessage.style.fontSize = '12px';
-                          errorMessage.style.marginTop = '5px';
-                          errorMessage.style.textAlign = 'left';
-                          
-                          // Insert error message after the name input
-                          if (nameInput && nameInput.parentNode) {
-                            nameInput.parentNode.insertBefore(errorMessage, nameInput.nextSibling);
-                          }
-                        }
-                      }
-                    });
+                  // Display pricing results if they're available
+                  if (pricingResults) {
+                    console.log('User made choice and pricing results available, calling displayPricingResults');
+                    displayPricingResults();
+                  } else {
+                    console.log('User made choice but no pricing results available yet');
                   }
-                }, 1000);
-              });
-            }
-            
-            if (useAIAgentBtn) {
-              useAIAgentBtn.addEventListener('click', () => {
-                useAIAgentBtn.style.background = 'rgb(16, 163, 127)';
-                useAIAgentBtn.textContent = '✓ Agentic AI booking';
-                if (bookMyselfBtn) {
-                  bookMyselfBtn.style.background = '#9E9E9E';
-                  bookMyselfBtn.style.cursor = 'not-allowed';
-                }
-                
-                // Set the flag to indicate AI Agent was clicked
-                bookingData.useAiAgentClicked = true;
-                
-                // Add 1 second delay before showing follow-up message
-                setTimeout(() => {
-                  // Add follow-up message with textboxes
-                  const followUpMessage = `<div id="traveller-name-message" style="margin-top: 30px; text-align: left;"></div>
-<div id="traveller-input-container" style="margin-top: 15px; text-align: left; display: none;">
-  <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
-    <input type="text" id="guestName" placeholder="Full Name" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-  </div>
-  <button id="saveDetails" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save</button>
-</div>`;
-                  
-                  // Add additional buttons if customer name is present
-                  let additionalButtons = '';
-                  if (bookingData.customerName && bookingData.customerName.trim() !== '') {
-                    additionalButtons = `<div id="additional-buttons" style="display: flex; justify-content: left; gap: 15px; margin-top: 15px; display: none;">
-                      <button id="useMyDetails" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">My name and email</button>
-                      <button id="enterManually" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">I will enter the details</button>
-                    </div>`;
-                  }
-                  
-                  messageDiv.innerHTML = messageDiv.innerHTML + followUpMessage + additionalButtons;
-                  
-                  // Apply typing animation to the traveller name message
-                  const travellerNameMessage = document.getElementById('traveller-name-message');
-                  const travellerInputContainer = document.getElementById('traveller-input-container');
-                  const additionalButtonsContainer = document.getElementById('additional-buttons');
-                  
-                  if (travellerNameMessage) {
-                    typeText(travellerNameMessage, 'Great. Just share full name of the main traveller', TYPING_SPEED_MS, () => {
-                      // Show input container after typing animation completes
-                      if (travellerInputContainer) {
-                        travellerInputContainer.style.display = 'block';
-                      }
-                      // Show additional buttons if they exist
-                      if (additionalButtonsContainer) {
-                        additionalButtonsContainer.style.display = 'flex';
-                      }
-                    });
-                  }
-                  
-                  // Add click event handlers for the new buttons
-                  const useMyDetailsBtn = document.getElementById('useMyDetails');
-                  const enterManuallyBtn = document.getElementById('enterManually');
-                  const saveDetailsBtn = document.getElementById('saveDetails');
-                  
-                  // Add click event handler for the save button
-                  if (saveDetailsBtn) {
-                    saveDetailsBtn.addEventListener('click', () => {
-                      // Get the input values
-                      const nameInput = document.getElementById('guestName') as HTMLInputElement;
-                      const name = nameInput?.value || '';
-                      
-                      // Simple name validation
-                      const isValidName = name.trim().length > 0;
-                      
-                      if (isValidName) {
-                        // Valid name - show checkmark
-                        saveDetailsBtn.style.background = 'rgb(16, 163, 127)';
-                        saveDetailsBtn.textContent = '✓ Saved';
-                        
-                        // Remove any existing error message
-                        const existingError = document.getElementById('emailError');
-                        if (existingError) {
-                          existingError.remove();
-                        }
-                        
-                        // Add 2-second delay before displaying email request
-                        setTimeout(() => {
-                          // Display email request message and textbox
-                          const emailMessage = document.createElement('div');
-                          emailMessage.style.cssText = 'margin-top: 30px;  text-align: left;';
-                          messageDiv.appendChild(emailMessage);
-                          
-                          const emailInputDiv = document.createElement('div');
-                          emailInputDiv.style.cssText = 'margin-top: 15px; text-align: left; display: none;';
-                          emailInputDiv.innerHTML = `
-                            <div style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: left;">
-                              <input type="email" id="guestEmail" placeholder="Email Address" style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;">
-                            </div>
-                            <button id="saveEmail" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Email</button>
-                          `;
-                          messageDiv.appendChild(emailInputDiv);
-                          
-                          // Apply typing animation to the email message
-                          typeText(emailMessage, 'Thanks. Let me know which email I send the confirmation to', TYPING_SPEED_MS, () => {
-                            // Show email input after typing animation completes
-                            emailInputDiv.style.display = 'block';
-                          });
-                          
-                          // Add click event handler for the save email button
-                          const saveEmailBtn = document.getElementById('saveEmail');
-                          if (saveEmailBtn) {
-                            saveEmailBtn.addEventListener('click', () => {
-                              const emailInput = document.getElementById('guestEmail') as HTMLInputElement;
-                              const email = emailInput?.value || '';
-                              
-                              // Simple email validation
-                              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                              const isValidEmail = emailRegex.test(email);
-                              
-                              if (isValidEmail) {
-                                // Valid email - show checkmark
-                                saveEmailBtn.style.background = 'rgb(16, 163, 127)';
-                                saveEmailBtn.textContent = '✓ Email Saved';
-                                
-                                // Remove any existing error message
-                                const existingEmailError = document.getElementById('emailError');
-                                if (existingEmailError) {
-                                  existingEmailError.remove();
-                                }
-                                
-                                // Add 2-second delay before displaying success message
-                                setTimeout(() => {
-                                  // Display success message
-                                  const successMessage = document.createElement('div');
-                                  successMessage.style.cssText = 'margin-top: 30px; text-align: left;';
-                                  messageDiv.appendChild(successMessage);
-                                  
-                                  // Mark that the ready message has been displayed
-                                  bookingData.readyMessageDisplayed = true;
-                                  
-                                  // Apply typing animation to the success message
-                                  typeText(successMessage, 'I have everything I need now. Let me load your results', TYPING_SPEED_MS, () => {
-                                    // Add additional message after success message typing completes
-                                    setTimeout(() => {
-                                      const additionalMessage = document.createElement('div');
-                                      additionalMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                      messageDiv.appendChild(additionalMessage);
-                                      
-                                      // Apply typing animation to the additional message
-                                      typeText(additionalMessage, 'I will show you the country that offers the best value for your hotel', TYPING_SPEED_MS, () => {
-                                        // Add second additional message after additional message typing completes
-                                        setTimeout(() => {
-                                          const secondMessage = document.createElement('div');
-                                          secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
-                                          messageDiv.appendChild(secondMessage);
-                                          
-                                          // Apply typing animation to the second message
-                                          typeText(secondMessage, 'and how much it is better vs Booking.com', TYPING_SPEED_MS, () => {
-                                            console.log('"and how much it is better vs Booking.com" message finished typing');
-                                            // Mark setup messages as complete
-                                            setupMessagesComplete = true;
-                                            
-                                            // Display pricing results if they're available
-                                            if (pricingResults) {
-                                              console.log('Setup messages complete and pricing results available, calling displayPricingResults');
-                                              displayPricingResults();
-                                            } else {
-                                              console.log('Setup messages complete but no pricing results available yet');
-                                            }
-                                            
-                                            // Scroll to the bottom to show the second message after typing completes
-                                            const contentDiv = document.querySelector('.content') as HTMLElement;
-                                            if (contentDiv) {
-                                              contentDiv.scrollTo({
-                                                top: contentDiv.scrollHeight,
-                                                behavior: 'smooth'
-                                              });
-                                              const lastMessage = messageDiv.lastElementChild as HTMLElement;
-                                              if (lastMessage) {
-                                                lastMessage.scrollIntoView({ 
-                                                  behavior: 'smooth', 
-                                                  block: 'end',
-                                                  inline: 'nearest'
-                                                });
-                                              }
-                                            }
-                                          });
-                                        }, 2000);
-                                      });
-                                    }, 2000);
-                                  });
-                                }, 2000);
-                              } else {
-                                // Invalid email - show error
-                                saveEmailBtn.style.background = '#FF9800';
-                                saveEmailBtn.textContent = 'Save Email';
-                                
-                                // Preserve the entered values
-                                if (emailInput) emailInput.value = email;
-                                
-                                // Display error message
-                                const existingEmailError = document.getElementById('emailError');
-                                if (!existingEmailError) {
-                                  const errorMessage = document.createElement('div');
-                                  errorMessage.id = 'emailError';
-                                  errorMessage.textContent = 'Invalid email';
-                                  errorMessage.style.color = '#f44336';
-                                  errorMessage.style.fontSize = '12px';
-                                  errorMessage.style.marginTop = '5px';
-                                  errorMessage.style.textAlign = 'left';
-                                  
-                                  // Insert error message after the email input
-                                  if (emailInput && emailInput.parentNode) {
-                                    emailInput.parentNode.insertBefore(errorMessage, emailInput.nextSibling);
-                                  }
-                                }
-                              }
-                            });
-                          }
-                        }, 2000);
-                      } else {
-                        // Invalid name - keep orange background and "Save" text
-                        saveDetailsBtn.style.background = '#FF9800';
-                        saveDetailsBtn.textContent = 'Save';
-                        
-                        // Preserve the entered values
-                        if (nameInput) nameInput.value = name;
-                        
-                        // Display error message below name input
-                        const existingError = document.getElementById('emailError');
-                        if (!existingError) {
-                          const errorMessage = document.createElement('div');
-                          errorMessage.id = 'emailError';
-                          errorMessage.textContent = 'Please enter a name';
-                          errorMessage.style.color = '#f44336';
-                          errorMessage.style.fontSize = '12px';
-                          errorMessage.style.marginTop = '5px';
-                          errorMessage.style.textAlign = 'left';
-                          
-                          // Insert error message after the name input
-                          if (nameInput && nameInput.parentNode) {
-                            nameInput.parentNode.insertBefore(errorMessage, nameInput.nextSibling);
-                          }
-                        }
-                      }
-                    });
-                  }
-                }, 1000);
-              });
+                });
+              }
             }
             
             // Make four parallel API calls for pricing data
@@ -1027,7 +677,135 @@ function injectPopup() {
     
     // Start typing animation for the greeting message
     if (greetingMessage) {
-      typeText(greetingMessage, 'Hello, I am your co-pilot for this payment.', TYPING_SPEED_MS);
+      typeText(greetingMessage, 'Hello, I am your co-pilot for this payment.', TYPING_SPEED_MS, () => {
+        // After greeting message finishes typing, wait 2 seconds then show the second message
+        setTimeout(() => {
+          const secondMessage = document.createElement('div');
+          secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+          greetingMessage.parentElement?.appendChild(secondMessage);
+          
+          // Apply typing animation to the second message
+          typeText(secondMessage, 'There is a better value available than yours for this hotel', TYPING_SPEED_MS, () => {
+            // After second message finishes typing, show the Reveal button
+            const revealButton = document.createElement('button');
+            revealButton.textContent = 'Reveal';
+            revealButton.style.cssText = 'background: #10a37f; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; display: block; margin-left: auto; margin-right: auto;';
+            greetingMessage.parentElement?.appendChild(revealButton);
+            
+            // Add click handler for Reveal button - only expands the chat window
+            revealButton.addEventListener('click', async () => {
+              // Hide the Reveal button
+              revealButton.style.display = 'none';
+              
+              // Clear the message div contents
+              const messageDiv = document.querySelector('.message');
+              if (messageDiv) {
+                messageDiv.innerHTML = '';
+              }
+              
+              // Expand the popup to full page height
+              const popup = document.getElementById('booking-ai-popup');
+              if (popup) {
+                popup.style.height = '100vh';
+                popup.style.width = 'calc(100vw - 17px)';
+                popup.style.position = 'fixed';
+                popup.style.top = '0';
+                popup.style.left = '0';
+                popup.style.zIndex = '9999';
+              }
+              
+              // Set the chat window expanded flag
+              chatWindowExpanded = true;
+              
+              // If the API response has already been processed, display the messages now
+              if (bookingData.customerName || bookingData.answersArray.length > 0) {
+                // Display the greeting and booking choice messages
+                if (bookingData.customerName && bookingData.customerName.trim() !== '') {
+                  const firstName = bookingData.customerName.split(' ')[0];
+                  const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>`;
+                  if (messageDiv) {
+                    messageDiv.innerHTML = greetingHtml;
+                  }
+                }
+                
+                // Display the booking choice message and buttons
+                const bookingChoiceHtml = `<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
+<div id="booking-buttons" style="display: flex; justify-content: left; gap: 15px; display: none;">
+  <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
+  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
+</div>`;
+                
+                if (messageDiv) {
+                  messageDiv.innerHTML = messageDiv.innerHTML + bookingChoiceHtml;
+                }
+                
+                // Apply typing animation to the booking choice message
+                const bookingChoiceMessage = document.getElementById('booking-choice-message');
+                const bookingButtons = document.getElementById('booking-buttons');
+                if (bookingChoiceMessage) {
+                  typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
+                    // Show buttons after typing animation completes
+                    if (bookingButtons) {
+                      bookingButtons.style.display = 'flex';
+                    }
+                  });
+                }
+                
+                // Add click event handlers for the buttons
+                const bookMyselfBtn = document.getElementById('bookMyself');
+                const useAIAgentBtn = document.getElementById('useAIAgent');
+                
+                if (bookMyselfBtn) {
+                  bookMyselfBtn.addEventListener('click', () => {
+                    bookMyselfBtn.style.background = 'rgb(16, 163, 127)';
+                    bookMyselfBtn.textContent = '✓ Book myself';
+                    if (useAIAgentBtn) {
+                      useAIAgentBtn.style.background = '#9E9E9E';
+                      useAIAgentBtn.style.cursor = 'not-allowed';
+                    }
+                    
+                    // Mark setup messages as complete when user makes a choice
+                    setupMessagesComplete = true;
+                    
+                    // Display pricing results if they're available
+                    if (pricingResults) {
+                      console.log('User made choice and pricing results available, calling displayPricingResults');
+                      displayPricingResults();
+                    } else {
+                      console.log('User made choice but no pricing results available yet');
+                    }
+                  });
+                }
+                
+                if (useAIAgentBtn) {
+                  useAIAgentBtn.addEventListener('click', () => {
+                    useAIAgentBtn.style.background = 'rgb(16, 163, 127)';
+                    useAIAgentBtn.textContent = '✓ Agentic AI booking';
+                    if (bookMyselfBtn) {
+                      bookMyselfBtn.style.background = '#9E9E9E';
+                      bookMyselfBtn.style.cursor = 'not-allowed';
+                    }
+                    
+                    // Mark setup messages as complete when user makes a choice
+                    setupMessagesComplete = true;
+                    
+                    // Display pricing results if they're available
+                    if (pricingResults) {
+                      console.log('User made choice and pricing results available, calling displayPricingResults');
+                      displayPricingResults();
+                    } else {
+                      console.log('User made choice but no pricing results available yet');
+                    }
+                  });
+                }
+              }
+              
+              // The screenshot process is now handled automatically when the popup first loads
+              // No need to call startScreenshotProcess() here anymore
+            });
+          });
+        }, 2000);
+      });
     }
     
     if (closeButton) {
@@ -1037,8 +815,8 @@ function injectPopup() {
     }
     if (screenshotBtn) {
       screenshotBtn.addEventListener('click', captureFullPageScreenshot);
-      // Automatically trigger the message and button display when the popup is first displayed
-      setTimeout(() => captureFullPageScreenshot(), 3000);
+      // Automatically trigger the full-page screenshot process when the popup is first displayed
+      setTimeout(() => startScreenshotProcess(), 3000);
     }
   }
 }
