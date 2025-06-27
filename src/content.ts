@@ -6,47 +6,35 @@ console.log('Content script loaded');
 const TYPING_SPEED_MS = 37;
 const DEV_LOCAL_MODE = false;
 
-// Data context to store booking information
-const bookingData: {
-  answersArray: Array<{question: string, answer: string}>;
-  customerName: string;
-  customerEmail: string;
-  hotelName: string;
-  checkInDate: string;
-  checkOutDate: string;
-  pricingData: any[];
-  bestPrice: any;
-  priceInGbp: number;
-  readyMessageDisplayed: boolean;
-  useAiAgentClicked: boolean;
-} = {
-  answersArray: [],
+// Global variables
+let bookingData = {
+  hotelName: '',
+  hotelAddress: '',
   customerName: '',
   customerEmail: '',
-  hotelName: '',
+  customerPhone: '',
+  customerAddress: '',
+  customerCity: '',
+  customerPostcode: '',
   checkInDate: '',
   checkOutDate: '',
-  pricingData: [],
-  bestPrice: null,
-  priceInGbp: 0,
+  roomType: '',
+  isCancellable: '',
+  isSignedIn: '',
+  totalCost: '',
+  answersArray: [] as Array<{question: string, answer: string}>,
   readyMessageDisplayed: false,
-  useAiAgentClicked: false
+  pricingData: [] as any[],
+  bestPrice: null as any,
+  priceInGbp: 0
 };
 
-// Global variable to store pricing results
-let pricingResults: {
-  hotelName: string;
-  countryName: string;
-  savingsGBP: number;
-  bookingLink: string;
-  hasCheaperPrice: boolean;
-} | null = null;
-
-// Global flag to track if setup messages are complete
+let pricingResults: any = null;
 let setupMessagesComplete = false;
-
-// Global flag to track if chat window has been expanded
 let chatWindowExpanded = false;
+let emailConfirmationShown = false;
+let userRespondedToEmail = false;
+let waitingForFinalMessage = false;
 
 // Function to update booking data from answers
 function updateBookingData(answersArray: Array<{question: string, answer: string}>) {
@@ -444,99 +432,159 @@ async function startScreenshotProcess() {
             console.log('Pricing API response UK:', pricingDataUK);
             console.log('Pricing API response US:', pricingDataUS);
             
-            // Helper function to get best price from data
-            const getBestPrice = (data: any) => {
-              if (data && Array.isArray(data) && data.length > 0) {
-                // Filter out prices that are 0 or less, then find the minimum
-                const validPrices = data.filter(item => item.totalPrice > 0);
-                if (validPrices.length > 0) {
-                  return validPrices.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min);
+            console.log('About to process pricing data immediately...');
+            
+            try {
+              // Helper function to get best price from data
+              const getBestPrice = (data: any) => {
+                if (data && Array.isArray(data) && data.length > 0) {
+                  // Filter out prices that are 0 or less, then find the minimum
+                  const validPrices = data.filter(item => item.totalPrice > 0);
+                  if (validPrices.length > 0) {
+                    return validPrices.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min);
+                  }
+                }
+                return null;
+              };
+              
+              const bestPriceVN = getBestPrice(pricingDataVN);
+              const bestPriceTH = getBestPrice(pricingDataTH);
+              const bestPriceUK = getBestPrice(pricingDataUK);
+              const bestPriceUS = getBestPrice(pricingDataUS);
+              
+              // Find the lowest price among all four (only consider valid prices > 0)
+              let bestPricingData = null;
+              let bestCountry = '';
+              
+              // Compare all valid prices and find the lowest
+              const validPrices = [
+                { data: pricingDataVN, price: bestPriceVN, country: 'Vietnam' },
+                { data: pricingDataTH, price: bestPriceTH, country: 'Thailand' },
+                { data: pricingDataUK, price: bestPriceUK, country: 'UK' },
+                { data: pricingDataUS, price: bestPriceUS, country: 'US' }
+              ].filter(item => item.price !== null);
+              
+              if (validPrices.length > 0) {
+                const bestOption = validPrices.reduce((min, current) => 
+                  current.price.totalPrice < min.price.totalPrice ? current : min
+                );
+                bestPricingData = bestOption.data;
+                bestCountry = bestOption.country;
+              }
+              
+              console.log('Pricing API processing completed:');
+              console.log('- validPrices.length:', validPrices.length);
+              console.log('- bestPricingData:', bestPricingData);
+              console.log('- bestCountry:', bestCountry);
+              
+              // Update pricing data in context with the best result
+              updatePricingData(bestPricingData);
+              
+              console.log('About to process pricing data immediately...');
+              
+              // Process pricing data and store results (only if we have valid pricing data)
+              console.log('Processing pricing data...');
+              console.log('bestPricingData:', bestPricingData);
+              console.log('bookingData.pricingData:', bookingData.pricingData);
+              console.log('bookingData.pricingData.length:', bookingData.pricingData?.length);
+              
+              if (bestPricingData) {
+                console.log('bestPricingData is valid, proceeding to set pricingResults');
+                // Get the hotel name from answers array index 0
+                const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
+                
+                // Get the country name from the best price data
+                const countryName = bookingData.bestPrice?.apiCountryName || 'Unknown Country';
+                
+                // Calculate the actual savings
+                const bookingComPrice = parseFloat(answersArray[13]?.answer || '0'); // This is in GBP
+                const bestPriceUSD = bookingData.bestPrice?.totalPrice || 0; // This is in USD
+                const bestPriceGBP = bestPriceUSD * 0.74; // Convert USD to GBP (approximate rate)
+                const savingsGBP = bookingComPrice - bestPriceGBP; // Both prices now in GBP
+                
+                console.log('Calculated values:');
+                console.log('- hotelName:', hotelName);
+                console.log('- countryName:', countryName);
+                console.log('- bookingComPrice:', bookingComPrice);
+                console.log('- bestPriceUSD:', bestPriceUSD);
+                console.log('- bestPriceGBP:', bestPriceGBP);
+                console.log('- savingsGBP:', savingsGBP);
+                
+                // Store the pricing results for later display
+                pricingResults = {
+                  hotelName,
+                  countryName,
+                  savingsGBP,
+                  bookingLink: bookingData.bestPrice?.bookingLink || '',
+                  hasCheaperPrice: true
+                };
+                
+                console.log('pricingResults set to:', pricingResults);
+                
+                console.log('Pricing results stored, checking if setup messages are complete');
+                if (setupMessagesComplete) {
+                  console.log('Setup messages complete, calling displayPricingResults');
+                  displayPricingResults();
+                } else {
+                  console.log('Setup messages not complete, pricing results will be displayed later');
+                }
+                
+                // Check if we're waiting for final message and trigger it
+                if (waitingForFinalMessage) {
+                  console.log('Waiting for final message flag detected, triggering final message');
+                  console.log('pricingResults:', pricingResults);
+                  console.log('hasCheaperPrice:', pricingResults?.hasCheaperPrice);
+                  
+                  setTimeout(() => {
+                    const messageDiv = document.querySelector('.message');
+                    console.log('messageDiv found:', !!messageDiv);
+                    
+                    if (messageDiv && pricingResults && pricingResults.hasCheaperPrice) {
+                      console.log('All conditions met, creating final message');
+                      const finalMessageDiv = document.createElement('div');
+                      finalMessageDiv.className = 'ai-message';
+                      messageDiv.appendChild(finalMessageDiv);
+                      
+                      const amountSaved = pricingResults.savingsGBP.toFixed(2);
+                      const finalMessage = `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}\nIt is £${amountSaved} better than on Booking.com\nHere is the booking link, happy to help with payment ${pricingResults.bookingLink}`;
+                      
+                      console.log('Final message text:', finalMessage);
+                      typeText(finalMessageDiv, finalMessage, TYPING_SPEED_MS);
+                      waitingForFinalMessage = false; // Clear the flag
+                      console.log('Final message displayed, flag cleared');
+                    } else {
+                      console.log('Conditions not met for final message:');
+                      console.log('- messageDiv:', !!messageDiv);
+                      console.log('- pricingResults:', !!pricingResults);
+                      console.log('- hasCheaperPrice:', pricingResults?.hasCheaperPrice);
+                    }
+                  }, 1000);
+                } else {
+                  console.log('Not waiting for final message, waitingForFinalMessage:', waitingForFinalMessage);
+                }
+              } else {
+                console.log('bestPricingData is null or invalid, setting hasCheaperPrice to false');
+                // No cheaper price found
+                pricingResults = {
+                  hotelName: answersArray[0]?.answer || 'Unknown Hotel',
+                  countryName: 'Unknown Country',
+                  savingsGBP: 0,
+                  bookingLink: '',
+                  hasCheaperPrice: false
+                };
+                
+                console.log('pricingResults set to (no cheaper price):', pricingResults);
+                
+                console.log('No pricing data found, checking if setup messages are complete');
+                if (setupMessagesComplete) {
+                  console.log('Setup messages complete, calling displayPricingResults');
+                  displayPricingResults();
+                } else {
+                  console.log('Setup messages not complete, pricing results will be displayed later');
                 }
               }
-              return null;
-            };
-            
-            const bestPriceVN = getBestPrice(pricingDataVN);
-            const bestPriceTH = getBestPrice(pricingDataTH);
-            const bestPriceUK = getBestPrice(pricingDataUK);
-            const bestPriceUS = getBestPrice(pricingDataUS);
-            
-            // Find the lowest price among all four (only consider valid prices > 0)
-            let bestPricingData = null;
-            let bestCountry = '';
-            
-            // Compare all valid prices and find the lowest
-            const validPrices = [
-              { data: pricingDataVN, price: bestPriceVN, country: 'Vietnam' },
-              { data: pricingDataTH, price: bestPriceTH, country: 'Thailand' },
-              { data: pricingDataUK, price: bestPriceUK, country: 'UK' },
-              { data: pricingDataUS, price: bestPriceUS, country: 'US' }
-            ].filter(item => item.price !== null);
-            
-            if (validPrices.length > 0) {
-              const bestOption = validPrices.reduce((min, current) => 
-                current.price.totalPrice < min.price.totalPrice ? current : min
-              );
-              bestPricingData = bestOption.data;
-              bestCountry = bestOption.country;
-            }
-            
-            // Update pricing data in context with the best result
-            updatePricingData(bestPricingData);
-            
-            // Wait for the ready message to be displayed before showing pricing
-            await waitForReadyMessage();
-            
-            // Add a 1-second delay after the ready message is displayed
-            await new Promise(resolve => setTimeout(resolve, 0));
-            
-            // Process pricing data and store results (only if we have valid pricing data)
-            if (bestPricingData && bookingData.pricingData.length > 0) {
-              // Get the hotel name from answers array index 0
-              const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
-              
-              // Get the country name from the best price data
-              const countryName = bookingData.bestPrice?.apiCountryName || 'Unknown Country';
-              
-              // Calculate the actual savings
-              const bookingComPrice = parseFloat(answersArray[13]?.answer || '0'); // This is in GBP
-              const bestPriceUSD = bookingData.bestPrice?.totalPrice || 0; // This is in USD
-              const bestPriceGBP = bestPriceUSD * 0.74; // Convert USD to GBP (approximate rate)
-              const savingsGBP = bookingComPrice - bestPriceGBP; // Both prices now in GBP
-              
-              // Store the pricing results for later display
-              pricingResults = {
-                hotelName,
-                countryName,
-                savingsGBP,
-                bookingLink: bookingData.bestPrice?.bookingLink || '',
-                hasCheaperPrice: true
-              };
-              
-              console.log('Pricing results stored, checking if setup messages are complete');
-              if (setupMessagesComplete) {
-                console.log('Setup messages complete, calling displayPricingResults');
-                displayPricingResults();
-              } else {
-                console.log('Setup messages not complete, pricing results will be displayed later');
-              }
-            } else {
-              // No cheaper price found
-              pricingResults = {
-                hotelName: answersArray[0]?.answer || 'Unknown Hotel',
-                countryName: 'Unknown Country',
-                savingsGBP: 0,
-                bookingLink: '',
-                hasCheaperPrice: false
-              };
-              
-              console.log('No pricing data found, checking if setup messages are complete');
-              if (setupMessagesComplete) {
-                console.log('Setup messages complete, calling displayPricingResults');
-                displayPricingResults();
-              } else {
-                console.log('Setup messages not complete, pricing results will be displayed later');
-              }
+            } catch (error) {
+              console.error('Error in pricing processing:', error);
             }
           }
         }
@@ -702,6 +750,115 @@ function injectPopup() {
           
           // Here you can add logic to handle the message (e.g., send to API, etc.)
           console.log('User message:', message);
+          
+          // Check if user has responded to email confirmation and show the three system messages
+          if (emailConfirmationShown && !userRespondedToEmail) {
+            console.log('User responded to email confirmation, setting flags');
+            userRespondedToEmail = true;
+            waitingForFinalMessage = true; // Set flag to indicate we're waiting for final message
+            console.log('waitingForFinalMessage set to:', waitingForFinalMessage);
+            
+            // Show the three system messages after user responds to email confirmation
+            setTimeout(() => {
+              console.log('Starting to show three system messages');
+              const messageDiv = document.querySelector('.message');
+              console.log('messageDiv for three messages:', !!messageDiv);
+              
+              if (messageDiv) {
+                // First message
+                const firstMessageDiv = document.createElement('div');
+                firstMessageDiv.className = 'ai-message';
+                messageDiv.appendChild(firstMessageDiv);
+                
+                typeText(firstMessageDiv, 'I have everything I need now. Let me load your results', TYPING_SPEED_MS, () => {
+                  // Second message after first completes
+                  setTimeout(() => {
+                    const secondMessageDiv = document.createElement('div');
+                    secondMessageDiv.className = 'ai-message';
+                    messageDiv.appendChild(secondMessageDiv);
+                    
+                    typeText(secondMessageDiv, 'I will show you the country that offers the best value for your hotel', TYPING_SPEED_MS, () => {
+                      // Third message after second completes
+                      setTimeout(() => {
+                        const thirdMessageDiv = document.createElement('div');
+                        thirdMessageDiv.className = 'ai-message';
+                        messageDiv.appendChild(thirdMessageDiv);
+                        
+                        typeText(thirdMessageDiv, 'and how much better it is than Booking.com', TYPING_SPEED_MS, () => {
+                          // After all three messages complete, wait 1 second then check for pricing results
+                          setTimeout(() => {
+                            console.log('Checking for pricing results after three messages...');
+                            console.log('pricingResults:', pricingResults);
+                            
+                            // Check if pricing API responses have completed
+                            if (pricingResults && pricingResults.hasCheaperPrice) {
+                              console.log('Pricing results available, showing final message');
+                              const finalMessageDiv = document.createElement('div');
+                              finalMessageDiv.className = 'ai-message';
+                              messageDiv.appendChild(finalMessageDiv);
+                              
+                              const amountSaved = pricingResults.savingsGBP.toFixed(2);
+                              const finalMessage = `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}\nIt is £${amountSaved} better than on Booking.com\nHere is the booking link, happy to help with payment ${pricingResults.bookingLink}`;
+                              
+                              typeText(finalMessageDiv, finalMessage, TYPING_SPEED_MS);
+                              waitingForFinalMessage = false; // Clear the flag
+                            } else {
+                              console.log('Pricing results not ready, setting up polling...');
+                              console.log('Current pricingResults:', pricingResults);
+                              // If pricing results not ready, set up polling to check periodically
+                              const checkForPricingResults = () => {
+                                console.log('Polling for pricing results...');
+                                console.log('Current pricingResults:', pricingResults);
+                                console.log('hasCheaperPrice:', pricingResults?.hasCheaperPrice);
+                                
+                                if (pricingResults && pricingResults.hasCheaperPrice) {
+                                  console.log('Pricing results now available, showing final message');
+                                  const finalMessageDiv = document.createElement('div');
+                                  finalMessageDiv.className = 'ai-message';
+                                  messageDiv.appendChild(finalMessageDiv);
+                                  
+                                  const amountSaved = pricingResults.savingsGBP.toFixed(2);
+                                  const finalMessage = `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}\nIt is £${amountSaved} better than on Booking.com\nHere is the booking link, happy to help with payment ${pricingResults.bookingLink}`;
+                                  
+                                  typeText(finalMessageDiv, finalMessage, TYPING_SPEED_MS);
+                                  waitingForFinalMessage = false; // Clear the flag
+                                } else {
+                                  console.log('Still waiting for pricing results, will check again in 1 second');
+                                  // Check again in 1 second
+                                  setTimeout(checkForPricingResults, 1000);
+                                }
+                              };
+                              
+                              // Start polling after 2 seconds
+                              setTimeout(checkForPricingResults, 2000);
+                            }
+                          }, 1000);
+                        });
+                      }, 1000);
+                    });
+                  }, 1000);
+                });
+              }
+            }, 1000); // Wait 1 second after user response before showing the three messages
+          }
+          
+          // Display email confirmation message after user types
+          setTimeout(() => {
+            if (bookingData.customerEmail && bookingData.customerEmail.trim() !== '' && !emailConfirmationShown) {
+              const messageDiv = document.querySelector('.message');
+              if (messageDiv) {
+                const emailConfirmationDiv = document.createElement('div');
+                emailConfirmationDiv.className = 'ai-message';
+                messageDiv.appendChild(emailConfirmationDiv);
+                
+                // Apply typing animation to the email confirmation message
+                typeText(emailConfirmationDiv, `I can send email confirmation to ${bookingData.customerEmail} is this the correct address?`, TYPING_SPEED_MS);
+                
+                // Mark as shown to prevent duplicate messages
+                emailConfirmationShown = true;
+              }
+            }
+          }, 1000); // Wait 1 second before showing the email confirmation
         }
       };
       
@@ -742,11 +899,15 @@ ensurePageReady();
 
 // Function to wait for the ready message to be displayed
 async function waitForReadyMessage(): Promise<void> {
+  console.log('waitForReadyMessage called, bookingData.readyMessageDisplayed:', bookingData.readyMessageDisplayed);
   return new Promise((resolve) => {
     const checkReadyMessage = () => {
+      console.log('Checking ready message, bookingData.readyMessageDisplayed:', bookingData.readyMessageDisplayed);
       if (bookingData.readyMessageDisplayed) {
+        console.log('Ready message is displayed, resolving promise');
         resolve();
       } else {
+        console.log('Ready message not displayed yet, checking again in 100ms');
         setTimeout(checkReadyMessage, 100); // Check every 100ms
       }
     };
