@@ -218,8 +218,45 @@ async function captureFullPageScreenshot() {
       // Hide the Reveal button
       revealButton.style.display = 'none';
 
-      // Clear the message div contents
+      // Create and display the spinner with message
+      const spinnerContainer = document.createElement('div');
+      spinnerContainer.style.cssText = 'display: flex; align-items: center; justify-content: center; margin: 20px 0;';
+
+      const spinner = document.createElement('div');
+      spinner.style.cssText = `
+        width: 24px;
+        height: 24px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #10a37f;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+      `;
+
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+
+      const loadingText = document.createElement('span');
+      loadingText.textContent = 'Initiating AI protocols';
+      loadingText.style.color = '#10a37f';
+
+      spinnerContainer.appendChild(spinner);
+      spinnerContainer.appendChild(loadingText);
       const messageDiv = document.querySelector('.message');
+      if (messageDiv) {
+        messageDiv.appendChild(spinnerContainer);
+      }
+
+      // Wait 3 seconds then remove the spinner
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      spinnerContainer.remove();
+      
       if (messageDiv) {
         messageDiv.innerHTML = '';
       }
@@ -654,6 +691,47 @@ function injectPopup() {
 
               // Clear the message div contents
               const messageDiv = document.querySelector('.message');
+             
+
+              // Create and display the spinner with message
+              const spinnerContainer = document.createElement('div');
+              spinnerContainer.style.cssText = 'display: flex; align-items: center; justify-content: center; margin: 20px 0;';
+
+              const spinner = document.createElement('div');
+              spinner.style.cssText = `
+                width: 24px;
+                height: 24px;
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #10a37f;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-right: 10px;
+              `;
+
+              const style = document.createElement('style');
+              style.textContent = `
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+              `;
+              document.head.appendChild(style);
+
+              const loadingText = document.createElement('span');
+              loadingText.textContent = 'Initiating AI protocols';
+              loadingText.style.color = '#10a37f';
+
+              spinnerContainer.appendChild(spinner);
+              spinnerContainer.appendChild(loadingText);
+              
+              if (messageDiv) {
+                messageDiv.appendChild(spinnerContainer);
+              }
+
+              // Wait 3 seconds then remove the spinner
+              await new Promise(resolve => setTimeout(resolve, 3000));
+              spinnerContainer.remove();
+              
               if (messageDiv) {
                 messageDiv.innerHTML = '';
               }
