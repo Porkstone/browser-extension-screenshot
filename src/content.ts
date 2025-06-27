@@ -222,6 +222,7 @@ async function captureFullPageScreenshot() {
         popup.style.top = '0';
         popup.style.left = '0';
         popup.style.zIndex = '9999';
+        popup.classList.add('expanded');
       }
       
       // Set the chat window expanded flag
@@ -232,18 +233,14 @@ async function captureFullPageScreenshot() {
         // Display the greeting and booking choice messages
         if (bookingData.customerName && bookingData.customerName.trim() !== '') {
           const firstName = bookingData.customerName.split(' ')[0];
-          const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>`;
+          const greetingHtml = `<div class="ai-message">Hi ${firstName},</div>`;
           if (messageDiv) {
             messageDiv.innerHTML = greetingHtml;
           }
         }
         
         // Display the booking choice message and buttons
-        const bookingChoiceHtml = `<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
-<div id="booking-buttons" style="display: flex; justify-content: left; gap: 15px; display: none;">
-  <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
-  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
-</div>`;
+        const bookingChoiceHtml = `<div id="booking-choice-message" class="ai-message"></div>`;
         
         if (messageDiv) {
           messageDiv.innerHTML = messageDiv.innerHTML + bookingChoiceHtml;
@@ -251,60 +248,17 @@ async function captureFullPageScreenshot() {
         
         // Apply typing animation to the booking choice message
         const bookingChoiceMessage = document.getElementById('booking-choice-message');
-        const bookingButtons = document.getElementById('booking-buttons');
         if (bookingChoiceMessage) {
           typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
-            // Show buttons after typing animation completes
-            if (bookingButtons) {
-              bookingButtons.style.display = 'flex';
-            }
-          });
-        }
-        
-        // Add click event handlers for the buttons
-        const bookMyselfBtn = document.getElementById('bookMyself');
-        const useAIAgentBtn = document.getElementById('useAIAgent');
-        
-        if (bookMyselfBtn) {
-          bookMyselfBtn.addEventListener('click', () => {
-            bookMyselfBtn.style.background = 'rgb(16, 163, 127)';
-            bookMyselfBtn.textContent = '✓ Book myself';
-            if (useAIAgentBtn) {
-              useAIAgentBtn.style.background = '#9E9E9E';
-              useAIAgentBtn.style.cursor = 'not-allowed';
-            }
-            
-            // Mark setup messages as complete when user makes a choice
+            // Mark setup messages as complete after typing animation
             setupMessagesComplete = true;
             
             // Display pricing results if they're available
             if (pricingResults) {
-              console.log('User made choice and pricing results available, calling displayPricingResults');
+              console.log('Setup complete and pricing results available, calling displayPricingResults');
               displayPricingResults();
             } else {
-              console.log('User made choice but no pricing results available yet');
-            }
-          });
-        }
-        
-        if (useAIAgentBtn) {
-          useAIAgentBtn.addEventListener('click', () => {
-            useAIAgentBtn.style.background = 'rgb(16, 163, 127)';
-            useAIAgentBtn.textContent = '✓ Agentic AI booking';
-            if (bookMyselfBtn) {
-              bookMyselfBtn.style.background = '#9E9E9E';
-              bookMyselfBtn.style.cursor = 'not-allowed';
-            }
-            
-            // Mark setup messages as complete when user makes a choice
-            setupMessagesComplete = true;
-            
-            // Display pricing results if they're available
-            if (pricingResults) {
-              console.log('User made choice and pricing results available, calling displayPricingResults');
-              displayPricingResults();
-            } else {
-              console.log('User made choice but no pricing results available yet');
+              console.log('Setup complete but no pricing results available yet');
             }
           });
         }
@@ -423,7 +377,7 @@ async function startScreenshotProcess() {
             if (bookingData.customerName && bookingData.customerName.trim() !== '') {
               // Extract first name from full name
               const firstName = bookingData.customerName.split(' ')[0];
-              const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>`;
+              const greetingHtml = `<div class="ai-message">Hi ${firstName},</div>`;
               finalHtml = greetingHtml;
             } else {
               // Display message without greeting when customer name is blank
@@ -440,70 +394,23 @@ async function startScreenshotProcess() {
               }
               
               // Display the booking choice message and buttons after the greeting
-              const bookingChoiceHtml = `<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
-<div id="booking-buttons" style="display: flex; justify-content: left; gap: 15px; display: none;">
-  <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
-  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
-</div>`;
+              const bookingChoiceHtml = `<div id="booking-choice-message" class="ai-message"></div>`;
               
               messageDiv.innerHTML = messageDiv.innerHTML + bookingChoiceHtml;
               
               // Apply typing animation to the booking choice message
               const bookingChoiceMessage = document.getElementById('booking-choice-message');
-              const bookingButtons = document.getElementById('booking-buttons');
               if (bookingChoiceMessage) {
                 typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
-                  // Show buttons after typing animation completes
-                  if (bookingButtons) {
-                    bookingButtons.style.display = 'flex';
-                  }
-                });
-              }
-              
-              // Add click event handlers for the buttons
-              const bookMyselfBtn = document.getElementById('bookMyself');
-              const useAIAgentBtn = document.getElementById('useAIAgent');
-              
-              if (bookMyselfBtn) {
-                bookMyselfBtn.addEventListener('click', () => {
-                  bookMyselfBtn.style.background = 'rgb(16, 163, 127)';
-                  bookMyselfBtn.textContent = '✓ Book myself';
-                  if (useAIAgentBtn) {
-                    useAIAgentBtn.style.background = '#9E9E9E';
-                    useAIAgentBtn.style.cursor = 'not-allowed';
-                  }
-                  
-                  // Mark setup messages as complete when user makes a choice
+                  // Mark setup messages as complete after typing animation
                   setupMessagesComplete = true;
                   
                   // Display pricing results if they're available
                   if (pricingResults) {
-                    console.log('User made choice and pricing results available, calling displayPricingResults');
+                    console.log('Setup complete and pricing results available, calling displayPricingResults');
                     displayPricingResults();
                   } else {
-                    console.log('User made choice but no pricing results available yet');
-                  }
-                });
-              }
-              
-              if (useAIAgentBtn) {
-                useAIAgentBtn.addEventListener('click', () => {
-                  useAIAgentBtn.style.background = 'rgb(16, 163, 127)';
-                  useAIAgentBtn.textContent = '✓ Agentic AI booking';
-                  if (bookMyselfBtn) {
-                    bookMyselfBtn.style.background = '#9E9E9E';
-                    bookMyselfBtn.style.cursor = 'not-allowed';
-                  }
-                  
-                  // Mark setup messages as complete when user makes a choice
-                  setupMessagesComplete = true;
-                  
-                  // Display pricing results if they're available
-                  if (pricingResults) {
-                    console.log('User made choice and pricing results available, calling displayPricingResults');
-                    displayPricingResults();
-                  } else {
-                    console.log('User made choice but no pricing results available yet');
+                    console.log('Setup complete but no pricing results available yet');
                   }
                 });
               }
@@ -665,6 +572,12 @@ function injectPopup() {
       <div class="footer">
         <button id="screenshotBtn" class="screenshot-button" style="display: none;">Refresh</button>
       </div>
+      <div id="chat-input-container" style="display: none;">
+        <div class="input-wrapper">
+          <input type="text" id="chat-input" placeholder="Type your message..." />
+          <button id="send-message-btn">Send</button>
+        </div>
+      </div>
     </div>
   `;
   const body = document.body || document.getElementsByTagName('body')[0];
@@ -674,6 +587,9 @@ function injectPopup() {
     const screenshotBtn = document.getElementById('screenshotBtn');
     const popup = document.getElementById('booking-ai-popup');
     const greetingMessage = document.getElementById('greeting-message');
+    const chatInputContainer = document.getElementById('chat-input-container');
+    const chatInput = document.getElementById('chat-input') as HTMLInputElement;
+    const sendMessageBtn = document.getElementById('send-message-btn');
     
     // Start typing animation for the greeting message
     if (greetingMessage) {
@@ -712,6 +628,12 @@ function injectPopup() {
                 popup.style.top = '0';
                 popup.style.left = '0';
                 popup.style.zIndex = '9999';
+                popup.classList.add('expanded');
+              }
+              
+              // Show the chat input container
+              if (chatInputContainer) {
+                chatInputContainer.style.display = 'block';
               }
               
               // Set the chat window expanded flag
@@ -722,18 +644,14 @@ function injectPopup() {
                 // Display the greeting and booking choice messages
                 if (bookingData.customerName && bookingData.customerName.trim() !== '') {
                   const firstName = bookingData.customerName.split(' ')[0];
-                  const greetingHtml = `<div style="margin-bottom: 15px; text-align: left;">Hi ${firstName},</div>`;
+                  const greetingHtml = `<div class="ai-message">Hi ${firstName},</div>`;
                   if (messageDiv) {
                     messageDiv.innerHTML = greetingHtml;
                   }
                 }
                 
                 // Display the booking choice message and buttons
-                const bookingChoiceHtml = `<div id="booking-choice-message" style="margin-bottom: 15px; text-align: left;"></div>
-<div id="booking-buttons" style="display: flex; justify-content: left; gap: 15px; display: none;">
-  <button id="bookMyself" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Book myself</button>
-  <button id="useAIAgent" style="background: #FF9800; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer;">Agentic AI booking</button>
-</div>`;
+                const bookingChoiceHtml = `<div id="booking-choice-message" class="ai-message"></div>`;
                 
                 if (messageDiv) {
                   messageDiv.innerHTML = messageDiv.innerHTML + bookingChoiceHtml;
@@ -741,60 +659,17 @@ function injectPopup() {
                 
                 // Apply typing animation to the booking choice message
                 const bookingChoiceMessage = document.getElementById('booking-choice-message');
-                const bookingButtons = document.getElementById('booking-buttons');
                 if (bookingChoiceMessage) {
                   typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
-                    // Show buttons after typing animation completes
-                    if (bookingButtons) {
-                      bookingButtons.style.display = 'flex';
-                    }
-                  });
-                }
-                
-                // Add click event handlers for the buttons
-                const bookMyselfBtn = document.getElementById('bookMyself');
-                const useAIAgentBtn = document.getElementById('useAIAgent');
-                
-                if (bookMyselfBtn) {
-                  bookMyselfBtn.addEventListener('click', () => {
-                    bookMyselfBtn.style.background = 'rgb(16, 163, 127)';
-                    bookMyselfBtn.textContent = '✓ Book myself';
-                    if (useAIAgentBtn) {
-                      useAIAgentBtn.style.background = '#9E9E9E';
-                      useAIAgentBtn.style.cursor = 'not-allowed';
-                    }
-                    
-                    // Mark setup messages as complete when user makes a choice
+                    // Mark setup messages as complete after typing animation
                     setupMessagesComplete = true;
                     
                     // Display pricing results if they're available
                     if (pricingResults) {
-                      console.log('User made choice and pricing results available, calling displayPricingResults');
+                      console.log('Setup complete and pricing results available, calling displayPricingResults');
                       displayPricingResults();
                     } else {
-                      console.log('User made choice but no pricing results available yet');
-                    }
-                  });
-                }
-                
-                if (useAIAgentBtn) {
-                  useAIAgentBtn.addEventListener('click', () => {
-                    useAIAgentBtn.style.background = 'rgb(16, 163, 127)';
-                    useAIAgentBtn.textContent = '✓ Agentic AI booking';
-                    if (bookMyselfBtn) {
-                      bookMyselfBtn.style.background = '#9E9E9E';
-                      bookMyselfBtn.style.cursor = 'not-allowed';
-                    }
-                    
-                    // Mark setup messages as complete when user makes a choice
-                    setupMessagesComplete = true;
-                    
-                    // Display pricing results if they're available
-                    if (pricingResults) {
-                      console.log('User made choice and pricing results available, calling displayPricingResults');
-                      displayPricingResults();
-                    } else {
-                      console.log('User made choice but no pricing results available yet');
+                      console.log('Setup complete but no pricing results available yet');
                     }
                   });
                 }
@@ -805,6 +680,38 @@ function injectPopup() {
             });
           });
         }, 2000);
+      });
+    }
+    
+    // Add event handlers for chat input
+    if (sendMessageBtn && chatInput) {
+      const handleSendMessage = () => {
+        const message = chatInput.value.trim();
+        if (message) {
+          // Add user message to chat
+          const messageDiv = document.querySelector('.message');
+          if (messageDiv) {
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'user-message';
+            userMessageDiv.textContent = message;
+            messageDiv.appendChild(userMessageDiv);
+          }
+          
+          // Clear input
+          chatInput.value = '';
+          
+          // Here you can add logic to handle the message (e.g., send to API, etc.)
+          console.log('User message:', message);
+        }
+      };
+      
+      sendMessageBtn.addEventListener('click', handleSendMessage);
+      
+      // Allow Enter key to send message
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          handleSendMessage();
+        }
       });
     }
     
@@ -875,7 +782,7 @@ function displayPricingResults() {
     console.log('Displaying pricing messages');
     // Display first message immediately
     const firstMessage = document.createElement('div');
-    firstMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+    firstMessage.className = 'ai-message';
     pricingMessageDiv.appendChild(firstMessage);
     
     // Apply typing animation to the first message
@@ -896,7 +803,7 @@ function displayPricingResults() {
       // Display second message after first message typing completes
       setTimeout(() => {
         const secondMessage = document.createElement('div');
-        secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+        secondMessage.className = 'ai-message';
         pricingMessageDiv.appendChild(secondMessage);
         
         // Apply typing animation to the second message
@@ -906,7 +813,7 @@ function displayPricingResults() {
             // Check if bestPrice data is available
             if (pricingResults!.bookingLink) {
               const thirdMessage = document.createElement('div');
-              thirdMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+              thirdMessage.className = 'ai-message';
               pricingMessageDiv.appendChild(thirdMessage);
               
               // Apply typing animation to the third message
@@ -928,7 +835,7 @@ function displayPricingResults() {
     console.log('Displaying no better price message');
     // No cheaper price found - display alternative message
     const noCheaperMessage = document.createElement('div');
-    noCheaperMessage.style.cssText = 'margin-top: 15px; text-align: left;';
+    noCheaperMessage.className = 'ai-message';
     pricingMessageDiv.appendChild(noCheaperMessage);
     
     // Apply typing animation to the no cheaper price message
