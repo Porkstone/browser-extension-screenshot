@@ -22,7 +22,7 @@ let bookingData = {
   isCancellable: '',
   isSignedIn: '',
   totalCost: '',
-  answersArray: [] as Array<{question: string, answer: string}>,
+  answersArray: [] as Array<{ question: string, answer: string }>,
   readyMessageDisplayed: false,
   pricingData: [] as any[],
   bestPrice: null as any,
@@ -56,8 +56,11 @@ interface SystemMessage {
 // Add a global counter for user message sends
 let userMessageSendCount = 0;
 
+// Add a variable to track when the customer has answered all questions
+let customerAnsweredAllQuestions = false;
+
 // Function to update booking data from answers
-function updateBookingData(answersArray: Array<{question: string, answer: string}>) {
+function updateBookingData(answersArray: Array<{ question: string, answer: string }>) {
   bookingData.answersArray = answersArray;
   bookingData.customerName = answersArray[2]?.answer || ''; // Customer name is at index 2
   bookingData.customerEmail = answersArray[3]?.answer || ''; // Customer email is at index 3
@@ -69,13 +72,13 @@ function updateBookingData(answersArray: Array<{question: string, answer: string
 // Function to update pricing data
 function updatePricingData(pricingData: any[]) {
   bookingData.pricingData = pricingData;
-  
+
   if (Array.isArray(pricingData) && pricingData.length > 0) {
     // Find the best price (lowest totalPrice)
-    bookingData.bestPrice = pricingData.reduce((min, current) => 
+    bookingData.bestPrice = pricingData.reduce((min, current) =>
       current.totalPrice < min.totalPrice ? current : min
     );
-    
+
     // Convert USD to GBP (approximate rate: 1 USD = 0.74 GBP)
     const usdToGbpRate = 0.74;
     bookingData.priceInGbp = bookingData.bestPrice.userLocalTotalPrice * usdToGbpRate;
@@ -172,7 +175,7 @@ function getFullPageWidth() {
 function typeText(element: HTMLElement, text: string, speed: number = TYPING_SPEED_MS, callback?: () => void) {
   element.textContent = '';
   let index = 0;
-  
+
   function typeNextChar() {
     if (index < text.length) {
       element.textContent += text.charAt(index);
@@ -185,7 +188,7 @@ function typeText(element: HTMLElement, text: string, speed: number = TYPING_SPE
       }
     }
   }
-  
+
   typeNextChar();
 }
 
@@ -197,30 +200,30 @@ async function captureFullPageScreenshot() {
     const refreshingDiv = document.createElement('div');
     refreshingDiv.style.cssText = 'margin-top: 15px;';
     messageDiv.appendChild(refreshingDiv);
-    
+
     // Add Reveal button (initially hidden)
     const revealButton = document.createElement('button');
     revealButton.textContent = 'Reveal';
     revealButton.style.cssText = 'background: #10a37f; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; display: none; margin-left: auto; margin-right: auto;';
     messageDiv.appendChild(revealButton);
-    
+
     // Apply typing animation to the message
     typeText(refreshingDiv, 'There is a better value than yours available for this hotel', TYPING_SPEED_MS, () => {
       // Show Reveal button after typing animation completes
       revealButton.style.display = 'block';
     });
-    
+
     // Add click handler for Reveal button - only expands the chat window
     revealButton.addEventListener('click', async () => {
       // Hide the Reveal button
       revealButton.style.display = 'none';
-      
+
       // Clear the message div contents
       const messageDiv = document.querySelector('.message');
       if (messageDiv) {
         messageDiv.innerHTML = '';
       }
-      
+
       // Expand the popup to full page height
       const popup = document.getElementById('booking-ai-popup');
       if (popup) {
@@ -232,10 +235,10 @@ async function captureFullPageScreenshot() {
         popup.style.zIndex = '9999';
         popup.classList.add('expanded');
       }
-      
+
       // Set the chat window expanded flag
       chatWindowExpanded = true;
-      
+
       // If the API response has already been processed, display the messages now
       if (bookingData.customerName || bookingData.answersArray.length > 0) {
         // Display the greeting and booking choice messages
@@ -248,14 +251,14 @@ async function captureFullPageScreenshot() {
             console.log('systemMessagesShown:', systemMessagesShown);
           }
         }
-        
+
         // Display the booking choice message and buttons
         const bookingChoiceHtml = `<div id="booking-choice-message" class="ai-message"></div>`;
-        
+
         if (messageDiv) {
           messageDiv.innerHTML = messageDiv.innerHTML + bookingChoiceHtml;
         }
-        
+
         // Apply typing animation to the booking choice message
         const bookingChoiceMessage = document.getElementById('booking-choice-message');
         if (bookingChoiceMessage) {
@@ -267,7 +270,7 @@ async function captureFullPageScreenshot() {
           });
         }
       }
-      
+
       // The screenshot process is now handled automatically when the popup first loads
       // No need to call startScreenshotProcess() here anymore
     });
@@ -311,19 +314,19 @@ async function startScreenshotProcess() {
         pageWidth,
         pageHeight
       );
-     
+
       interface QuestionAnswer {
         question: string;
         answer: string;
       }
 
       // If your API returns the array directly
-    interface DirectArrayResponse extends Array<QuestionAnswer> {}
+      interface DirectArrayResponse extends Array<QuestionAnswer> { }
 
-  // If your API wraps the array in an object (like {results: [...]} as seen in your logs)
-    interface WrappedArrayResponse {
-      results: QuestionAnswer[];
-}
+      // If your API wraps the array in an object (like {results: [...]} as seen in your logs)
+      interface WrappedArrayResponse {
+        results: QuestionAnswer[];
+      }
 
       const questions = [
         "What is the name of the hotel?",
@@ -340,7 +343,7 @@ async function startScreenshotProcess() {
         "Is the booking canceleable with full refund?",
         "Is the customer signed in to the website? Please answer yes or no",
         "What is the total cost of the booking? Please provide a number without any currency symbols"
-        
+
       ];
       canvas.toBlob(async (blob) => {
         if (blob) {
@@ -349,33 +352,33 @@ async function startScreenshotProcess() {
           const formData = new FormData();
           formData.append("file", blob, `booking-fullpage-${new Date().toISOString()}.png`);
           formData.append("questions", JSON.stringify(questions));
-          
+
           // Make first API call and display greeting immediately
           const apiResponse = await fetch(DEV_LOCAL_MODE ? "http://localhost:3001/api/ask" : "https://capture-booking-data-api.vercel.app/api/ask", {
             method: "POST",
             body: formData
           });
-          
+
           const result = await apiResponse.json() as WrappedArrayResponse;
           console.log('API response:', result); // Debug log
           console.log('First element:', result.results[0].answer);
-          
+
           // Display the answers first
           const messageDiv = document.querySelector('.message');
           if (messageDiv) {
             // Get the results array from the wrapped response
             const answersArray = result.results || [];
-            
+
             // Update booking data context
             updateBookingData(answersArray);
-            
+
             console.log('answer[0]:', answersArray[0]?.answer);
             console.log('Extracted data:', {
               hotelName: bookingData.hotelName,
               checkInDate: bookingData.checkInDate,
               checkOutDate: bookingData.checkOutDate
             });
-            
+
             // Check for customer name and add greeting immediately
             let finalHtml = '';
             if (bookingData.customerName && bookingData.customerName.trim() !== '') {
@@ -388,7 +391,7 @@ async function startScreenshotProcess() {
               const greetingHtml = ``;
               finalHtml = greetingHtml;
             }
-            
+
             // Only display messages if the chat window has been expanded
             if (chatWindowExpanded) {
               // Preserve the original greeting message and only add new content if needed
@@ -401,12 +404,12 @@ async function startScreenshotProcess() {
                   console.log('systemMessagesShown:', systemMessagesShown);
                 }
               }
-              
+
               // Display the booking choice message and buttons after the greeting
               const bookingChoiceHtml = `<div id="booking-choice-message" class="ai-message"></div>`;
-              
+
               messageDiv.innerHTML = messageDiv.innerHTML + bookingChoiceHtml;
-              
+
               // Apply typing animation to the booking choice message
               const bookingChoiceMessage = document.getElementById('booking-choice-message');
               if (bookingChoiceMessage) {
@@ -418,22 +421,22 @@ async function startScreenshotProcess() {
                 });
               }
             }
-            
+
             // Make four parallel API calls for pricing data
             const hotelName = encodeURIComponent((answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || ''));
-            
+
             // First API call - Vietnam
             const pricingResponseVN = fetch(`https://sp.autodeal.io/api/prices/VN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
+
             // Second API call - Thailand
             const pricingResponseTH = fetch(`https://sp.autodeal.io/api/prices/TH4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
+
             // Third API call - UK
             const pricingResponseUK = fetch(`https://autodeal.io/api/prices/UK4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
+
             // Fourth API call - US
             const pricingResponseUS = fetch(`https://autodeal.io/api/prices/US4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
+
             // Wait for all four API calls to complete with 5 second delay
             const [pricingDataVN, pricingDataTH, pricingDataUK, pricingDataUS] = await Promise.all([
               pricingResponseVN.then(response => response.json()),
@@ -441,20 +444,20 @@ async function startScreenshotProcess() {
               pricingResponseUK.then(response => response.json()),
               pricingResponseUS.then(response => response.json())
             ]);
-            
+
             console.log('Pricing API response VN:', pricingDataVN);
             console.log('Pricing API response TH:', pricingDataTH);
             console.log('Pricing API response UK:', pricingDataUK);
             console.log('Pricing API response US:', pricingDataUS);
-            
+
             console.log('About to process pricing data immediately...');
-            
+
             // Prevent duplicate processing
             if (pricingProcessingComplete) {
               console.log('Pricing processing already complete, skipping...');
               return;
             }
-            
+
             try {
               // Helper function to get best price from data
               const getBestPrice = (data: any) => {
@@ -467,16 +470,16 @@ async function startScreenshotProcess() {
                 }
                 return null;
               };
-              
+
               const bestPriceVN = getBestPrice(pricingDataVN);
               const bestPriceTH = getBestPrice(pricingDataTH);
               const bestPriceUK = getBestPrice(pricingDataUK);
               const bestPriceUS = getBestPrice(pricingDataUS);
-              
+
               // Find the lowest price among all four (only consider valid prices > 0)
               let bestPricingData = null;
               let bestCountry = '';
-              
+
               // Compare all valid prices and find the lowest
               const validPrices = [
                 { data: pricingDataVN, price: bestPriceVN, country: 'Vietnam' },
@@ -484,45 +487,45 @@ async function startScreenshotProcess() {
                 { data: pricingDataUK, price: bestPriceUK, country: 'UK' },
                 { data: pricingDataUS, price: bestPriceUS, country: 'US' }
               ].filter(item => item.price !== null);
-              
+
               if (validPrices.length > 0) {
-                const bestOption = validPrices.reduce((min, current) => 
+                const bestOption = validPrices.reduce((min, current) =>
                   current.price.totalPrice < min.price.totalPrice ? current : min
                 );
                 bestPricingData = bestOption.data;
                 bestCountry = bestOption.country;
               }
-              
+
               console.log('Pricing API processing completed:');
               console.log('- validPrices.length:', validPrices.length);
               console.log('- bestPricingData:', bestPricingData);
               console.log('- bestCountry:', bestCountry);
-              
+
               // Update pricing data in context with the best result
               updatePricingData(bestPricingData);
-              
+
               console.log('About to process pricing data immediately...');
-              
+
               // Process pricing data and store results (only if we have valid pricing data)
               console.log('Processing pricing data...');
               console.log('bestPricingData:', bestPricingData);
               console.log('bookingData.pricingData:', bookingData.pricingData);
               console.log('bookingData.pricingData.length:', bookingData.pricingData?.length);
-              
+
               if (bestPricingData) {
                 console.log('bestPricingData is valid, proceeding to set pricingResults');
                 // Get the hotel name from answers array index 0
                 const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
-                
+
                 // Get the country name from the best price data
                 const countryName = bookingData.bestPrice?.apiCountryName || 'Unknown Country';
-                
+
                 // Calculate the actual savings
                 const bookingComPrice = parseFloat(answersArray[13]?.answer || '0'); // This is in GBP
                 const bestPriceUSD = bookingData.bestPrice?.totalPrice || 0; // This is in USD
-                const bestPriceGBP = bestPriceUSD * 0.74; // Convert USD to GBP (approximate rate)
+                const bestPriceGBP = bestPriceUSD * 0.73; // Convert USD to GBP (approximate rate)
                 const savingsGBP = bookingComPrice - bestPriceGBP; // Both prices now in GBP
-                
+
                 console.log('Calculated values:');
                 console.log('- hotelName:', hotelName);
                 console.log('- countryName:', countryName);
@@ -530,7 +533,7 @@ async function startScreenshotProcess() {
                 console.log('- bestPriceUSD:', bestPriceUSD);
                 console.log('- bestPriceGBP:', bestPriceGBP);
                 console.log('- savingsGBP:', savingsGBP);
-                
+
                 // Store the pricing results for later display
                 pricingResults = {
                   hotelName,
@@ -539,12 +542,12 @@ async function startScreenshotProcess() {
                   bookingLink: bookingData.bestPrice?.bookingLink || '',
                   hasCheaperPrice: true
                 };
-                
+
                 console.log('pricingResults set to:', pricingResults);
-                
+
                 console.log('Pricing results stored, checking if setup messages are complete');
-               
-                
+
+
                 // Note: Final message will be triggered from user message handling flow
                 // after user responds to email confirmation and three messages complete
               } else {
@@ -557,16 +560,16 @@ async function startScreenshotProcess() {
                   bookingLink: '',
                   hasCheaperPrice: false
                 };
-                
+
                 console.log('pricingResults set to (no cheaper price):', pricingResults);
-                
+
                 console.log('No pricing data found, checking if setup messages are complete');
-               
+
               }
             } catch (error) {
               console.error('Error in pricing processing:', error);
             }
-            
+
             // Mark processing as complete
             pricingProcessingComplete = true;
             console.log('Pricing processing marked as complete');
@@ -622,7 +625,7 @@ function injectPopup() {
     const chatInputContainer = document.getElementById('chat-input-container');
     const chatInput = document.getElementById('chat-input') as HTMLInputElement;
     const sendMessageBtn = document.getElementById('send-message-btn');
-    
+
     // Start typing animation for the greeting message
     if (greetingMessage) {
       typeText(greetingMessage, 'Hello, I am your co-pilot for this payment.', TYPING_SPEED_MS, () => {
@@ -633,7 +636,7 @@ function injectPopup() {
           const secondMessage = document.createElement('div');
           secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
           greetingMessage.parentElement?.appendChild(secondMessage);
-          
+
           // Apply typing animation to the second message
           typeText(secondMessage, 'There is a better value available than yours for this hotel', TYPING_SPEED_MS, () => {
             systemMessagesShown.push({ key: 'greeting_better_value', greetingMessage: 'There is a better value available than yours for this hotel', answer: '' });
@@ -643,18 +646,18 @@ function injectPopup() {
             revealButton.textContent = 'Reveal';
             revealButton.style.cssText = 'background: #10a37f; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; display: block; margin-left: auto; margin-right: auto;';
             greetingMessage.parentElement?.appendChild(revealButton);
-            
+
             // Add click handler for Reveal button - only expands the chat window
             revealButton.addEventListener('click', async () => {
               // Hide the Reveal button
               revealButton.style.display = 'none';
-              
+
               // Clear the message div contents
               const messageDiv = document.querySelector('.message');
               if (messageDiv) {
                 messageDiv.innerHTML = '';
               }
-              
+
               // Expand the popup to full page height
               const popup = document.getElementById('booking-ai-popup');
               if (popup) {
@@ -666,15 +669,15 @@ function injectPopup() {
                 popup.style.zIndex = '9999';
                 popup.classList.add('expanded');
               }
-              
+
               // Show the chat input container
               if (chatInputContainer) {
                 chatInputContainer.style.display = 'block';
               }
-              
+
               // Set the chat window expanded flag
               chatWindowExpanded = true;
-              
+
               // If the API response has already been processed, display the messages now
               if (bookingData.customerName || bookingData.answersArray.length > 0) {
                 // Display the greeting and booking choice messages
@@ -687,14 +690,14 @@ function injectPopup() {
                     console.log('systemMessagesShown:', systemMessagesShown);
                   }
                 }
-                
+
                 // Display the booking choice message and buttons
                 const bookingChoiceHtml = `<div id="booking-choice-message" class="ai-message"></div>`;
-                
+
                 if (messageDiv) {
                   messageDiv.innerHTML = messageDiv.innerHTML + bookingChoiceHtml;
                 }
-                
+
                 // Apply typing animation to the booking choice message
                 const bookingChoiceMessage = document.getElementById('booking-choice-message');
                 if (bookingChoiceMessage) {
@@ -706,7 +709,7 @@ function injectPopup() {
                   });
                 }
               }
-              
+
               // The screenshot process is now handled automatically when the popup first loads
               // No need to call startScreenshotProcess() here anymore
             });
@@ -714,7 +717,7 @@ function injectPopup() {
         }, 2000);
       });
     }
-    
+
     // Add event handlers for chat input
     if (sendMessageBtn && chatInput) {
       const handleSendMessage = () => {
@@ -727,6 +730,7 @@ function injectPopup() {
             const idx = systemMessagesShown.findIndex(msg => msg.key === 'booking_choice' && msg.answer === '');
             if (idx !== -1) {
               systemMessagesShown[idx].answer = message;
+              bookingChoiceAnswered = true;
               console.log('systemMessagesShown (set booking_choice answer on first message):', systemMessagesShown);
             }
           }
@@ -735,6 +739,7 @@ function injectPopup() {
             const idx = systemMessagesShown.findIndex(msg => msg.key === 'email_confirmation' && msg.answer === '');
             if (idx !== -1) {
               systemMessagesShown[idx].answer = message;
+              userRespondedToEmail = true;
               console.log('systemMessagesShown (set email_confirmation answer on second message):', systemMessagesShown);
             }
           }
@@ -753,56 +758,60 @@ function injectPopup() {
           // Here you can add logic to handle the message (e.g., send to API, etc.)
           console.log('User message:', message);
 
-         
-
-          // If waiting for booking choice answer
-          if (userRespondedToEmail && !bookingChoiceAnswered) {
-            bookingChoiceAnswered = true;
-            waitingForFinalMessage = true; // Set flag to indicate we're waiting for final message
-            console.log('User responded to booking choice. Both questions answered, now showing three system messages.');
-            // Show the three system messages after user responds to booking choice
-            setTimeout(() => {
-              
-              const messageDiv = document.querySelector('.message');
-              
-              if (messageDiv) {
-                // First message
-                const firstMessageDiv = document.createElement('div');
-                firstMessageDiv.className = 'ai-message';
-                messageDiv.appendChild(firstMessageDiv);
-                typeText(firstMessageDiv, 'I have everything I need now. Let me load your results', TYPING_SPEED_MS, () => {
-                  systemMessagesShown.push({ key: 'three_msg_1', greetingMessage: 'I have everything I need now. Let me load your results', answer: '' });
-                  console.log('systemMessagesShown:', systemMessagesShown);
-                  // Second message after first completes
-                  setTimeout(() => {
-                    const secondMessageDiv = document.createElement('div');
-                    secondMessageDiv.className = 'ai-message';
-                    messageDiv.appendChild(secondMessageDiv);
-                    typeText(secondMessageDiv, 'I will show you the country that offers the best value for your hotel', TYPING_SPEED_MS, () => {
-                      systemMessagesShown.push({ key: 'three_msg_2', greetingMessage: 'I will show you the country that offers the best value for your hotel', answer: '' });
-                      console.log('systemMessagesShown:', systemMessagesShown);
-                      // Third message after second completes
-                      setTimeout(() => {
-                        const thirdMessageDiv = document.createElement('div');
-                        thirdMessageDiv.className = 'ai-message';
-                        messageDiv.appendChild(thirdMessageDiv);
-                        typeText(thirdMessageDiv, 'and how much better is than Booking.com', TYPING_SPEED_MS, () => {
-                          systemMessagesShown.push({ key: 'three_msg_3', greetingMessage: 'and how much better is than Booking.com', answer: '' });
-                          console.log('systemMessagesShown:', systemMessagesShown);
-                          // After all three messages complete, wait 1 second then check for pricing results
-                          setTimeout(() => {
-                            threeMessagesComplete = true;
-                            // Check if all conditions are met for final message
-                            maybeShowFinalMessage();
-                          }, 1000);
-                        });
-                      }, 1000);
-                    });
-                  }, 1000);
-                });
-              }
-            }, 1000); // Wait 1 second after user response before showing the messages
-            return;
+          // Set customerAnsweredAllQuestions to true after both answers are stored
+          const hasBookingChoiceAnswer = systemMessagesShown.some(msg => msg.key === 'booking_choice' && msg.answer !== '');
+          const hasEmailConfirmationAnswer = systemMessagesShown.some(msg => msg.key === 'email_confirmation' && msg.answer !== '');
+          if (hasBookingChoiceAnswer && hasEmailConfirmationAnswer && !customerAnsweredAllQuestions) {
+            customerAnsweredAllQuestions = true;
+            console.log('customerAnsweredAllQuestions set to true');
+            // Display the next three system messages in sequence and store each one
+            const messageDiv = document.querySelector('.message');
+            if (messageDiv) {
+              // First system message
+              const firstMessageDiv = document.createElement('div');
+              firstMessageDiv.className = 'ai-message';
+              messageDiv.appendChild(firstMessageDiv);
+              typeText(firstMessageDiv, 'I have everything I need now. Let me load your results', TYPING_SPEED_MS, () => {
+                systemMessagesShown.push({ key: 'three_msg_1', greetingMessage: 'I have everything I need now. Let me load your results', answer: '' });
+                console.log('systemMessagesShown:', systemMessagesShown);
+                // Second system message
+                setTimeout(() => {
+                  const secondMessageDiv = document.createElement('div');
+                  secondMessageDiv.className = 'ai-message';
+                  messageDiv.appendChild(secondMessageDiv);
+                  typeText(secondMessageDiv, 'I will show you the country that offers the best value for your hotel', TYPING_SPEED_MS, () => {
+                    systemMessagesShown.push({ key: 'three_msg_2', greetingMessage: 'I will show you the country that offers the best value for your hotel', answer: '' });
+                    console.log('systemMessagesShown:', systemMessagesShown);
+                    // Third system message
+                    setTimeout(() => {
+                      const thirdMessageDiv = document.createElement('div');
+                      thirdMessageDiv.className = 'ai-message';
+                      messageDiv.appendChild(thirdMessageDiv);
+                      typeText(thirdMessageDiv, 'and how much better it is than Booking.com', TYPING_SPEED_MS, () => {
+                        systemMessagesShown.push({ key: 'three_msg_3', greetingMessage: 'and how much better it is than Booking.com', answer: '' });
+                        console.log('systemMessagesShown:', systemMessagesShown);
+                        // After all three messages complete, wait 1 second then check for pricing results
+                        setTimeout(() => {
+                          threeMessagesComplete = true;
+                          let attempts = 0;
+                          const maxAttempts = 20;
+                          async function pollFinalMessage() {
+                            while (!finalMessageDisplayed && attempts < maxAttempts) {
+                              attempts++;
+                              await new Promise(resolve => {
+                                maybeShowFinalMessage();
+                                setTimeout(resolve, 10000);
+                              });
+                            }
+                          }
+                          pollFinalMessage();
+                        }, 1000);
+                      });
+                    }, 1000);
+                  });
+                }, 1000);
+              });
+            }
           }
 
           // Display email confirmation message after user types (only if not already shown and we have customer email)
@@ -826,8 +835,10 @@ function injectPopup() {
         }
       };
 
+      
       // Helper to show final message if all conditions are met
       function maybeShowFinalMessage() {
+        console.log('maybeShowFinalMessage called');
         if (
           pricingResults &&
           pricingResults.hasCheaperPrice &&
@@ -836,7 +847,9 @@ function injectPopup() {
           threeMessagesComplete &&
           !finalMessageDisplayed
         ) {
+
           console.log('All conditions met, showing final message');
+          finalMessageDisplayed = true;
           setTimeout(() => {
             const messageDiv = document.querySelector('.message');
             if (messageDiv) {
@@ -844,11 +857,16 @@ function injectPopup() {
               finalMessageDiv.className = 'ai-message';
               messageDiv.appendChild(finalMessageDiv);
               const amountSaved = pricingResults.savingsGBP.toFixed(2);
-              const finalMessage = `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}\nIt is £${amountSaved} better than on Booking.com\nHere is the booking link, happy to help with payment ${pricingResults.bookingLink}`;
-              typeText(finalMessageDiv, finalMessage, TYPING_SPEED_MS, () => {
-                systemMessagesShown.push({ key: 'final_result', greetingMessage: finalMessage, answer: '' });
+              const bookingLink = pricingResults.bookingLink || '#';
+              const hotelNameHtml = `<span style=\"color: #10a37f;\">${pricingResults.hotelName}</span>`;
+              const countryHtml = `<span style=\"color: #10a37f;\">${pricingResults.countryName}</span>`;
+              const amountSavedHtml = `<span style=\"color: #10a37f;\">£${amountSaved}</span>`;
+              const bookingLinkHtml = `<a href=\"${bookingLink}\" target=\"_blank\" style=\"color: #10a37f; text-decoration: underline;\">Book Now</a>`;
+              const finalMessageHtml = `I found the best value for ${hotelNameHtml} in ${countryHtml}<br>It is ${amountSavedHtml} better than on Booking.com<br>Here is the booking link, happy to help with payment ${bookingLinkHtml}`;
+              typeText(finalMessageDiv, '', TYPING_SPEED_MS, () => {
+                finalMessageDiv.innerHTML = finalMessageHtml;
+                systemMessagesShown.push({ key: 'final_result', greetingMessage: finalMessageHtml, answer: '' });
                 console.log('systemMessagesShown:', systemMessagesShown);
-                finalMessageDisplayed = true;
                 waitingForFinalMessage = false;
                 console.log('Final message displayed and marked as shown');
               });
@@ -866,8 +884,10 @@ function injectPopup() {
         }
       }
 
+ 
+
       sendMessageBtn.addEventListener('click', handleSendMessage);
-      
+
       // Allow Enter key to send message
       chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -875,7 +895,7 @@ function injectPopup() {
         }
       });
     }
-    
+
     if (closeButton) {
       closeButton.addEventListener('click', () => {
         if (popup) popup.style.display = 'none';
@@ -923,57 +943,57 @@ async function waitForReadyMessage(): Promise<void> {
 function displayPricingResults() {
   console.log('displayPricingResults called');
   console.log('pricingResults:', pricingResults);
-  
+
   // Prevent duplicate final messages
   if (finalMessageDisplayed) {
     console.log('Final message already displayed, skipping displayPricingResults...');
     return;
   }
-  
+
   // Don't display final messages if we're waiting for user response flow
   if (waitingForFinalMessage) {
     console.log('Waiting for final message from user flow, skipping displayPricingResults...');
     return;
   }
-  
+
   if (!pricingResults) {
     console.log('No pricing results available');
     return;
   }
-  
+
   const contentDiv = document.querySelector('.content');
   if (!contentDiv) {
     console.log('No content div found');
     return;
   }
-  
+
   // Create a second message div for pricing results
   const pricingMessageDiv = document.createElement('div');
   pricingMessageDiv.className = 'message';
-  pricingMessageDiv.style.cssText = 'margin-top: 30px; border-top: 1px solid #565869; padding-top: 20px; min-height: 200px;';
+  pricingMessageDiv.style.cssText = 'margin-top: 30px; border-top: 1px solid #565869; padding-top: 20px; min-height: 200px; max-width: 800px;';
   contentDiv.appendChild(pricingMessageDiv);
-  
+
   console.log('hasCheaperPrice:', pricingResults.hasCheaperPrice);
-  
+
   if (pricingResults.hasCheaperPrice) {
     console.log('Displaying pricing messages');
-    
+
     // Mark as displayed to prevent duplicates
     finalMessageDisplayed = true;
     console.log('Final message marked as displayed in displayPricingResults');
-    
+
     // Display first message immediately
     const firstMessage = document.createElement('div');
     firstMessage.className = 'ai-message';
     pricingMessageDiv.appendChild(firstMessage);
-    
+
     // Apply typing animation to the first message
     typeText(firstMessage, `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}`, TYPING_SPEED_MS, () => {
       // After typing animation completes, replace with HTML to color the country name
       if (pricingResults) {
         firstMessage.innerHTML = `I found the best value for ${pricingResults.hotelName} in <span style="color: rgb(16, 163, 127);">${pricingResults.countryName}</span>`;
       }
-      
+
       // Scroll to the bottom of the page after first message is displayed
       if (contentDiv) {
         contentDiv.scrollTo({
@@ -981,13 +1001,13 @@ function displayPricingResults() {
           behavior: 'smooth'
         });
       }
-      
+
       // Display second message after first message typing completes
       setTimeout(() => {
         const secondMessage = document.createElement('div');
         secondMessage.className = 'ai-message';
         pricingMessageDiv.appendChild(secondMessage);
-        
+
         // Apply typing animation to the second message
         typeText(secondMessage, `It is £${pricingResults!.savingsGBP.toFixed(2)} better than on Booking.com`, TYPING_SPEED_MS, () => {
           // Display third message after second message typing completes
@@ -997,7 +1017,7 @@ function displayPricingResults() {
               const thirdMessage = document.createElement('div');
               thirdMessage.className = 'ai-message';
               pricingMessageDiv.appendChild(thirdMessage);
-              
+
               // Apply typing animation to the third message
               typeText(thirdMessage, `Here is the booking link for you, happy to help with this payment `, TYPING_SPEED_MS, () => {
                 // Add the link after the text is typed
@@ -1019,7 +1039,7 @@ function displayPricingResults() {
     const noCheaperMessage = document.createElement('div');
     noCheaperMessage.className = 'ai-message';
     pricingMessageDiv.appendChild(noCheaperMessage);
-    
+
     // Apply typing animation to the no cheaper price message
     typeText(noCheaperMessage, 'On this occasion I was unable to locate a cheaper price, please refresh this page to try again.', TYPING_SPEED_MS);
   }
