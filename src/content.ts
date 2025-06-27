@@ -34,7 +34,27 @@ let setupMessagesComplete = false;
 let chatWindowExpanded = false;
 let emailConfirmationShown = false;
 let userRespondedToEmail = false;
+let bookingChoiceAnswered = false; // New flag for booking choice
 let waitingForFinalMessage = false;
+let pricingProcessingComplete = false; // Add flag to prevent duplicate processing
+let finalMessageDisplayed = false; // Add flag to prevent duplicate final messages
+let threeMessagesComplete = false; // Add flag to track when three messages are complete
+
+// Add userMessages array to store all user messages
+let userMessages: string[] = [];
+
+// Change systemMessagesShown to store SystemMessage objects
+let systemMessagesShown: SystemMessage[] = [];
+
+// Add SystemMessage interface for system messages
+interface SystemMessage {
+  key: string;
+  greetingMessage: string;
+  answer: string;
+}
+
+// Add a global counter for user message sends
+let userMessageSendCount = 0;
 
 // Function to update booking data from answers
 function updateBookingData(answersArray: Array<{question: string, answer: string}>) {
@@ -224,6 +244,8 @@ async function captureFullPageScreenshot() {
           const greetingHtml = `<div class="ai-message">Hi ${firstName},</div>`;
           if (messageDiv) {
             messageDiv.innerHTML = greetingHtml;
+            systemMessagesShown.push({ key: 'greeting_name', greetingMessage: `Hi ${firstName},`, answer: '' });
+            console.log('systemMessagesShown:', systemMessagesShown);
           }
         }
         
@@ -240,14 +262,8 @@ async function captureFullPageScreenshot() {
           typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
             // Mark setup messages as complete after typing animation
             setupMessagesComplete = true;
-            
-            // Display pricing results if they're available
-            if (pricingResults) {
-              console.log('Setup complete and pricing results available, calling displayPricingResults');
-              displayPricingResults();
-            } else {
-              console.log('Setup complete but no pricing results available yet');
-            }
+            systemMessagesShown.push({ key: 'booking_choice', greetingMessage: 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', answer: '' });
+            console.log('systemMessagesShown:', systemMessagesShown);
           });
         }
       }
@@ -379,6 +395,11 @@ async function startScreenshotProcess() {
               if (finalHtml) {
                 // Only add the greeting if there's content to add
                 messageDiv.innerHTML = messageDiv.innerHTML + finalHtml;
+                if (bookingData.customerName && bookingData.customerName.trim() !== '') {
+                  const firstName = bookingData.customerName.split(' ')[0];
+                  systemMessagesShown.push({ key: 'greeting_name', greetingMessage: `Hi ${firstName},`, answer: '' });
+                  console.log('systemMessagesShown:', systemMessagesShown);
+                }
               }
               
               // Display the booking choice message and buttons after the greeting
@@ -392,14 +413,8 @@ async function startScreenshotProcess() {
                 typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
                   // Mark setup messages as complete after typing animation
                   setupMessagesComplete = true;
-                  
-                  // Display pricing results if they're available
-                  if (pricingResults) {
-                    console.log('Setup complete and pricing results available, calling displayPricingResults');
-                    displayPricingResults();
-                  } else {
-                    console.log('Setup complete but no pricing results available yet');
-                  }
+                  systemMessagesShown.push({ key: 'booking_choice', greetingMessage: 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', answer: '' });
+                  console.log('systemMessagesShown:', systemMessagesShown);
                 });
               }
             }
@@ -433,6 +448,12 @@ async function startScreenshotProcess() {
             console.log('Pricing API response US:', pricingDataUS);
             
             console.log('About to process pricing data immediately...');
+            
+            // Prevent duplicate processing
+            if (pricingProcessingComplete) {
+              console.log('Pricing processing already complete, skipping...');
+              return;
+            }
             
             try {
               // Helper function to get best price from data
@@ -522,46 +543,10 @@ async function startScreenshotProcess() {
                 console.log('pricingResults set to:', pricingResults);
                 
                 console.log('Pricing results stored, checking if setup messages are complete');
-                if (setupMessagesComplete) {
-                  console.log('Setup messages complete, calling displayPricingResults');
-                  displayPricingResults();
-                } else {
-                  console.log('Setup messages not complete, pricing results will be displayed later');
-                }
+               
                 
-                // Check if we're waiting for final message and trigger it
-                if (waitingForFinalMessage) {
-                  console.log('Waiting for final message flag detected, triggering final message');
-                  console.log('pricingResults:', pricingResults);
-                  console.log('hasCheaperPrice:', pricingResults?.hasCheaperPrice);
-                  
-                  setTimeout(() => {
-                    const messageDiv = document.querySelector('.message');
-                    console.log('messageDiv found:', !!messageDiv);
-                    
-                    if (messageDiv && pricingResults && pricingResults.hasCheaperPrice) {
-                      console.log('All conditions met, creating final message');
-                      const finalMessageDiv = document.createElement('div');
-                      finalMessageDiv.className = 'ai-message';
-                      messageDiv.appendChild(finalMessageDiv);
-                      
-                      const amountSaved = pricingResults.savingsGBP.toFixed(2);
-                      const finalMessage = `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}\nIt is £${amountSaved} better than on Booking.com\nHere is the booking link, happy to help with payment ${pricingResults.bookingLink}`;
-                      
-                      console.log('Final message text:', finalMessage);
-                      typeText(finalMessageDiv, finalMessage, TYPING_SPEED_MS);
-                      waitingForFinalMessage = false; // Clear the flag
-                      console.log('Final message displayed, flag cleared');
-                    } else {
-                      console.log('Conditions not met for final message:');
-                      console.log('- messageDiv:', !!messageDiv);
-                      console.log('- pricingResults:', !!pricingResults);
-                      console.log('- hasCheaperPrice:', pricingResults?.hasCheaperPrice);
-                    }
-                  }, 1000);
-                } else {
-                  console.log('Not waiting for final message, waitingForFinalMessage:', waitingForFinalMessage);
-                }
+                // Note: Final message will be triggered from user message handling flow
+                // after user responds to email confirmation and three messages complete
               } else {
                 console.log('bestPricingData is null or invalid, setting hasCheaperPrice to false');
                 // No cheaper price found
@@ -576,16 +561,15 @@ async function startScreenshotProcess() {
                 console.log('pricingResults set to (no cheaper price):', pricingResults);
                 
                 console.log('No pricing data found, checking if setup messages are complete');
-                if (setupMessagesComplete) {
-                  console.log('Setup messages complete, calling displayPricingResults');
-                  displayPricingResults();
-                } else {
-                  console.log('Setup messages not complete, pricing results will be displayed later');
-                }
+               
               }
             } catch (error) {
               console.error('Error in pricing processing:', error);
             }
+            
+            // Mark processing as complete
+            pricingProcessingComplete = true;
+            console.log('Pricing processing marked as complete');
           }
         }
       }, 'image/png');
@@ -642,6 +626,8 @@ function injectPopup() {
     // Start typing animation for the greeting message
     if (greetingMessage) {
       typeText(greetingMessage, 'Hello, I am your co-pilot for this payment.', TYPING_SPEED_MS, () => {
+        systemMessagesShown.push({ key: 'greeting', greetingMessage: 'Hello, I am your co-pilot for this payment.', answer: '' });
+        console.log('systemMessagesShown:', systemMessagesShown);
         // After greeting message finishes typing, wait 2 seconds then show the second message
         setTimeout(() => {
           const secondMessage = document.createElement('div');
@@ -650,6 +636,8 @@ function injectPopup() {
           
           // Apply typing animation to the second message
           typeText(secondMessage, 'There is a better value available than yours for this hotel', TYPING_SPEED_MS, () => {
+            systemMessagesShown.push({ key: 'greeting_better_value', greetingMessage: 'There is a better value available than yours for this hotel', answer: '' });
+            console.log('systemMessagesShown:', systemMessagesShown);
             // After second message finishes typing, show the Reveal button
             const revealButton = document.createElement('button');
             revealButton.textContent = 'Reveal';
@@ -695,6 +683,8 @@ function injectPopup() {
                   const greetingHtml = `<div class="ai-message">Hi ${firstName},</div>`;
                   if (messageDiv) {
                     messageDiv.innerHTML = greetingHtml;
+                    systemMessagesShown.push({ key: 'greeting_name', greetingMessage: `Hi ${firstName},`, answer: '' });
+                    console.log('systemMessagesShown:', systemMessagesShown);
                   }
                 }
                 
@@ -711,14 +701,8 @@ function injectPopup() {
                   typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
                     // Mark setup messages as complete after typing animation
                     setupMessagesComplete = true;
-                    
-                    // Display pricing results if they're available
-                    if (pricingResults) {
-                      console.log('Setup complete and pricing results available, calling displayPricingResults');
-                      displayPricingResults();
-                    } else {
-                      console.log('Setup complete but no pricing results available yet');
-                    }
+                    systemMessagesShown.push({ key: 'booking_choice', greetingMessage: 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', answer: '' });
+                    console.log('systemMessagesShown:', systemMessagesShown);
                   });
                 }
               }
@@ -734,8 +718,28 @@ function injectPopup() {
     // Add event handlers for chat input
     if (sendMessageBtn && chatInput) {
       const handleSendMessage = () => {
+        userMessageSendCount++;
+        console.log('User message send count:', userMessageSendCount);
         const message = chatInput.value.trim();
         if (message) {
+          // If this is the first user message, store it as the answer for booking_choice
+          if (userMessageSendCount === 1) {
+            const idx = systemMessagesShown.findIndex(msg => msg.key === 'booking_choice' && msg.answer === '');
+            if (idx !== -1) {
+              systemMessagesShown[idx].answer = message;
+              console.log('systemMessagesShown (set booking_choice answer on first message):', systemMessagesShown);
+            }
+          }
+          // If this is the second user message, store it as the answer for email_confirmation
+          if (userMessageSendCount === 2) {
+            const idx = systemMessagesShown.findIndex(msg => msg.key === 'email_confirmation' && msg.answer === '');
+            if (idx !== -1) {
+              systemMessagesShown[idx].answer = message;
+              console.log('systemMessagesShown (set email_confirmation answer on second message):', systemMessagesShown);
+            }
+          }
+          // Add user message to array
+          userMessages.push(message);
           // Add user message to chat
           const messageDiv = document.querySelector('.message');
           if (messageDiv) {
@@ -744,94 +748,52 @@ function injectPopup() {
             userMessageDiv.textContent = message;
             messageDiv.appendChild(userMessageDiv);
           }
-          
           // Clear input
           chatInput.value = '';
-          
           // Here you can add logic to handle the message (e.g., send to API, etc.)
           console.log('User message:', message);
-          
-          // Check if user has responded to email confirmation and show the three system messages
-          if (emailConfirmationShown && !userRespondedToEmail) {
-            console.log('User responded to email confirmation, setting flags');
-            userRespondedToEmail = true;
+
+         
+
+          // If waiting for booking choice answer
+          if (userRespondedToEmail && !bookingChoiceAnswered) {
+            bookingChoiceAnswered = true;
             waitingForFinalMessage = true; // Set flag to indicate we're waiting for final message
-            console.log('waitingForFinalMessage set to:', waitingForFinalMessage);
-            
-            // Show the three system messages after user responds to email confirmation
+            console.log('User responded to booking choice. Both questions answered, now showing three system messages.');
+            // Show the three system messages after user responds to booking choice
             setTimeout(() => {
-              console.log('Starting to show three system messages');
+              
               const messageDiv = document.querySelector('.message');
-              console.log('messageDiv for three messages:', !!messageDiv);
               
               if (messageDiv) {
                 // First message
                 const firstMessageDiv = document.createElement('div');
                 firstMessageDiv.className = 'ai-message';
                 messageDiv.appendChild(firstMessageDiv);
-                
                 typeText(firstMessageDiv, 'I have everything I need now. Let me load your results', TYPING_SPEED_MS, () => {
+                  systemMessagesShown.push({ key: 'three_msg_1', greetingMessage: 'I have everything I need now. Let me load your results', answer: '' });
+                  console.log('systemMessagesShown:', systemMessagesShown);
                   // Second message after first completes
                   setTimeout(() => {
                     const secondMessageDiv = document.createElement('div');
                     secondMessageDiv.className = 'ai-message';
                     messageDiv.appendChild(secondMessageDiv);
-                    
                     typeText(secondMessageDiv, 'I will show you the country that offers the best value for your hotel', TYPING_SPEED_MS, () => {
+                      systemMessagesShown.push({ key: 'three_msg_2', greetingMessage: 'I will show you the country that offers the best value for your hotel', answer: '' });
+                      console.log('systemMessagesShown:', systemMessagesShown);
                       // Third message after second completes
                       setTimeout(() => {
                         const thirdMessageDiv = document.createElement('div');
                         thirdMessageDiv.className = 'ai-message';
                         messageDiv.appendChild(thirdMessageDiv);
-                        
-                        typeText(thirdMessageDiv, 'and how much better it is than Booking.com', TYPING_SPEED_MS, () => {
+                        typeText(thirdMessageDiv, 'and how much better is than Booking.com', TYPING_SPEED_MS, () => {
+                          systemMessagesShown.push({ key: 'three_msg_3', greetingMessage: 'and how much better is than Booking.com', answer: '' });
+                          console.log('systemMessagesShown:', systemMessagesShown);
                           // After all three messages complete, wait 1 second then check for pricing results
                           setTimeout(() => {
-                            console.log('Checking for pricing results after three messages...');
-                            console.log('pricingResults:', pricingResults);
-                            
-                            // Check if pricing API responses have completed
-                            if (pricingResults && pricingResults.hasCheaperPrice) {
-                              console.log('Pricing results available, showing final message');
-                              const finalMessageDiv = document.createElement('div');
-                              finalMessageDiv.className = 'ai-message';
-                              messageDiv.appendChild(finalMessageDiv);
-                              
-                              const amountSaved = pricingResults.savingsGBP.toFixed(2);
-                              const finalMessage = `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}\nIt is £${amountSaved} better than on Booking.com\nHere is the booking link, happy to help with payment ${pricingResults.bookingLink}`;
-                              
-                              typeText(finalMessageDiv, finalMessage, TYPING_SPEED_MS);
-                              waitingForFinalMessage = false; // Clear the flag
-                            } else {
-                              console.log('Pricing results not ready, setting up polling...');
-                              console.log('Current pricingResults:', pricingResults);
-                              // If pricing results not ready, set up polling to check periodically
-                              const checkForPricingResults = () => {
-                                console.log('Polling for pricing results...');
-                                console.log('Current pricingResults:', pricingResults);
-                                console.log('hasCheaperPrice:', pricingResults?.hasCheaperPrice);
-                                
-                                if (pricingResults && pricingResults.hasCheaperPrice) {
-                                  console.log('Pricing results now available, showing final message');
-                                  const finalMessageDiv = document.createElement('div');
-                                  finalMessageDiv.className = 'ai-message';
-                                  messageDiv.appendChild(finalMessageDiv);
-                                  
-                                  const amountSaved = pricingResults.savingsGBP.toFixed(2);
-                                  const finalMessage = `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}\nIt is £${amountSaved} better than on Booking.com\nHere is the booking link, happy to help with payment ${pricingResults.bookingLink}`;
-                                  
-                                  typeText(finalMessageDiv, finalMessage, TYPING_SPEED_MS);
-                                  waitingForFinalMessage = false; // Clear the flag
-                                } else {
-                                  console.log('Still waiting for pricing results, will check again in 1 second');
-                                  // Check again in 1 second
-                                  setTimeout(checkForPricingResults, 1000);
-                                }
-                              };
-                              
-                              // Start polling after 2 seconds
-                              setTimeout(checkForPricingResults, 2000);
-                            }
+                            threeMessagesComplete = true;
+                            // Check if all conditions are met for final message
+                            maybeShowFinalMessage();
                           }, 1000);
                         });
                       }, 1000);
@@ -839,29 +801,71 @@ function injectPopup() {
                   }, 1000);
                 });
               }
-            }, 1000); // Wait 1 second after user response before showing the three messages
+            }, 1000); // Wait 1 second after user response before showing the messages
+            return;
           }
-          
-          // Display email confirmation message after user types
-          setTimeout(() => {
-            if (bookingData.customerEmail && bookingData.customerEmail.trim() !== '' && !emailConfirmationShown) {
+
+          // Display email confirmation message after user types (only if not already shown and we have customer email)
+          if (!emailConfirmationShown && bookingData.customerEmail && bookingData.customerEmail.trim() !== '') {
+            setTimeout(() => {
               const messageDiv = document.querySelector('.message');
               if (messageDiv) {
                 const emailConfirmationDiv = document.createElement('div');
                 emailConfirmationDiv.className = 'ai-message';
                 messageDiv.appendChild(emailConfirmationDiv);
-                
                 // Apply typing animation to the email confirmation message
-                typeText(emailConfirmationDiv, `I can send email confirmation to ${bookingData.customerEmail} is this the correct address?`, TYPING_SPEED_MS);
-                
-                // Mark as shown to prevent duplicate messages
-                emailConfirmationShown = true;
+                typeText(emailConfirmationDiv, `I can send email confirmation to ${bookingData.customerEmail} is this the correct address?`, TYPING_SPEED_MS, () => {
+                  systemMessagesShown.push({ key: 'email_confirmation', greetingMessage: `I can send email confirmation to ${bookingData.customerEmail} is this the correct address?`, answer: '' });
+                  console.log('systemMessagesShown:', systemMessagesShown);
+                  // Mark as shown to prevent duplicate messages
+                  emailConfirmationShown = true;
+                });
               }
-            }
-          }, 1000); // Wait 1 second before showing the email confirmation
+            }, 1000); // Wait 1 second before showing the email confirmation
+          }
         }
       };
-      
+
+      // Helper to show final message if all conditions are met
+      function maybeShowFinalMessage() {
+        if (
+          pricingResults &&
+          pricingResults.hasCheaperPrice &&
+          userRespondedToEmail &&
+          bookingChoiceAnswered &&
+          threeMessagesComplete &&
+          !finalMessageDisplayed
+        ) {
+          console.log('All conditions met, showing final message');
+          setTimeout(() => {
+            const messageDiv = document.querySelector('.message');
+            if (messageDiv) {
+              const finalMessageDiv = document.createElement('div');
+              finalMessageDiv.className = 'ai-message';
+              messageDiv.appendChild(finalMessageDiv);
+              const amountSaved = pricingResults.savingsGBP.toFixed(2);
+              const finalMessage = `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}\nIt is £${amountSaved} better than on Booking.com\nHere is the booking link, happy to help with payment ${pricingResults.bookingLink}`;
+              typeText(finalMessageDiv, finalMessage, TYPING_SPEED_MS, () => {
+                systemMessagesShown.push({ key: 'final_result', greetingMessage: finalMessage, answer: '' });
+                console.log('systemMessagesShown:', systemMessagesShown);
+                finalMessageDisplayed = true;
+                waitingForFinalMessage = false;
+                console.log('Final message displayed and marked as shown');
+              });
+            }
+          }, 1000);
+        } else {
+          console.log('Not all conditions met for final message:', {
+            pricingResults: !!pricingResults,
+            hasCheaperPrice: pricingResults?.hasCheaperPrice,
+            userRespondedToEmail,
+            bookingChoiceAnswered,
+            threeMessagesComplete,
+            finalMessageDisplayed
+          });
+        }
+      }
+
       sendMessageBtn.addEventListener('click', handleSendMessage);
       
       // Allow Enter key to send message
@@ -920,6 +924,18 @@ function displayPricingResults() {
   console.log('displayPricingResults called');
   console.log('pricingResults:', pricingResults);
   
+  // Prevent duplicate final messages
+  if (finalMessageDisplayed) {
+    console.log('Final message already displayed, skipping displayPricingResults...');
+    return;
+  }
+  
+  // Don't display final messages if we're waiting for user response flow
+  if (waitingForFinalMessage) {
+    console.log('Waiting for final message from user flow, skipping displayPricingResults...');
+    return;
+  }
+  
   if (!pricingResults) {
     console.log('No pricing results available');
     return;
@@ -941,6 +957,11 @@ function displayPricingResults() {
   
   if (pricingResults.hasCheaperPrice) {
     console.log('Displaying pricing messages');
+    
+    // Mark as displayed to prevent duplicates
+    finalMessageDisplayed = true;
+    console.log('Final message marked as displayed in displayPricingResults');
+    
     // Display first message immediately
     const firstMessage = document.createElement('div');
     firstMessage.className = 'ai-message';
