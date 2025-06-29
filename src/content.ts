@@ -665,18 +665,20 @@ function injectPopup() {
 
     // Start typing animation for the greeting message
     if (greetingMessage) {
-      typeText(greetingMessage, 'Hello, I am your co-pilot for this payment.', TYPING_SPEED_MS, () => {
-        systemMessagesShown.push({ key: 'greeting', greetingMessage: 'Hello, I am your co-pilot for this payment.', answer: '' });
-        console.log('systemMessagesShown:', systemMessagesShown);
+      const greetingMessageText = 'Hello, I am your co-pilot for optimising this payment.'
+      typeText(greetingMessage, greetingMessageText, TYPING_SPEED_MS, () => {
+        systemMessagesShown.push({ key: 'greeting', greetingMessage: greetingMessageText, answer: '' });
+        
         // After greeting message finishes typing, wait 2 seconds then show the second message
         setTimeout(() => {
           const secondMessage = document.createElement('div');
+          const secondMessageText = 'For this hotel, there is a better option than yours available'
           secondMessage.style.cssText = 'margin-top: 15px; text-align: left;';
           greetingMessage.parentElement?.appendChild(secondMessage);
 
           // Apply typing animation to the second message
-          typeText(secondMessage, 'There is a better value available than yours for this hotel', TYPING_SPEED_MS, () => {
-            systemMessagesShown.push({ key: 'greeting_better_value', greetingMessage: 'There is a better value available than yours for this hotel', answer: '' });
+          typeText(secondMessage, secondMessageText, TYPING_SPEED_MS, () => {
+            systemMessagesShown.push({ key: 'greeting_better_value', greetingMessage: secondMessageText, answer: '' });
             console.log('systemMessagesShown:', systemMessagesShown);
             // After second message finishes typing, show the Reveal button
             const revealButton = document.createElement('button');
