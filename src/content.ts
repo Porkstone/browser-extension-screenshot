@@ -689,6 +689,7 @@ function injectPopup() {
               // Hide the Reveal button
               revealButton.style.display = 'none';
 
+              
               // Clear the message div contents
               const messageDiv = document.querySelector('.message');
              
@@ -930,24 +931,41 @@ function injectPopup() {
           finalMessageDisplayed = true;
           setTimeout(() => {
             const messageDiv = document.querySelector('.message');
-            if (messageDiv) {
+            let finalMessageContainer = document.getElementById('final-message-container');
+            if (!finalMessageContainer) {
+              finalMessageContainer = document.createElement('div');
+              finalMessageContainer.id = 'final-message-container';
+              finalMessageContainer.style.marginTop = '24px';
+              finalMessageContainer.style.width = '100%'
+              finalMessageContainer.classList.add('message');
+              // Insert after the main message div
+              if (messageDiv && messageDiv.parentElement) {
+                messageDiv.parentElement.appendChild(finalMessageContainer);
+              }
+            }
+            if (finalMessageContainer) {
+              // Scroll to bottom before displaying the final message
+              finalMessageContainer.scrollTop = finalMessageContainer.scrollHeight;
               const finalMessageDiv = document.createElement('div');
               finalMessageDiv.className = 'ai-message';
-              messageDiv.appendChild(finalMessageDiv);
+              finalMessageDiv.style.minHeight = '200px';
+              finalMessageDiv.style.maxWidth = '800px';
+              finalMessageDiv.style.margin = '0 auto';
+              finalMessageDiv.style.textAlign = 'center';
+              finalMessageContainer.appendChild(finalMessageDiv);
               const amountSaved = pricingResults.savingsGBP.toFixed(2);
               const bookingLink = pricingResults.bookingLink || '#';
-              const hotelNameHtml = `<span style=\"color: #10a37f;\">${pricingResults.hotelName}</span>`;
+              const hotelNameHtml = `<span style=\"font-weight: bold;\">${pricingResults.hotelName}</span>`;
               const countryHtml = `<span style=\"color: #10a37f;\">${pricingResults.countryName}</span>`;
               const amountSavedHtml = `<span style=\"color: #10a37f;\">£${amountSaved}</span>`;
               const bookingLinkHtml = `<a href=\"${bookingLink}\" target=\"_blank\" style=\"color: #10a37f; text-decoration: underline;\">Book Now</a>`;
               const finalMessageHtml = `I found the best value for ${hotelNameHtml} in ${countryHtml}<br>It is ${amountSavedHtml} better than on Booking.com<br>Here is the booking link, happy to help with payment ${bookingLinkHtml}`;
-              typeText(finalMessageDiv, '', TYPING_SPEED_MS, () => {
-                finalMessageDiv.innerHTML = finalMessageHtml;
-                systemMessagesShown.push({ key: 'final_result', greetingMessage: finalMessageHtml, answer: '' });
-                console.log('systemMessagesShown:', systemMessagesShown);
-                waitingForFinalMessage = false;
-                console.log('Final message displayed and marked as shown');
-              });
+              finalMessageDiv.innerHTML = finalMessageHtml;
+              finalMessageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              systemMessagesShown.push({ key: 'final_result', greetingMessage: finalMessageHtml, answer: '' });
+              console.log('systemMessagesShown:', systemMessagesShown);
+              waitingForFinalMessage = false;
+              console.log('Final message displayed and marked as shown');
             }
           }, 1000);
         } else {
