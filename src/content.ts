@@ -964,7 +964,10 @@ function injectPopup() {
               const bookingLinkHtml = `<a href=\"${bookingLink}\" target=\"_blank\" style=\"color: #10a37f; text-decoration: underline;\">Book Now</a>`;
               const finalMessageHtml = `I found the best value for ${hotelNameHtml} in ${countryHtml}<br>It is ${amountSavedHtml} better than on Booking.com<br>As you chose to self-complete the payment, here is the ${bookingLinkHtml}`;
               finalMessageDiv.innerHTML = finalMessageHtml;
-              finalMessageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              finalMessageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              setTimeout(() => {
+                window.scrollBy(0, -40); // scroll up 40px for padding
+              }, 600);
               systemMessagesShown.push({ key: 'final_result', greetingMessage: finalMessageHtml, answer: '' });
               console.log('systemMessagesShown:', systemMessagesShown);
               waitingForFinalMessage = false;
