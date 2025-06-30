@@ -5,6 +5,7 @@ console.log('Content script loaded');
 // Constants
 const TYPING_SPEED_MS = 37;
 const DEV_LOCAL_MODE = false;
+const ENABLE_SECOND_QUESTION = true; // Set to false to disable the second question/answer
 
 // Global variables
 let bookingData = {
@@ -380,8 +381,8 @@ async function startScreenshotProcess() {
         "Is the booking canceleable with full refund?",
         "Is the customer signed in to the website? Please answer yes or no",
         "What is the total cost of the booking? Please provide a number without any currency symbols"
-
       ];
+      
       canvas.toBlob(async (blob) => {
         if (blob) {
           // Restore original scroll position before API call
@@ -397,6 +398,7 @@ async function startScreenshotProcess() {
           });
 
           const result = await apiResponse.json() as WrappedArrayResponse;
+         
           console.log('API response:', result); // Debug log
           console.log('First element:', result.results[0].answer);
 
@@ -415,6 +417,12 @@ async function startScreenshotProcess() {
               checkInDate: bookingData.checkInDate,
               checkOutDate: bookingData.checkOutDate
             });
+
+ // If customer is signed out, set userRespondedToEmail to true
+ const isSignedIn = result.results.find(qa => qa.question.includes("Is the customer signed in"))?.answer.toLowerCase() === "yes";
+ if (!isSignedIn) {
+   userRespondedToEmail = true;
+ }
 
             // Check for customer name and add greeting immediately
             let finalHtml = '';
@@ -848,7 +856,9 @@ function injectPopup() {
 
           // Set customerAnsweredAllQuestions to true after both answers are stored
           const hasBookingChoiceAnswer = systemMessagesShown.some(msg => msg.key === 'booking_choice' && msg.answer !== '');
-          const hasEmailConfirmationAnswer = systemMessagesShown.some(msg => msg.key === 'email_confirmation' && msg.answer !== '');
+          const hasEmailConfirmationAnswer = bookingData.isSignedIn
+            ? systemMessagesShown.some(msg => msg.key === 'email_confirmation' && msg.answer !== '')
+            : true; // If not signed in, treat as answered
           if (hasBookingChoiceAnswer && hasEmailConfirmationAnswer && !customerAnsweredAllQuestions) {
             customerAnsweredAllQuestions = true;
             console.log('customerAnsweredAllQuestions set to true');
