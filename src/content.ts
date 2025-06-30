@@ -823,6 +823,10 @@ function injectPopup() {
               userRespondedToEmail = true;
               console.log('systemMessagesShown (set email_confirmation answer on second message):', systemMessagesShown);
             }
+            // Disable the Send button
+            if (sendMessageBtn) {
+              (sendMessageBtn as HTMLButtonElement).disabled = true;
+            }
           }
           // Add user message to array
           userMessages.push(message);
