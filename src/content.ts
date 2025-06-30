@@ -1011,6 +1011,14 @@ function injectPopup() {
       // Automatically trigger the full-page screenshot process when the popup is first displayed
       setTimeout(() => startScreenshotProcess(), 3000);
     }
+
+    // After displaying the booking choice message (i.e., after typeText for bookingChoiceMessage), enable the Send button:
+    if (sendMessageBtn) {
+      (sendMessageBtn as HTMLButtonElement).disabled = false;
+      (sendMessageBtn as HTMLButtonElement).style.background = '#10a37f';
+      (sendMessageBtn as HTMLButtonElement).style.color = 'white';
+      (sendMessageBtn as HTMLButtonElement).style.cursor = 'pointer';
+    }
   }
 }
 
