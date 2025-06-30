@@ -274,6 +274,18 @@ async function captureFullPageScreenshot() {
         popup.classList.add('expanded');
       }
 
+      // Enable minimize button when popup is expanded
+      const minimizeButton = document.getElementById('minimize-popup') as HTMLButtonElement;
+      if (minimizeButton) {
+        minimizeButton.disabled = false;
+      }
+
+      // Disable maximize button when popup is expanded
+      const maximizeButton = document.getElementById('maximize-popup') as HTMLButtonElement;
+      if (maximizeButton) {
+        maximizeButton.disabled = true;
+      }
+
       // Set the chat window expanded flag
       chatWindowExpanded = true;
 
@@ -642,7 +654,11 @@ function injectPopup() {
     <div id="booking-ai-popup">
       <div class="header">
         <h1>Zorro Co-pilot${DEV_LOCAL_MODE ? ' (Dev Local)' : ''}</h1>
-        <button id="close-popup" class="close-button">×</button>
+        <div class="header-buttons">
+          <button id="minimize-popup" class="minimize-button" disabled>−</button>
+          <button id="maximize-popup" class="maximize-button" disabled>□</button>
+          <button id="close-popup" class="close-button">×</button>
+        </div>
       </div>
       <div class="content">
         <div class="message">
@@ -664,12 +680,78 @@ function injectPopup() {
   if (body) {
     body.appendChild(popupContainer);
     const closeButton = document.getElementById('close-popup');
+    const minimizeButton = document.getElementById('minimize-popup') as HTMLButtonElement;
+    const maximizeButton = document.getElementById('maximize-popup') as HTMLButtonElement;
     const screenshotBtn = document.getElementById('screenshotBtn');
     const popup = document.getElementById('booking-ai-popup');
     const greetingMessage = document.getElementById('greeting-message');
     const chatInputContainer = document.getElementById('chat-input-container');
     const chatInput = document.getElementById('chat-input') as HTMLInputElement;
     const sendMessageBtn = document.getElementById('send-message-btn');
+
+    // Add maximize button functionality
+    if (maximizeButton) {
+      maximizeButton.addEventListener('click', () => {
+        if (popup) {
+          // Expand popup to full page
+          popup.style.height = '100vh';
+          popup.style.width = 'calc(100vw - 17px)';
+          popup.style.position = 'fixed';
+          popup.style.top = '0';
+          popup.style.left = '0';
+          popup.style.bottom = 'auto';
+          popup.style.right = 'auto';
+          popup.style.zIndex = '9999';
+          popup.classList.add('expanded');
+          
+          // Show chat input container
+          if (chatInputContainer) {
+            chatInputContainer.style.display = 'block';
+          }
+          
+          // Enable minimize button and disable maximize button
+          if (minimizeButton) {
+            minimizeButton.disabled = false;
+          }
+          maximizeButton.disabled = true;
+          
+          // Set chat window expanded flag
+          chatWindowExpanded = true;
+        }
+      });
+    }
+
+    // Add minimize button functionality
+    if (minimizeButton) {
+      minimizeButton.addEventListener('click', () => {
+        if (popup) {
+          // Restore original popup size and position
+          popup.style.height = '26.1875rem';
+          popup.style.width = '24rem';
+          popup.style.position = 'fixed';
+          popup.style.bottom = '1rem';
+          popup.style.right = '1rem';
+          popup.style.top = 'auto';
+          popup.style.left = 'auto';
+          popup.style.zIndex = '9999';
+          popup.classList.remove('expanded');
+          
+          // Hide chat input container
+          if (chatInputContainer) {
+            chatInputContainer.style.display = 'none';
+          }
+          
+          // Disable minimize button and enable maximize button
+          minimizeButton.disabled = true;
+          if (maximizeButton) {
+            maximizeButton.disabled = false;
+          }
+          
+          // Reset chat window expanded flag
+          chatWindowExpanded = false;
+        }
+      });
+    }
 
     // Start typing animation for the greeting message
     if (greetingMessage) {
@@ -757,6 +839,18 @@ function injectPopup() {
                 popup.style.left = '0';
                 popup.style.zIndex = '9999';
                 popup.classList.add('expanded');
+              }
+
+              // Enable minimize button when popup is expanded
+              const minimizeButton = document.getElementById('minimize-popup') as HTMLButtonElement;
+              if (minimizeButton) {
+                minimizeButton.disabled = false;
+              }
+
+              // Disable maximize button when popup is expanded
+              const maximizeButton = document.getElementById('maximize-popup') as HTMLButtonElement;
+              if (maximizeButton) {
+                maximizeButton.disabled = true;
               }
 
               // Show the chat input container
