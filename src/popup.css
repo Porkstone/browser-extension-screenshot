@@ -289,6 +289,22 @@
   clear: both !important;
 }
 
+.final-message {
+  background-color: #444654 !important;
+  color: #ececf1 !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 1rem !important;
+  margin-bottom: 15px !important;
+  text-align: left !important;
+  display: block !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  word-wrap: break-word !important;
+  border: 1px solid #565869 !important;
+  clear: both !important;
+}
+
+
 /* Clear float after message containers */
 .message::after {
   content: "";

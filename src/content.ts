@@ -949,11 +949,8 @@ function injectPopup() {
               // Scroll to bottom before displaying the final message
               finalMessageContainer.scrollTop = finalMessageContainer.scrollHeight;
               const finalMessageDiv = document.createElement('div');
-              finalMessageDiv.className = 'ai-message';
-              finalMessageDiv.style.minHeight = '200px';
-              finalMessageDiv.style.maxWidth = '800px';
-              finalMessageDiv.style.margin = '0 auto';
-              finalMessageDiv.style.textAlign = 'center';
+              finalMessageDiv.className = 'final-message';
+              
               finalMessageContainer.appendChild(finalMessageDiv);
               const amountSaved = pricingResults.savingsGBP.toFixed(2);
               const bookingLink = pricingResults.bookingLink || '#';
@@ -961,7 +958,7 @@ function injectPopup() {
               const countryHtml = `<span style=\"color: #10a37f;\">${pricingResults.countryName}</span>`;
               const amountSavedHtml = `<span style=\"color: #10a37f;\">£${amountSaved}</span>`;
               const bookingLinkHtml = `<a href=\"${bookingLink}\" target=\"_blank\" style=\"color: #10a37f; text-decoration: underline;\">Book Now</a>`;
-              const finalMessageHtml = `I found the best value for ${hotelNameHtml} in ${countryHtml}<br>It is ${amountSavedHtml} better than on Booking.com<br>Here is the booking link, happy to help with payment ${bookingLinkHtml}`;
+              const finalMessageHtml = `I found the best value for ${hotelNameHtml} in ${countryHtml}<br>It is ${amountSavedHtml} better than on Booking.com<br>As you chose to self-complete the payment, here is the ${bookingLinkHtml}`;
               finalMessageDiv.innerHTML = finalMessageHtml;
               finalMessageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
               systemMessagesShown.push({ key: 'final_result', greetingMessage: finalMessageHtml, answer: '' });
