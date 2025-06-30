@@ -826,6 +826,9 @@ function injectPopup() {
             // Disable the Send button
             if (sendMessageBtn) {
               (sendMessageBtn as HTMLButtonElement).disabled = true;
+              (sendMessageBtn as HTMLButtonElement).style.background = '#ccc';
+              (sendMessageBtn as HTMLButtonElement).style.color = '#888';
+              (sendMessageBtn as HTMLButtonElement).style.cursor = 'not-allowed';
             }
           }
           // Add user message to array
