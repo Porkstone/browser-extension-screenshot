@@ -392,7 +392,8 @@ async function startScreenshotProcess() {
         "What is the room type?",
         "Is the booking canceleable with full refund?",
         "Is the customer signed in to the website? Please answer yes or no",
-        "What is the total cost of the booking? Please provide a number without any currency symbols"
+        "What is the total cost of the booking? Please provide a number without any currency symbols",
+        "What currency is the total cost of the booking in? Please answer in the format of GBP, USD, EUR, etc."
       ];
       
       canvas.toBlob(async (blob) => {
@@ -597,7 +598,7 @@ async function startScreenshotProcess() {
                   countryName,
                   savingsGBP,
                   bookingLink: bookingData.bestPrice?.bookingLink || '',
-                  hasCheaperPrice: true
+                  hasCheaperPrice: savingsGBP >= 0,
                 };
 
                 console.log('pricingResults set to:', pricingResults);
@@ -1033,15 +1034,23 @@ function injectPopup() {
         console.log('maybeShowFinalMessage called');
         if (
           pricingResults &&
-          pricingResults.hasCheaperPrice &&
           userRespondedToEmail &&
           bookingChoiceAnswered &&
           threeMessagesComplete &&
-          !finalMessageDisplayed
+          !finalMessageDisplayed 
         ) {
 
-          console.log('All conditions met, showing final message');
+          console.log('All conditions met for final message:', {
+            pricingResults: !!pricingResults,
+            hasCheaperPrice: pricingResults?.hasCheaperPrice,
+            userRespondedToEmail,
+            bookingChoiceAnswered,
+            threeMessagesComplete,
+            finalMessageDisplayed
+          });
+
           finalMessageDisplayed = true;
+          if (pricingResults.hasCheaperPrice) {
           setTimeout(() => {
             const messageDiv = document.querySelector('.message');
             let finalMessageContainer = document.getElementById('final-message-container');
@@ -1068,7 +1077,7 @@ function injectPopup() {
               const hotelNameHtml = `<span style=\"font-weight: bold;\">${pricingResults.hotelName}</span>`;
               const countryHtml = `<span style=\"color: #10a37f;\">${pricingResults.countryName}</span>`;
               const amountSavedHtml = `<span style=\"color: #10a37f;\">£${amountSaved}</span>`;
-              const bookingLinkHtml = `<a href=\"${bookingLink}\" target=\"_blank\" style=\"color: #10a37f; text-decoration: underline;\">Book Now</a>`;
+              const bookingLinkHtml = `<a href=\"${bookingLink}\" target=\"_blank\" style=\"color: #10a37f; text-decoration: underline;\">booking link</a>`;
               const finalMessageHtml = `I found the best value for ${hotelNameHtml} in ${countryHtml}<br>It is ${amountSavedHtml} better than on Booking.com<br>As you chose to self-complete the payment, here is the ${bookingLinkHtml}`;
               finalMessageDiv.innerHTML = finalMessageHtml;
               finalMessageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1078,9 +1087,15 @@ function injectPopup() {
               systemMessagesShown.push({ key: 'final_result', greetingMessage: finalMessageHtml, answer: '' });
               console.log('systemMessagesShown:', systemMessagesShown);
               waitingForFinalMessage = false;
-              console.log('Final message displayed and marked as shown');
-            }
-          }, 1000);
+                console.log('Final message displayed and marked as shown');
+              }
+            }, 1000);
+          } else {
+            console.log('No cheaper price found, skipping final message');
+            finalMessageDisplayed = true;
+            waitingForFinalMessage = false;
+            console.log('Final message displayed and marked as shown');
+          }
         } else {
           console.log('Not all conditions met for final message:', {
             pricingResults: !!pricingResults,
