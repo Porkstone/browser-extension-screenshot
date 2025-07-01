@@ -80,9 +80,9 @@ function updatePricingData(pricingData: any[]) {
       current.totalPrice < min.totalPrice ? current : min
     );
 
-    // Convert USD to GBP (approximate rate: 1 USD = 0.74 GBP)
-    const usdToGbpRate = 0.74;
-    bookingData.priceInGbp = bookingData.bestPrice.userLocalTotalPrice * usdToGbpRate;
+    // Note: Currency conversion is now handled in the main calculation
+    // where we have access to the website's currency from the answers array
+    bookingData.priceInGbp = 0; // This field is no longer used for currency conversion
   } else {
     bookingData.bestPrice = null;
     bookingData.priceInGbp = 0;
@@ -578,27 +578,45 @@ async function startScreenshotProcess() {
                 // Get the country name from the best price data
                 const countryName = bookingData.bestPrice?.apiCountryName || 'Unknown Country';
 
-                // Calculate the actual savings
-                const bookingComPrice = parseFloat(answersArray[13]?.answer || '0'); // This is in GBP
+                // Get the currency from the 14th item in answers array
+                const websiteCurrency = answersArray[14]?.answer || 'GBP';
+                
+                // Calculate the actual savings with proper currency conversion
+                const bookingComPrice = parseFloat(answersArray[13]?.answer || '0');
                 const bestPriceUSD = bookingData.bestPrice?.totalPrice || 0; // This is in USD
-                const bestPriceGBP = bestPriceUSD * 0.73; // Convert USD to GBP (approximate rate)
-                const savingsGBP = bookingComPrice - bestPriceGBP; // Both prices now in GBP
+                
+                // Convert USD to the website's currency
+                let bestPriceInWebsiteCurrency = 0;
+                let savingsInWebsiteCurrency = 0;
+                
+                // Currency conversion rates (approximate)
+                const conversionRates: { [key: string]: number } = {
+                  'GBP': 0.73,  // 1 USD = 0.73 GBP
+                  'EUR': 0.85,  // 1 USD = 0.85 EUR
+                  'USD': 1.0    // 1 USD = 1.0 USD
+                };
+                
+                const conversionRate = conversionRates[websiteCurrency] || 0.73; // Default to GBP rate
+                bestPriceInWebsiteCurrency = bestPriceUSD * conversionRate;
+                savingsInWebsiteCurrency = bookingComPrice - bestPriceInWebsiteCurrency;
 
                 console.log('Calculated values:');
                 console.log('- hotelName:', hotelName);
                 console.log('- countryName:', countryName);
+                console.log('- websiteCurrency:', websiteCurrency);
                 console.log('- bookingComPrice:', bookingComPrice);
                 console.log('- bestPriceUSD:', bestPriceUSD);
-                console.log('- bestPriceGBP:', bestPriceGBP);
-                console.log('- savingsGBP:', savingsGBP);
+                console.log('- bestPriceInWebsiteCurrency:', bestPriceInWebsiteCurrency);
+                console.log('- savingsInWebsiteCurrency:', savingsInWebsiteCurrency);
 
                 // Store the pricing results for later display
                 pricingResults = {
                   hotelName,
                   countryName,
-                  savingsGBP,
+                  savingsGBP: savingsInWebsiteCurrency,
+                  websiteCurrency,
                   bookingLink: bookingData.bestPrice?.bookingLink || '',
-                  hasCheaperPrice: savingsGBP >= 0,
+                  hasCheaperPrice: savingsInWebsiteCurrency >= 0,
                 };
 
                 console.log('pricingResults set to:', pricingResults);
@@ -1074,9 +1092,22 @@ function injectPopup() {
               finalMessageContainer.appendChild(finalMessageDiv);
               const amountSaved = pricingResults.savingsGBP.toFixed(2);
               const bookingLink = pricingResults.bookingLink || '#';
+              
+              // Get currency symbol based on website currency
+              const getCurrencySymbol = (currency: string) => {
+                const symbols: { [key: string]: string } = {
+                  'GBP': '£',
+                  'EUR': '€',
+                  'USD': '$'
+                };
+                return symbols[currency] || '£';
+              };
+              
+              const currencySymbol = getCurrencySymbol(pricingResults.websiteCurrency || 'GBP');
+              
               const hotelNameHtml = `<span style=\"font-weight: bold;\">${pricingResults.hotelName}</span>`;
               const countryHtml = `<span style=\"color: #10a37f;\">${pricingResults.countryName}</span>`;
-              const amountSavedHtml = `<span style=\"color: #10a37f;\">£${amountSaved}</span>`;
+              const amountSavedHtml = `<span style=\"color: #10a37f;\">${currencySymbol}${amountSaved}</span>`;
               const bookingLinkHtml = `<a href=\"${bookingLink}\" target=\"_blank\" style=\"color: #10a37f; text-decoration: underline;\">booking link</a>`;
               const finalMessageHtml = `I found the best value for ${hotelNameHtml} in ${countryHtml}<br>It is ${amountSavedHtml} better than on Booking.com<br>As you chose to self-complete the payment, here is the ${bookingLinkHtml}`;
               finalMessageDiv.innerHTML = finalMessageHtml;
@@ -1240,8 +1271,20 @@ function displayPricingResults() {
         secondMessage.className = 'ai-message';
         pricingMessageDiv.appendChild(secondMessage);
 
+        // Get currency symbol based on website currency
+        const getCurrencySymbol = (currency: string) => {
+          const symbols: { [key: string]: string } = {
+            'GBP': '£',
+            'EUR': '€',
+            'USD': '$'
+          };
+          return symbols[currency] || '£';
+        };
+        
+        const currencySymbol = getCurrencySymbol(pricingResults!.websiteCurrency || 'GBP');
+        
         // Apply typing animation to the second message
-        typeText(secondMessage, `It is £${pricingResults!.savingsGBP.toFixed(2)} better than on Booking.com`, TYPING_SPEED_MS, () => {
+        typeText(secondMessage, `It is ${currencySymbol}${pricingResults!.savingsGBP.toFixed(2)} better than on Booking.com`, TYPING_SPEED_MS, () => {
           // Display third message after second message typing completes
           setTimeout(() => {
             // Check if bestPrice data is available
