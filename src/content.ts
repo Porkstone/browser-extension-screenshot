@@ -60,6 +60,21 @@ let userMessageSendCount = 0;
 // Add a variable to track when the customer has answered all questions
 let customerAnsweredAllQuestions = false;
 
+// --- 1. Zoom Detection and Scale Multiplier System ---
+const getScaleMultiplier = () => window.devicePixelRatio || 1;
+const isHighDPI = () => getScaleMultiplier() > 1;
+
+// --- 2. Position Adjustment for Zoom Levels ---
+function adjustPositionForZoom(position: number): number {
+  const dpr = getScaleMultiplier();
+  if (dpr < 1) {
+    return position - Math.ceil(1 / dpr);
+  } else if (dpr > 1) {
+    return position - Math.ceil(dpr);
+  }
+  return position;
+}
+
 // Function to update booking data from answers
 function updateBookingData(answersArray: Array<{ question: string, answer: string }>) {
   bookingData.answersArray = answersArray;
@@ -117,13 +132,28 @@ function getPageDimensions() {
   return { width, height };
 }
 
-// Function to stitch screenshots
-async function stitchScreenshots(screenshots: string[], totalScreenshotsVertical: number, totalScreenshotsHorizontal: number, viewportWidth: number, viewportHeight: number, pageWidth: number, pageHeight: number) {
+// --- 6. PNG Capture Process with Zoom Support ---
+async function stitchScreenshots(
+  screenshots: string[],
+  totalScreenshotsVertical: number,
+  totalScreenshotsHorizontal: number,
+  viewportWidth: number,
+  viewportHeight: number,
+  pageWidth: number,
+  pageHeight: number
+) {
+  const scaleMultiplier = getScaleMultiplier();
+  const scaledPageWidth = Math.round(pageWidth * scaleMultiplier);
+  const scaledPageHeight = Math.round(pageHeight * scaleMultiplier);
+
   const canvas = document.createElement('canvas');
-  canvas.width = pageWidth;
-  canvas.height = pageHeight;
+  canvas.width = scaledPageWidth;
+  canvas.height = scaledPageHeight;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get canvas context');
+
+  ctx.scale(scaleMultiplier, scaleMultiplier);
+
   let index = 0;
   for (let y = 0; y < totalScreenshotsVertical; y++) {
     for (let x = 0; x < totalScreenshotsHorizontal; x++) {
@@ -133,17 +163,33 @@ async function stitchScreenshots(screenshots: string[], totalScreenshotsVertical
         img.onerror = reject;
         img.src = screenshots[index++];
       });
-      ctx.drawImage(
-        img,
-        x * viewportWidth,
-        y * viewportHeight,
-        viewportWidth,
-        viewportHeight
-      );
+      // --- 2. Position Adjustment for Zoom Levels ---
+      const drawX = adjustPositionForZoom(x * viewportWidth);
+      const drawY = adjustPositionForZoom(y * viewportHeight);
+      ctx.drawImage(img, drawX, drawY, viewportWidth, viewportHeight);
     }
   }
   return canvas;
 }
+
+// --- 7. Metadata Preservation ---
+function getScreenshotMetadata(url: string, title: string, format: string, images: string[], sizes: number[], extraMeta: any = {}) {
+  const scaleMultiplier = getScaleMultiplier();
+  return {
+    url,
+    domain: (new URL(url)).hostname,
+    title,
+    format,
+    scaleMultiplier,
+    images,
+    sizes,
+    time: new Date(),
+    metadata: extraMeta
+  };
+}
+
+// --- 6. PNG Generation with Quality Preservation ---
+// (already handled by canvas.toBlob(blob => ..., 'image/png', 1.0);)
 
 // Add getFullPageWidth function
 function getFullPageWidth() {
@@ -338,16 +384,14 @@ async function startScreenshotProcess() {
   const originalScrollX = window.scrollX;
   const originalScrollY = window.scrollY;
   try {
-    const dpr = window.devicePixelRatio || 1;
-
-    // Scale all dimensions by devicePixelRatio
-    const pageWidth = getFullPageWidth() * dpr;
+    const pageWidth = getFullPageWidth();
     const { height: pageHeight } = getPageDimensions();
-    const scaledPageHeight = pageHeight * dpr;
-    const buffer = 600 * dpr;
-    const viewportWidth = Math.max(window.innerWidth, document.documentElement.clientWidth) * dpr + buffer;
-    const viewportHeight = window.innerHeight * dpr;
-    const totalScreenshotsVertical = Math.ceil(scaledPageHeight / viewportHeight);
+    const buffer = 600;
+    const viewportWidth = Math.max(window.innerWidth, document.documentElement.clientWidth) + buffer;
+    console.log('window.innerWidth:', window.innerWidth, 'document.documentElement.clientWidth:', document.documentElement.clientWidth, 'Using viewportWidth:', viewportWidth);
+    const viewportHeight = window.innerHeight;
+    const totalScreenshotsVertical = Math.ceil(pageHeight / viewportHeight);
+
     const totalScreenshotsHorizontal = Math.ceil(pageWidth / viewportWidth);
     console.log('FullPageScreenshot:', { pageWidth, pageHeight, viewportWidth, viewportHeight, totalScreenshotsHorizontal, totalScreenshotsVertical });
 
