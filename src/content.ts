@@ -1075,7 +1075,7 @@ function injectPopup() {
                               attempts++;
                               await new Promise(resolve => {
                                 maybeShowFinalMessage();
-                                setTimeout(resolve, 10000);
+                                setTimeout(resolve, 3000);
                               });
                             }
                           }
