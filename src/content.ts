@@ -459,19 +459,6 @@ async function startScreenshotProcess() {
           // Restore original scroll position before API call
           window.scrollTo(originalScrollX, originalScrollY);
           
-          // Download the screenshot first
-          const downloadLink = document.createElement('a');
-          downloadLink.href = URL.createObjectURL(blob);
-          downloadLink.download = `booking-screenshot-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          
-          // Clean up the object URL
-          setTimeout(() => {
-            URL.revokeObjectURL(downloadLink.href);
-          }, 1000);
-          
           const formData = new FormData();
           formData.append("file", blob, `booking-fullpage-${new Date().toISOString()}.png`);
           formData.append("questions", JSON.stringify(questions));
