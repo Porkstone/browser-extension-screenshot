@@ -1140,7 +1140,7 @@ function injectPopup() {
               finalMessageContainer = document.createElement('div');
               finalMessageContainer.id = 'final-message-container';
               finalMessageContainer.style.marginTop = '24px';
-              finalMessageContainer.style.width = '100%'
+              finalMessageContainer.style.width = '100%';
               finalMessageContainer.classList.add('message');
               // Insert after the main message div
               if (messageDiv && messageDiv.parentElement) {
@@ -1150,13 +1150,7 @@ function injectPopup() {
             if (finalMessageContainer) {
               // Scroll to bottom before displaying the final message
               finalMessageContainer.scrollTop = finalMessageContainer.scrollHeight;
-              const finalMessageDiv = document.createElement('div');
-              finalMessageDiv.className = 'final-message';
-              
-              finalMessageContainer.appendChild(finalMessageDiv);
-              const amountSaved = pricingResults.savingsGBP.toFixed(2);
-              const bookingLink = pricingResults.bookingLink || '#';
-              
+
               // Get currency symbol based on website currency
               const getCurrencySymbol = (currency: string) => {
                 const symbols: { [key: string]: string } = {
@@ -1166,20 +1160,33 @@ function injectPopup() {
                 };
                 return symbols[currency] || '£';
               };
-              
               const currencySymbol = getCurrencySymbol(pricingResults.websiteCurrency || 'GBP');
-              
-              const hotelNameHtml = `<span style=\"font-weight: bold;\">${pricingResults.hotelName}</span>`;
-              const countryHtml = `<span style=\"color: #10a37f;\">${pricingResults.countryName}</span>`;
-              const amountSavedHtml = `<span style=\"color: #10a37f;\">${currencySymbol}${amountSaved}</span>`;
-              const bookingLinkHtml = `<a href=\"${bookingLink}\" target=\"_blank\" style=\"color: #10a37f; text-decoration: underline;\">booking link</a>`;
-              const finalMessageHtml = `I found the best value for ${hotelNameHtml} in ${countryHtml}<br>It is ${amountSavedHtml} better than on Booking.com<br>As you chose to self-complete the payment, here is the ${bookingLinkHtml}`;
-              finalMessageDiv.innerHTML = finalMessageHtml;
-              finalMessageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              const hotelNameHtml = `<span style="font-weight: bold;">${pricingResults.hotelName}</span>`;
+              const countryHtml = `<span style="color: #10a37f;">${pricingResults.countryName}</span>`;
+              const amountSavedHtml = `<span style="color: #10a37f;">${currencySymbol}${pricingResults.savingsGBP.toFixed(2)}</span>`;
+              const bookingLink = pricingResults.bookingLink || '#';
+              const bookingLinkHtml = `<a href="${bookingLink}" target="_blank" style="color: #10a37f; text-decoration: underline;">booking link</a>`;
+
+              // --- Each line in its own div ---
+              const line1 = `I found the best value for ${hotelNameHtml} in ${countryHtml}`;
+              const line2 = `It is ${amountSavedHtml} better than on Booking.com`;
+              const line3 = `As you chose to self-complete the payment, here is the ${bookingLinkHtml}`;
+
+              // Create and append each line as its own div
+              [line1, line2, line3].forEach(line => {
+                const div = document.createElement('div');
+                div.className = 'final-message';
+                div.innerHTML = line;
+                finalMessageContainer.appendChild(div);
+              });
+
+              // Scroll the last message into view
+              finalMessageContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               setTimeout(() => {
                 window.scrollBy(0, -40); // scroll up 40px for padding
               }, 600);
-              systemMessagesShown.push({ key: 'final_result', greetingMessage: finalMessageHtml, answer: '' });
+
+              systemMessagesShown.push({ key: 'final_result', greetingMessage: `${line1}<br>${line2}<br>${line3}`, answer: '' });
               console.log('systemMessagesShown:', systemMessagesShown);
               waitingForFinalMessage = false;
                 console.log('Final message displayed and marked as shown');
