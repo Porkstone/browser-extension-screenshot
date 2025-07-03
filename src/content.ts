@@ -73,13 +73,13 @@ function updateBookingData(answersArray: Array<{ question: string, answer: strin
 // Function to update pricing data
 function updatePricingData(pricingData: any[]) {
   bookingData.pricingData = pricingData;
-
+  
   if (Array.isArray(pricingData) && pricingData.length > 0) {
     // Find the best price (lowest totalPrice)
-    bookingData.bestPrice = pricingData.reduce((min, current) =>
+    bookingData.bestPrice = pricingData.reduce((min, current) => 
       current.totalPrice < min.totalPrice ? current : min
     );
-
+    
     // Note: Currency conversion is now handled in the main calculation
     // where we have access to the website's currency from the answers array
     bookingData.priceInGbp = 0; // This field is no longer used for currency conversion
@@ -133,8 +133,13 @@ async function stitchScreenshots(screenshots: string[], totalScreenshotsVertical
         img.onerror = reject;
         img.src = screenshots[index++];
       });
-      ctx.drawImage(img, x * viewportWidth, y * viewportHeight);
-      console.log('Viewport dimensions:', { width: viewportWidth, height: viewportHeight });
+      ctx.drawImage(
+        img,
+        x * viewportWidth,
+        y * viewportHeight,
+        viewportWidth,
+        viewportHeight
+      );
     }
   }
   return canvas;
@@ -176,7 +181,7 @@ function getFullPageWidth() {
 function typeText(element: HTMLElement, text: string, speed: number = TYPING_SPEED_MS, callback?: () => void) {
   element.textContent = '';
   let index = 0;
-
+  
   function typeNextChar() {
     if (index < text.length) {
       element.textContent += text.charAt(index);
@@ -189,7 +194,7 @@ function typeText(element: HTMLElement, text: string, speed: number = TYPING_SPE
       }
     }
   }
-
+  
   typeNextChar();
 }
 
@@ -201,19 +206,19 @@ async function captureFullPageScreenshot() {
     const refreshingDiv = document.createElement('div');
     refreshingDiv.style.cssText = 'margin-top: 15px;';
     messageDiv.appendChild(refreshingDiv);
-
+    
     // Add Reveal button (initially hidden)
     const revealButton = document.createElement('button');
     revealButton.textContent = 'Reveal';
     revealButton.style.cssText = 'background: #10a37f; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; display: none; margin-left: auto; margin-right: auto;';
     messageDiv.appendChild(revealButton);
-
+    
     // Apply typing animation to the message
     typeText(refreshingDiv, 'There is a better value than yours available for this hotel', TYPING_SPEED_MS, () => {
       // Show Reveal button after typing animation completes
       revealButton.style.display = 'block';
     });
-
+    
     // Add click handler for Reveal button - only expands the chat window
     revealButton.addEventListener('click', async () => {
       // Hide the Reveal button
@@ -333,14 +338,16 @@ async function startScreenshotProcess() {
   const originalScrollX = window.scrollX;
   const originalScrollY = window.scrollY;
   try {
-    const pageWidth = getFullPageWidth();
-    const { height: pageHeight } = getPageDimensions();
-    const buffer = 600;
-    const viewportWidth = Math.max(window.innerWidth, document.documentElement.clientWidth) + buffer;
-    console.log('window.innerWidth:', window.innerWidth, 'document.documentElement.clientWidth:', document.documentElement.clientWidth, 'Using viewportWidth:', viewportWidth);
-    const viewportHeight = window.innerHeight;
-    const totalScreenshotsVertical = Math.ceil(pageHeight / viewportHeight);
+    const dpr = window.devicePixelRatio || 1;
 
+    // Scale all dimensions by devicePixelRatio
+    const pageWidth = getFullPageWidth() * dpr;
+    const { height: pageHeight } = getPageDimensions();
+    const scaledPageHeight = pageHeight * dpr;
+    const buffer = 600 * dpr;
+    const viewportWidth = Math.max(window.innerWidth, document.documentElement.clientWidth) * dpr + buffer;
+    const viewportHeight = window.innerHeight * dpr;
+    const totalScreenshotsVertical = Math.ceil(scaledPageHeight / viewportHeight);
     const totalScreenshotsHorizontal = Math.ceil(pageWidth / viewportWidth);
     console.log('FullPageScreenshot:', { pageWidth, pageHeight, viewportWidth, viewportHeight, totalScreenshotsHorizontal, totalScreenshotsVertical });
 
@@ -364,7 +371,7 @@ async function startScreenshotProcess() {
         pageWidth,
         pageHeight
       );
-
+     
       interface QuestionAnswer {
         question: string;
         answer: string;
@@ -373,10 +380,10 @@ async function startScreenshotProcess() {
       // If your API returns the array directly
       interface DirectArrayResponse extends Array<QuestionAnswer> { }
 
-      // If your API wraps the array in an object (like {results: [...]} as seen in your logs)
-      interface WrappedArrayResponse {
-        results: QuestionAnswer[];
-      }
+  // If your API wraps the array in an object (like {results: [...]} as seen in your logs)
+    interface WrappedArrayResponse {
+      results: QuestionAnswer[];
+}
 
       const questions = [
         "What is the name of the hotel?",
@@ -400,30 +407,44 @@ async function startScreenshotProcess() {
         if (blob) {
           // Restore original scroll position before API call
           window.scrollTo(originalScrollX, originalScrollY);
+          
+          // Download the screenshot first
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(blob);
+          downloadLink.download = `booking-screenshot-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          
+          // Clean up the object URL
+          setTimeout(() => {
+            URL.revokeObjectURL(downloadLink.href);
+          }, 1000);
+          
           const formData = new FormData();
           formData.append("file", blob, `booking-fullpage-${new Date().toISOString()}.png`);
           formData.append("questions", JSON.stringify(questions));
-
+          
           // Make first API call and display greeting immediately
-          const apiResponse = await fetch(DEV_LOCAL_MODE ? "http://localhost:3001/api/ask" : "https://capture-booking-data-api.vercel.app/api/ask", {
+          const apiResponse = await fetch("https://capture-booking-data-api.vercel.app/api/ask", {
             method: "POST",
             body: formData
           });
-
+          
           const result = await apiResponse.json() as WrappedArrayResponse;
          
           console.log('API response:', result); // Debug log
           console.log('First element:', result.results[0].answer);
-
+          
           // Display the answers first
           const messageDiv = document.querySelector('.message');
           if (messageDiv) {
             // Get the results array from the wrapped response
             const answersArray = result.results || [];
-
+            
             // Update booking data context
             updateBookingData(answersArray);
-
+            
             console.log('answer[0]:', answersArray[0]?.answer);
             console.log('Extracted data:', {
               hotelName: bookingData.hotelName,
@@ -436,7 +457,7 @@ async function startScreenshotProcess() {
  if (!isSignedIn) {
    userRespondedToEmail = true;
  }
-
+            
             // Check for customer name and add greeting immediately
             let finalHtml = '';
             if (bookingData.customerName && bookingData.customerName.trim() !== '') {
@@ -449,14 +470,14 @@ async function startScreenshotProcess() {
               const greetingHtml = ``;
               finalHtml = greetingHtml;
             }
-
+            
             // Only display messages if the chat window has been expanded
             if (chatWindowExpanded) {
               // Preserve the original greeting message and only add new content if needed
               if (finalHtml) {
                 // Only add the greeting if there's content to add
                 messageDiv.innerHTML = messageDiv.innerHTML + finalHtml;
-                if (bookingData.customerName && bookingData.customerName.trim() !== '') {
+                  if (bookingData.customerName && bookingData.customerName.trim() !== '') {
                   const firstName = bookingData.customerName.split(' ')[0];
                   systemMessagesShown.push({ key: 'greeting_name', greetingMessage: `Hi ${firstName},`, answer: '' });
                   console.log('systemMessagesShown:', systemMessagesShown);
@@ -473,28 +494,28 @@ async function startScreenshotProcess() {
               if (bookingChoiceMessage) {
                 typeText(bookingChoiceMessage, 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', TYPING_SPEED_MS, () => {
                   // Mark setup messages as complete after typing animation
-                  setupMessagesComplete = true;
+                                            setupMessagesComplete = true;
                   systemMessagesShown.push({ key: 'booking_choice', greetingMessage: 'Do you want me to complete the booking for you as your AI Co-pilot or do it yourself?', answer: '' });
                   console.log('systemMessagesShown:', systemMessagesShown);
                 });
               }
             }
-
+            
             // Make four parallel API calls for pricing data
             const hotelName = encodeURIComponent((answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || ''));
-
+            
             // First API call - Vietnam
             const pricingResponseVN = fetch(`https://sp.autodeal.io/api/prices/VN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-
+            
             // Second API call - Thailand
             const pricingResponseTH = fetch(`https://sp.autodeal.io/api/prices/TH4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-
+            
             // Third API call - UK
             const pricingResponseUK = fetch(`https://autodeal.io/api/prices/UK4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-
+            
             // Fourth API call - US
             const pricingResponseUS = fetch(`https://autodeal.io/api/prices/US4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-
+            
             // Wait for all four API calls to complete with 5 second delay
             const [pricingDataVN, pricingDataTH, pricingDataUK, pricingDataUS] = await Promise.all([
               pricingResponseVN.then(response => response.json()),
@@ -502,12 +523,12 @@ async function startScreenshotProcess() {
               pricingResponseUK.then(response => response.json()),
               pricingResponseUS.then(response => response.json())
             ]);
-
+            
             console.log('Pricing API response VN:', pricingDataVN);
             console.log('Pricing API response TH:', pricingDataTH);
             console.log('Pricing API response UK:', pricingDataUK);
             console.log('Pricing API response US:', pricingDataUS);
-
+            
             console.log('About to process pricing data immediately...');
 
             // Prevent duplicate processing
@@ -517,54 +538,54 @@ async function startScreenshotProcess() {
             }
 
             try {
-              // Helper function to get best price from data
-              const getBestPrice = (data: any) => {
-                if (data && Array.isArray(data) && data.length > 0) {
-                  // Filter out prices that are 0 or less, then find the minimum
-                  const validPrices = data.filter(item => item.totalPrice > 0);
-                  if (validPrices.length > 0) {
-                    return validPrices.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min);
-                  }
+            // Helper function to get best price from data
+            const getBestPrice = (data: any) => {
+              if (data && Array.isArray(data) && data.length > 0) {
+                // Filter out prices that are 0 or less, then find the minimum
+                const validPrices = data.filter(item => item.totalPrice > 0);
+                if (validPrices.length > 0) {
+                  return validPrices.reduce((min, current) => current.totalPrice < min.totalPrice ? current : min);
                 }
-                return null;
-              };
-
-              const bestPriceVN = getBestPrice(pricingDataVN);
-              const bestPriceTH = getBestPrice(pricingDataTH);
-              const bestPriceUK = getBestPrice(pricingDataUK);
-              const bestPriceUS = getBestPrice(pricingDataUS);
-
-              // Find the lowest price among all four (only consider valid prices > 0)
-              let bestPricingData = null;
-              let bestCountry = '';
-
-              // Compare all valid prices and find the lowest
-              const validPrices = [
-                { data: pricingDataVN, price: bestPriceVN, country: 'Vietnam' },
-                { data: pricingDataTH, price: bestPriceTH, country: 'Thailand' },
-                { data: pricingDataUK, price: bestPriceUK, country: 'UK' },
-                { data: pricingDataUS, price: bestPriceUS, country: 'US' }
-              ].filter(item => item.price !== null);
-
-              if (validPrices.length > 0) {
-                const bestOption = validPrices.reduce((min, current) =>
-                  current.price.totalPrice < min.price.totalPrice ? current : min
-                );
-                bestPricingData = bestOption.data;
-                bestCountry = bestOption.country;
               }
+              return null;
+            };
+            
+            const bestPriceVN = getBestPrice(pricingDataVN);
+            const bestPriceTH = getBestPrice(pricingDataTH);
+            const bestPriceUK = getBestPrice(pricingDataUK);
+            const bestPriceUS = getBestPrice(pricingDataUS);
+            
+            // Find the lowest price among all four (only consider valid prices > 0)
+            let bestPricingData = null;
+            let bestCountry = '';
+            
+            // Compare all valid prices and find the lowest
+            const validPrices = [
+              { data: pricingDataVN, price: bestPriceVN, country: 'Vietnam' },
+              { data: pricingDataTH, price: bestPriceTH, country: 'Thailand' },
+              { data: pricingDataUK, price: bestPriceUK, country: 'UK' },
+              { data: pricingDataUS, price: bestPriceUS, country: 'US' }
+            ].filter(item => item.price !== null);
+            
+            if (validPrices.length > 0) {
+              const bestOption = validPrices.reduce((min, current) => 
+                current.price.totalPrice < min.price.totalPrice ? current : min
+              );
+              bestPricingData = bestOption.data;
+              bestCountry = bestOption.country;
+            }
 
               console.log('Pricing API processing completed:');
               console.log('- validPrices.length:', validPrices.length);
               console.log('- bestPricingData:', bestPricingData);
               console.log('- bestCountry:', bestCountry);
-
-              // Update pricing data in context with the best result
-              updatePricingData(bestPricingData);
-
+            
+            // Update pricing data in context with the best result
+            updatePricingData(bestPricingData);
+            
               console.log('About to process pricing data immediately...');
-
-              // Process pricing data and store results (only if we have valid pricing data)
+            
+            // Process pricing data and store results (only if we have valid pricing data)
               console.log('Processing pricing data...');
               console.log('bestPricingData:', bestPricingData);
               console.log('bookingData.pricingData:', bookingData.pricingData);
@@ -572,18 +593,18 @@ async function startScreenshotProcess() {
 
               if (bestPricingData) {
                 console.log('bestPricingData is valid, proceeding to set pricingResults');
-                // Get the hotel name from answers array index 0
-                const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
-
-                // Get the country name from the best price data
-                const countryName = bookingData.bestPrice?.apiCountryName || 'Unknown Country';
-
+              // Get the hotel name from answers array index 0
+              const hotelName = answersArray[0]?.answer || 'Unknown Hotel';
+              
+              // Get the country name from the best price data
+              const countryName = bookingData.bestPrice?.apiCountryName || 'Unknown Country';
+              
                 // Get the currency from the 14th item in answers array
                 const websiteCurrency = answersArray[14]?.answer || 'GBP';
                 
                 // Calculate the actual savings with proper currency conversion
                 const bookingComPrice = parseFloat(answersArray[13]?.answer || '0');
-                const bestPriceUSD = bookingData.bestPrice?.totalPrice || 0; // This is in USD
+              const bestPriceUSD = bookingData.bestPrice?.totalPrice || 0; // This is in USD
                 
                 // Convert USD to the website's currency
                 let bestPriceInWebsiteCurrency = 0;
@@ -608,38 +629,38 @@ async function startScreenshotProcess() {
                 console.log('- bestPriceUSD:', bestPriceUSD);
                 console.log('- bestPriceInWebsiteCurrency:', bestPriceInWebsiteCurrency);
                 console.log('- savingsInWebsiteCurrency:', savingsInWebsiteCurrency);
-
-                // Store the pricing results for later display
-                pricingResults = {
-                  hotelName,
-                  countryName,
+              
+              // Store the pricing results for later display
+              pricingResults = {
+                hotelName,
+                countryName,
                   savingsGBP: savingsInWebsiteCurrency,
                   websiteCurrency,
-                  bookingLink: bookingData.bestPrice?.bookingLink || '',
+                bookingLink: bookingData.bestPrice?.bookingLink || '',
                   hasCheaperPrice: savingsInWebsiteCurrency >= 0,
-                };
+              };
 
                 console.log('pricingResults set to:', pricingResults);
-
-                console.log('Pricing results stored, checking if setup messages are complete');
+              
+              console.log('Pricing results stored, checking if setup messages are complete');
 
 
                 // Note: Final message will be triggered from user message handling flow
                 // after user responds to email confirmation and three messages complete
               } else {
                 console.log('bestPricingData is null or invalid, setting hasCheaperPrice to false');
-                // No cheaper price found
-                pricingResults = {
-                  hotelName: answersArray[0]?.answer || 'Unknown Hotel',
-                  countryName: 'Unknown Country',
-                  savingsGBP: 0,
-                  bookingLink: '',
-                  hasCheaperPrice: false
-                };
+              // No cheaper price found
+              pricingResults = {
+                hotelName: answersArray[0]?.answer || 'Unknown Hotel',
+                countryName: 'Unknown Country',
+                savingsGBP: 0,
+                bookingLink: '',
+                hasCheaperPrice: false
+              };
 
                 console.log('pricingResults set to (no cheaper price):', pricingResults);
-
-                console.log('No pricing data found, checking if setup messages are complete');
+              
+              console.log('No pricing data found, checking if setup messages are complete');
 
               }
             } catch (error) {
@@ -676,7 +697,7 @@ function injectPopup() {
         <div class="header-buttons">
           <button id="minimize-popup" class="minimize-button" disabled>−</button>
           <button id="maximize-popup" class="maximize-button" disabled>□</button>
-          <button id="close-popup" class="close-button">×</button>
+        <button id="close-popup" class="close-button">×</button>
         </div>
       </div>
       <div class="content">
@@ -771,7 +792,7 @@ function injectPopup() {
         }
       });
     }
-
+    
     // Start typing animation for the greeting message
     if (greetingMessage) {
       const greetingMessageText = 'Hello, I am your co-pilot for optimising this payment.'
@@ -1150,7 +1171,7 @@ function injectPopup() {
         }
       });
     }
-
+    
     if (closeButton) {
       closeButton.addEventListener('click', () => {
         if (popup) popup.style.display = 'none';
@@ -1218,26 +1239,26 @@ function displayPricingResults() {
     console.log('Waiting for final message from user flow, skipping displayPricingResults...');
     return;
   }
-
+  
   if (!pricingResults) {
     console.log('No pricing results available');
     return;
   }
-
+  
   const contentDiv = document.querySelector('.content');
   if (!contentDiv) {
     console.log('No content div found');
     return;
   }
-
+  
   // Create a second message div for pricing results
   const pricingMessageDiv = document.createElement('div');
   pricingMessageDiv.className = 'message';
   pricingMessageDiv.style.cssText = 'margin-top: 30px; border-top: 1px solid #565869; padding-top: 20px; min-height: 200px; max-width: 800px;';
   contentDiv.appendChild(pricingMessageDiv);
-
+  
   console.log('hasCheaperPrice:', pricingResults.hasCheaperPrice);
-
+  
   if (pricingResults.hasCheaperPrice) {
     console.log('Displaying pricing messages');
 
@@ -1249,14 +1270,14 @@ function displayPricingResults() {
     const firstMessage = document.createElement('div');
     firstMessage.className = 'ai-message';
     pricingMessageDiv.appendChild(firstMessage);
-
+    
     // Apply typing animation to the first message
     typeText(firstMessage, `I found the best value for ${pricingResults.hotelName} in ${pricingResults.countryName}`, TYPING_SPEED_MS, () => {
       // After typing animation completes, replace with HTML to color the country name
       if (pricingResults) {
         firstMessage.innerHTML = `I found the best value for ${pricingResults.hotelName} in <span style="color: rgb(16, 163, 127);">${pricingResults.countryName}</span>`;
       }
-
+      
       // Scroll to the bottom of the page after first message is displayed
       if (contentDiv) {
         contentDiv.scrollTo({
@@ -1264,7 +1285,7 @@ function displayPricingResults() {
           behavior: 'smooth'
         });
       }
-
+      
       // Display second message after first message typing completes
       setTimeout(() => {
         const secondMessage = document.createElement('div');
@@ -1292,7 +1313,7 @@ function displayPricingResults() {
               const thirdMessage = document.createElement('div');
               thirdMessage.className = 'ai-message';
               pricingMessageDiv.appendChild(thirdMessage);
-
+              
               // Apply typing animation to the third message
               typeText(thirdMessage, `Here is the booking link for you, happy to help with this payment `, TYPING_SPEED_MS, () => {
                 // Add the link after the text is typed
@@ -1314,7 +1335,7 @@ function displayPricingResults() {
     const noCheaperMessage = document.createElement('div');
     noCheaperMessage.className = 'ai-message';
     pricingMessageDiv.appendChild(noCheaperMessage);
-
+    
     // Apply typing animation to the no cheaper price message
     typeText(noCheaperMessage, 'On this occasion I was unable to locate a cheaper price, please refresh this page to try again.', TYPING_SPEED_MS);
   }
