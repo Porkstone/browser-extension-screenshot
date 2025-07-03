@@ -383,6 +383,13 @@ async function startScreenshotProcess() {
   // Save original scroll position
   const originalScrollX = window.scrollX;
   const originalScrollY = window.scrollY;
+
+  // HIDE THE POPUP
+  const popup = document.getElementById('booking-ai-popup');
+  if (popup) {
+    popup.style.visibility = 'hidden'; // or use display: 'none' if you want to remove it from layout
+  }
+
   try {
     const pageWidth = getFullPageWidth();
     const { height: pageHeight } = getPageDimensions();
@@ -726,6 +733,11 @@ async function startScreenshotProcess() {
     // Restore original scroll position on error
     window.scrollTo(originalScrollX, originalScrollY);
     throw err;
+  } finally {
+    // SHOW THE POPUP AGAIN
+    if (popup) {
+      popup.style.visibility = 'visible';
+    }
   }
 }
 
