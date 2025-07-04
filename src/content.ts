@@ -615,7 +615,7 @@ async function startScreenshotProcess() {
               }
             }
             
-            // Make four parallel API calls for pricing data
+            // Make seven parallel API calls for pricing data
             const hotelName = encodeURIComponent((answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || ''));
             
             // First API call - Vietnam
@@ -630,18 +630,33 @@ async function startScreenshotProcess() {
             // Fourth API call - US
             const pricingResponseUS = fetch(`https://autodeal.io/api/prices/US4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
             
-            // Wait for all four API calls to complete with 5 second delay
-            const [pricingDataVN, pricingDataTH, pricingDataUK, pricingDataUS] = await Promise.all([
+            // Fifth API call - India
+            const pricingResponseIN = fetch(`https://autodeal.io/api/prices/IN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
+            
+            // Sixth API call - New Zealand
+            const pricingResponseNZ = fetch(`https://autodeal.io/api/prices/NZ4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
+            
+            // Seventh API call - Mexico
+            const pricingResponseMX = fetch(`https://autodeal.io/api/prices/MX4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
+            
+            // Wait for all seven API calls to complete with 5 second delay
+            const [pricingDataVN, pricingDataTH, pricingDataUK, pricingDataUS, pricingDataIN, pricingDataNZ, pricingDataMX] = await Promise.all([
               pricingResponseVN.then(response => response.json()),
               pricingResponseTH.then(response => response.json()),
               pricingResponseUK.then(response => response.json()),
-              pricingResponseUS.then(response => response.json())
+              pricingResponseUS.then(response => response.json()),
+              pricingResponseIN.then(response => response.json()),
+              pricingResponseNZ.then(response => response.json()),
+              pricingResponseMX.then(response => response.json())
             ]);
             
             console.log('Pricing API response VN:', pricingDataVN);
             console.log('Pricing API response TH:', pricingDataTH);
             console.log('Pricing API response UK:', pricingDataUK);
             console.log('Pricing API response US:', pricingDataUS);
+            console.log('Pricing API response IN:', pricingDataIN);
+            console.log('Pricing API response NZ:', pricingDataNZ);
+            console.log('Pricing API response MX:', pricingDataMX);
             
             console.log('About to process pricing data immediately...');
 
@@ -668,8 +683,11 @@ async function startScreenshotProcess() {
             const bestPriceTH = getBestPrice(pricingDataTH);
             const bestPriceUK = getBestPrice(pricingDataUK);
             const bestPriceUS = getBestPrice(pricingDataUS);
+            const bestPriceIN = getBestPrice(pricingDataIN);
+            const bestPriceNZ = getBestPrice(pricingDataNZ);
+            const bestPriceMX = getBestPrice(pricingDataMX);
             
-            // Find the lowest price among all four (only consider valid prices > 0)
+            // Find the lowest price among all seven (only consider valid prices > 0)
             let bestPricingData = null;
             let bestCountry = '';
             
@@ -678,7 +696,10 @@ async function startScreenshotProcess() {
               { data: pricingDataVN, price: bestPriceVN, country: 'Vietnam' },
               { data: pricingDataTH, price: bestPriceTH, country: 'Thailand' },
               { data: pricingDataUK, price: bestPriceUK, country: 'UK' },
-              { data: pricingDataUS, price: bestPriceUS, country: 'US' }
+              { data: pricingDataUS, price: bestPriceUS, country: 'US' },
+              { data: pricingDataIN, price: bestPriceIN, country: 'India' },
+              { data: pricingDataNZ, price: bestPriceNZ, country: 'New Zealand' },
+              { data: pricingDataMX, price: bestPriceMX, country: 'Mexico' }
             ].filter(item => item.price !== null);
             
             if (validPrices.length > 0) {
