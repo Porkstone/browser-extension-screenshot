@@ -395,7 +395,7 @@ function showAnimatedDotsOverlay() {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -452,6 +452,8 @@ function hideAnimatedDotsOverlay() {
     overlay.remove();
   }
 }
+
+
 
 // Function to handle the actual screenshot process
 async function startScreenshotProcess() {
@@ -1286,6 +1288,11 @@ function injectPopup() {
                   
                   // Apply typing animation to the first follow-up message
                   typeText(firstFollowUp, `I'll continue to monitor ${pricingResults.hotelName} after you book. If the price drops:`, TYPING_SPEED_MS, () => {
+                    // Make the hotel name bold after typing animation completes
+                    firstFollowUp.innerHTML = firstFollowUp.innerHTML.replace(
+                      pricingResults.hotelName,
+                      `<span style="font-weight: bold;">${pricingResults.hotelName}</span>`
+                    );
                     // Scroll to show the first follow-up message
                     firstFollowUp.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     setTimeout(() => {
@@ -1313,10 +1320,56 @@ function injectPopup() {
               }
             }, 1000);
           } else {
-            console.log('No cheaper price found, skipping final message');
+            console.log('No cheaper price found, showing no better price messages');
             finalMessageDisplayed = true;
             waitingForFinalMessage = false;
             console.log('Final message displayed and marked as shown');
+            
+            // Show the three "no better price" messages
+            setTimeout(() => {
+              const messageDiv = document.querySelector('.message');
+              if (messageDiv) {
+                // Create follow-up messages container
+                const noBetterPriceContainer = document.createElement('div');
+                noBetterPriceContainer.id = 'no-better-price-messages-container';
+                noBetterPriceContainer.style.marginTop = '24px';
+                noBetterPriceContainer.style.width = '100%';
+                noBetterPriceContainer.classList.add('message');
+                
+                // Insert after the main message div
+                if (messageDiv.parentElement) {
+                  messageDiv.parentElement.appendChild(noBetterPriceContainer);
+                }
+                
+                // First message
+                const firstMessage = document.createElement('div');
+                firstMessage.className = 'ai-message';
+                noBetterPriceContainer.appendChild(firstMessage);
+                
+                // Apply typing animation to the first message
+                typeText(firstMessage, 'Happy to report Booking.com actually offers the best option for your dates.', TYPING_SPEED_MS, () => {
+                  // Second message after first one completes
+                  setTimeout(() => {
+                    const secondMessage = document.createElement('div');
+                    secondMessage.className = 'ai-message';
+                    noBetterPriceContainer.appendChild(secondMessage);
+                    
+                    // Apply typing animation to the second message
+                    typeText(secondMessage, 'I\'ve basically scanned the internet for you, so book with confidence!', TYPING_SPEED_MS, () => {
+                      // Third message after second one completes
+                      setTimeout(() => {
+                        const thirdMessage = document.createElement('div');
+                        thirdMessage.className = 'ai-message';
+                        noBetterPriceContainer.appendChild(thirdMessage);
+                        
+                        // Apply typing animation to the third message
+                        typeText(thirdMessage, 'Oh, and I can work my magic to optimise other payments – just let me have them.', TYPING_SPEED_MS);
+                      }, 2000);
+                    });
+                  }, 2000);
+                });
+              }
+            }, 1000);
           }
         } else {
           console.log('Not all conditions met for final message:', {
