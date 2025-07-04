@@ -3,29 +3,111 @@
 <head>
   <meta charset="UTF-8">
   <title>Booking.com AI Assistant</title>
-  <link href="styles.css" rel="stylesheet">
-</head>
-<body class="w-96 h-96 bg-gray-100">
-  <div class="flex flex-col h-full">
-    <div class="bg-blue-600 text-white p-4">
-      <h1 class="text-xl font-bold">AI Assistant</h1>
-    </div>
+  <link href="src/popup.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #343541;
+      color: #ececf1;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      font-size: 12px;
+    }
     
-    <div class="flex-1 p-4 overflow-y-auto">
-      <div class="space-y-4">
-        <div class="bg-white rounded-lg p-3 shadow">
-          <p class="text-gray-800">Hello! I'm your AI assistant. How can I help you with your booking?</p>
+    #booking-ai-popup-container {
+      background-color: #343541;
+      color: #ececf1;
+      padding: 1rem;
+    }
+    
+    #booking-ai-popup {
+      background-color: #343541;
+      color: #ececf1;
+      border-radius: 0.75rem;
+      border: 1px solid #565869;
+      overflow: hidden;
+      width: 36rem;
+    }
+    
+    .header {
+      background-color: #202123;
+      color: #ececf1;
+      padding: 1rem;
+      border-bottom: 1px solid #565869;
+    }
+    
+    .header h1 {
+      color: #ececf1;
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .content {
+      background-color: #343541;
+      color: #ececf1;
+      padding: 1.5rem;
+    }
+    
+    .message {
+      background-color: #444654;
+      color: #ececf1;
+      border: 1px solid #565869;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .footer {
+      background-color: #202123;
+      color: #ececf1;
+      border-top: 1px solid #565869;
+      padding: 1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="booking-ai-popup-container">
+    <div id="booking-ai-popup">
+      <div class="header">
+        <h1 style="white-space: nowrap;">Zorro Co-pilot</h1>
+      </div>
+      <div class="content">
+        <div class="message">
+          <div id="greeting-message" style="font-size: 1.2rem;">Hello, I am your co-pilot for optimising this payment.</div>
+        </div>
+      </div>
+      <div class="footer">
+        <button id="screenshotBtn" class="screenshot-button" style="display: none;">Refresh</button>
+      </div>
+             <button id="close-popup" class="close-button" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #ececf1; cursor: pointer; font-size: 1.5rem; line-height: 1;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div id="chat-input-container" style="display: none; height: 120px; margin-right: 16px;">
+        <div class="input-wrapper">
+          <input type="text" id="chat-input" placeholder="Type your message..." />
+          <button id="send-message-btn">Send</button>
         </div>
       </div>
     </div>
-
-    <div class="p-4 border-t border-gray-200 bg-white">
-      <button id="screenshotBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-        Take Screenshot
-      </button>
-    </div>
   </div>
-  <script src="popup.js"></script>
-  <script src="styles.js"></script>
+  <script src="src/popup.js"></script>
+  <script>
+    // Add close button functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const closeButton = document.getElementById('close-popup');
+      const popupContainer = document.getElementById('booking-ai-popup-container');
+      
+      if (closeButton && popupContainer) {
+        closeButton.addEventListener('click', function() {
+          popupContainer.style.display = 'none';
+        });
+      }
+    });
+  </script>
 </body>
 </html> 
