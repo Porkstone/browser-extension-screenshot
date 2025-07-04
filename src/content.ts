@@ -1348,6 +1348,12 @@ function injectPopup() {
                 
                 // Apply typing animation to the first message
                 typeText(firstMessage, 'Happy to report Booking.com actually offers the best option for your dates.', TYPING_SPEED_MS, () => {
+                  // Scroll to show the first message
+                  firstMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  setTimeout(() => {
+                    window.scrollBy(0, -40); // scroll up 40px for padding
+                  }, 600);
+                  
                   // Second message after first one completes
                   setTimeout(() => {
                     const secondMessage = document.createElement('div');
@@ -1356,6 +1362,12 @@ function injectPopup() {
                     
                     // Apply typing animation to the second message
                     typeText(secondMessage, 'I\'ve basically scanned the internet for you, so book with confidence!', TYPING_SPEED_MS, () => {
+                      // Scroll to show the second message
+                      secondMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      setTimeout(() => {
+                        window.scrollBy(0, -40); // scroll up 40px for padding
+                      }, 600);
+                      
                       // Third message after second one completes
                       setTimeout(() => {
                         const thirdMessage = document.createElement('div');
@@ -1363,7 +1375,13 @@ function injectPopup() {
                         noBetterPriceContainer.appendChild(thirdMessage);
                         
                         // Apply typing animation to the third message
-                        typeText(thirdMessage, 'Oh, and I can work my magic to optimise other payments – just let me have them.', TYPING_SPEED_MS);
+                        typeText(thirdMessage, 'Oh, and I can work my magic to optimise other payments – just let me have them.', TYPING_SPEED_MS, () => {
+                          // Scroll to show the third message
+                          thirdMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          setTimeout(() => {
+                            window.scrollBy(0, -40); // scroll up 40px for padding
+                          }, 600);
+                        });
                       }, 2000);
                     });
                   }, 2000);
@@ -1591,6 +1609,12 @@ function displayPricingResults() {
     
     // Apply typing animation to the first message
     typeText(firstMessage, 'Happy to report Booking.com actually offers the best option for your dates.', TYPING_SPEED_MS, () => {
+      // Scroll to show the first message
+      firstMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => {
+        window.scrollBy(0, -40); // scroll up 40px for padding
+      }, 600);
+      
       // Display second message after first message typing completes
       setTimeout(() => {
         const secondMessage = document.createElement('div');
@@ -1599,6 +1623,12 @@ function displayPricingResults() {
         
         // Apply typing animation to the second message
         typeText(secondMessage, 'I\'ve basically scanned the internet for you, so book with confidence!', TYPING_SPEED_MS, () => {
+          // Scroll to show the second message
+          secondMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          setTimeout(() => {
+            window.scrollBy(0, -40); // scroll up 40px for padding
+          }, 600);
+          
           // Display third message after second message typing completes
           setTimeout(() => {
             const thirdMessage = document.createElement('div');
@@ -1606,7 +1636,13 @@ function displayPricingResults() {
             pricingMessageDiv.appendChild(thirdMessage);
             
             // Apply typing animation to the third message
-            typeText(thirdMessage, 'Oh, and I can work my magic to optimise other payments – just let me have them.', TYPING_SPEED_MS);
+            typeText(thirdMessage, 'Oh, and I can work my magic to optimise other payments – just let me have them.', TYPING_SPEED_MS, () => {
+              // Scroll to show the third message
+              thirdMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              setTimeout(() => {
+                window.scrollBy(0, -40); // scroll up 40px for padding
+              }, 600);
+            });
           }, 2000);
         });
       }, 2000);
