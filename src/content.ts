@@ -378,11 +378,89 @@ async function captureFullPageScreenshot() {
   }
 }
 
+// Function to create and show animated dots overlay
+function showAnimatedDotsOverlay() {
+  // Remove any existing overlay
+  const existingOverlay = document.getElementById('screenshot-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
+  }
+
+  // Create overlay container
+  const overlay = document.createElement('div');
+  overlay.id = 'screenshot-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999999;
+    pointer-events: none;
+  `;
+
+  // Create dots container
+  const dotsContainer = document.createElement('div');
+  dotsContainer.style.cssText = `
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  `;
+
+  // Create three animated dots
+  for (let i = 0; i < 3; i++) {
+    const dot = document.createElement('div');
+    dot.style.cssText = `
+      width: 12px;
+      height: 12px;
+      background-color: #10a37f;
+      border-radius: 50%;
+      animation: dotPulse 1.4s ease-in-out infinite;
+      animation-delay: ${i * 0.2}s;
+    `;
+    dotsContainer.appendChild(dot);
+  }
+
+  // Add CSS animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes dotPulse {
+      0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+      }
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  overlay.appendChild(dotsContainer);
+  document.body.appendChild(overlay);
+}
+
+// Function to hide animated dots overlay
+function hideAnimatedDotsOverlay() {
+  const overlay = document.getElementById('screenshot-overlay');
+  if (overlay) {
+    overlay.remove();
+  }
+}
+
 // Function to handle the actual screenshot process
 async function startScreenshotProcess() {
   // Save original scroll position
   const originalScrollX = window.scrollX;
   const originalScrollY = window.scrollY;
+
+  // Show animated dots overlay
+  showAnimatedDotsOverlay();
 
   // No need to hide popup since it doesn't exist yet
 
@@ -716,6 +794,9 @@ async function startScreenshotProcess() {
     // Restore original scroll position on error
     window.scrollTo(originalScrollX, originalScrollY);
     throw err;
+  } finally {
+    // Hide animated dots overlay
+    hideAnimatedDotsOverlay();
   }
 }
 
