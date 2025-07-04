@@ -1477,12 +1477,38 @@ function displayPricingResults() {
     });
   } else {
     console.log('Displaying no better price message');
-    // No cheaper price found - display alternative message
-    const noCheaperMessage = document.createElement('div');
-    noCheaperMessage.className = 'ai-message';
-    pricingMessageDiv.appendChild(noCheaperMessage);
+    // No cheaper price found - display three separate messages
     
-    // Apply typing animation to the no cheaper price message
-    typeText(noCheaperMessage, 'On this occasion I was unable to locate a cheaper price, please refresh this page to try again.', TYPING_SPEED_MS);
+    // Mark as displayed to prevent duplicates
+    finalMessageDisplayed = true;
+    console.log('Final message marked as displayed in displayPricingResults (no better price)');
+
+    // Display first message
+    const firstMessage = document.createElement('div');
+    firstMessage.className = 'ai-message';
+    pricingMessageDiv.appendChild(firstMessage);
+    
+    // Apply typing animation to the first message
+    typeText(firstMessage, 'Happy to report Booking.com actually offers the best option for your dates.', TYPING_SPEED_MS, () => {
+      // Display second message after first message typing completes
+      setTimeout(() => {
+        const secondMessage = document.createElement('div');
+        secondMessage.className = 'ai-message';
+        pricingMessageDiv.appendChild(secondMessage);
+        
+        // Apply typing animation to the second message
+        typeText(secondMessage, 'I\'ve basically scanned the internet for you, so book with confidence!', TYPING_SPEED_MS, () => {
+          // Display third message after second message typing completes
+          setTimeout(() => {
+            const thirdMessage = document.createElement('div');
+            thirdMessage.className = 'ai-message';
+            pricingMessageDiv.appendChild(thirdMessage);
+            
+            // Apply typing animation to the third message
+            typeText(thirdMessage, 'Oh, and I can work my magic to optimise other payments – just let me have them.', TYPING_SPEED_MS);
+          }, 2000);
+        });
+      }, 2000);
+    });
   }
 }
