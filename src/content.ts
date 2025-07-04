@@ -1261,7 +1261,55 @@ function injectPopup() {
               systemMessagesShown.push({ key: 'final_result', greetingMessage: `${line1}<br>${line2}<br>${line3}`, answer: '' });
               console.log('systemMessagesShown:', systemMessagesShown);
               waitingForFinalMessage = false;
-                console.log('Final message displayed and marked as shown');
+              console.log('Final message displayed and marked as shown');
+              
+              // Show follow-up messages after a delay
+              setTimeout(() => {
+                const messageDiv = document.querySelector('.message');
+                if (messageDiv) {
+                  // Create follow-up messages container
+                  const followUpContainer = document.createElement('div');
+                  followUpContainer.id = 'follow-up-messages-container';
+                  followUpContainer.style.marginTop = '24px';
+                  followUpContainer.style.width = '100%';
+                  followUpContainer.classList.add('message');
+                  
+                  // Insert after the main message div
+                  if (messageDiv.parentElement) {
+                    messageDiv.parentElement.appendChild(followUpContainer);
+                  }
+                  
+                  // First follow-up message
+                  const firstFollowUp = document.createElement('div');
+                  firstFollowUp.className = 'ai-message';
+                  followUpContainer.appendChild(firstFollowUp);
+                  
+                  // Apply typing animation to the first follow-up message
+                  typeText(firstFollowUp, `I'll continue to monitor ${pricingResults.hotelName} after you book. If the price drops:`, TYPING_SPEED_MS, () => {
+                    // Scroll to show the first follow-up message
+                    firstFollowUp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => {
+                      window.scrollBy(0, -40); // scroll up 40px for padding
+                    }, 600);
+                    
+                    // Second follow-up message after first one completes
+                    setTimeout(() => {
+                      const secondFollowUp = document.createElement('div');
+                      secondFollowUp.className = 'ai-message';
+                      followUpContainer.appendChild(secondFollowUp);
+                      
+                      // Apply typing animation to the second follow-up message
+                      typeText(secondFollowUp, 'I\'ll cancel your booking, re-book a better deal & credit the difference into your bank account', TYPING_SPEED_MS, () => {
+                        // Scroll to show the second follow-up message
+                        secondFollowUp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        setTimeout(() => {
+                          window.scrollBy(0, -40); // scroll up 40px for padding
+                        }, 600);
+                      });
+                    }, 2000);
+                  });
+                }
+              }, 3000);
               }
             }, 1000);
           } else {
