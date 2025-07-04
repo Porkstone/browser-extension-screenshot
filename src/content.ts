@@ -384,11 +384,7 @@ async function startScreenshotProcess() {
   const originalScrollX = window.scrollX;
   const originalScrollY = window.scrollY;
 
-  // HIDE THE POPUP
-  const popup = document.getElementById('booking-ai-popup');
-  if (popup) {
-    popup.style.visibility = 'hidden'; // or use display: 'none' if you want to remove it from layout
-  }
+  // No need to hide popup since it doesn't exist yet
 
   try {
     const pageWidth = getFullPageWidth();
@@ -720,11 +716,6 @@ async function startScreenshotProcess() {
     // Restore original scroll position on error
     window.scrollTo(originalScrollX, originalScrollY);
     throw err;
-  } finally {
-    // SHOW THE POPUP AGAIN
-    if (popup) {
-      popup.style.visibility = 'visible';
-    }
   }
 }
 
@@ -1229,8 +1220,7 @@ function injectPopup() {
     }
     if (screenshotBtn) {
       screenshotBtn.addEventListener('click', captureFullPageScreenshot);
-      // Automatically trigger the full-page screenshot process when the popup is first displayed
-      setTimeout(() => startScreenshotProcess(), 3000);
+      // Screenshot is now taken before popup injection, so no need for automatic trigger here
     }
 
     // After displaying the booking choice message (i.e., after typeText for bookingChoiceMessage), enable the Send button:
@@ -1256,16 +1246,28 @@ function injectPopup() {
   }
 }
 
-// Function to ensure the page is ready
+// Function to ensure the page is ready and start the screenshot process first
 function ensurePageReady() {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectPopup);
+    document.addEventListener('DOMContentLoaded', startScreenshotFirst);
   } else {
-    injectPopup();
+    startScreenshotFirst();
   }
 }
 
-// Start the injection process
+// Function to start screenshot process first, then inject popup
+async function startScreenshotFirst() {
+  console.log('Starting screenshot process before popup injection');
+  
+  // Take screenshot first (without popup present)
+  await startScreenshotProcess();
+  
+  // After screenshot is complete, inject the popup
+  console.log('Screenshot complete, now injecting popup');
+  injectPopup();
+}
+
+// Start the process
 ensurePageReady();
 
 // Function to wait for the ready message to be displayed
