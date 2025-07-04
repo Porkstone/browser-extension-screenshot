@@ -751,7 +751,7 @@ function injectPopup() {
       <div class="footer">
         <button id="screenshotBtn" class="screenshot-button" style="display: none;">Refresh</button>
       </div>
-      <div id="chat-input-container" style="display: none;">
+      <div id="chat-input-container" style="display: none; height: 120px; margin-right: 16px;">
         <div class="input-wrapper">
           <input type="text" id="chat-input" placeholder="Type your message..." />
           <button id="send-message-btn">Send</button>
@@ -1054,8 +1054,8 @@ function injectPopup() {
                   const secondMessageDiv = document.createElement('div');
                   secondMessageDiv.className = 'ai-message';
                   messageDiv.appendChild(secondMessageDiv);
-                  typeText(secondMessageDiv, 'I will show you the country that offers the best value for your hotel', TYPING_SPEED_MS, () => {
-                    systemMessagesShown.push({ key: 'three_msg_2', greetingMessage: 'I will show you the country that offers the best value for your hotel', answer: '' });
+                  typeText(secondMessageDiv, 'I will show you the best deal globally for this hotel that I identified with a new formula', TYPING_SPEED_MS, () => {
+                    systemMessagesShown.push({ key: 'three_msg_2', greetingMessage: 'I will show you the best deal globally for this hotel that I identified with a new formula', answer: '' });
                     console.log('systemMessagesShown:', systemMessagesShown);
                     // Third system message
                     setTimeout(() => {
@@ -1239,6 +1239,19 @@ function injectPopup() {
       (sendMessageBtn as HTMLButtonElement).style.background = '#10a37f';
       (sendMessageBtn as HTMLButtonElement).style.color = 'white';
       (sendMessageBtn as HTMLButtonElement).style.cursor = 'pointer';
+      (sendMessageBtn as HTMLButtonElement).style.fontSize = '1.3em';
+    }
+
+    if (chatInputContainer) {
+      chatInputContainer.style.height = '120px';
+      chatInputContainer.style.marginRight = '16px';
+      chatInputContainer.style.paddingTop = '';
+      chatInputContainer.style.paddingBottom = '';
+    }
+
+    if (chatInput) {
+      chatInput.style.height = '60px'; // or another value to match your design
+      chatInput.style.fontSize = '1.2em'; // optional: make text bigger
     }
   }
 }
