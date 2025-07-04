@@ -1094,6 +1094,19 @@ function injectPopup() {
               bookingChoiceAnswered = true;
               console.log('systemMessagesShown (set booking_choice answer on first message):', systemMessagesShown);
             }
+            // Disable the Send button and input after first message
+            if (sendMessageBtn) {
+              (sendMessageBtn as HTMLButtonElement).disabled = true;
+              (sendMessageBtn as HTMLButtonElement).style.background = '#ccc';
+              (sendMessageBtn as HTMLButtonElement).style.color = '#888';
+              (sendMessageBtn as HTMLButtonElement).style.cursor = 'not-allowed';
+            }
+            if (chatInput) {
+              (chatInput as HTMLInputElement).disabled = true;
+              (chatInput as HTMLInputElement).style.background = '#2a2b32';
+              (chatInput as HTMLInputElement).style.color = '#565869';
+              (chatInput as HTMLInputElement).style.cursor = 'not-allowed';
+            }
           }
           // If this is the second user message, store it as the answer for email_confirmation
           if (userMessageSendCount === 2) {
@@ -1102,13 +1115,6 @@ function injectPopup() {
               systemMessagesShown[idx].answer = message;
               userRespondedToEmail = true;
               console.log('systemMessagesShown (set email_confirmation answer on second message):', systemMessagesShown);
-            }
-            // Disable the Send button
-            if (sendMessageBtn) {
-              (sendMessageBtn as HTMLButtonElement).disabled = true;
-              (sendMessageBtn as HTMLButtonElement).style.background = '#ccc';
-              (sendMessageBtn as HTMLButtonElement).style.color = '#888';
-              (sendMessageBtn as HTMLButtonElement).style.cursor = 'not-allowed';
             }
           }
           // Add user message to array
