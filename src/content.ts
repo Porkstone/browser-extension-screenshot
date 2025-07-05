@@ -618,36 +618,38 @@ async function startScreenshotProcess() {
             // Make seven parallel API calls for pricing data
             const hotelName = encodeURIComponent((answersArray[0]?.answer || '') + ', ' + (answersArray[1]?.answer || ''));
             
-            // First API call - Vietnam
-            const pricingResponseVN = fetch(`https://sp.autodeal.io/api/prices/VN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
-            // Second API call - Thailand
-            const pricingResponseTH = fetch(`https://sp.autodeal.io/api/prices/TH4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
-            // Third API call - UK
-            const pricingResponseUK = fetch(`https://autodeal.io/api/prices/UK4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
-            // Fourth API call - US
-            const pricingResponseUS = fetch(`https://autodeal.io/api/prices/US4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
-            // Fifth API call - India
-            const pricingResponseIN = fetch(`https://autodeal.io/api/prices/IN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
-            // Sixth API call - New Zealand
-            const pricingResponseNZ = fetch(`https://autodeal.io/api/prices/NZ4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
-            // Seventh API call - Mexico
-            const pricingResponseMX = fetch(`https://autodeal.io/api/prices/MX4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`);
-            
-            // Wait for all seven API calls to complete with 5 second delay
+            // Helper function to add timeout to fetch requests
+            const fetchWithTimeout = (url: string, timeoutMs: number = 35000) => {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => {
+                controller.abort();
+              }, timeoutMs);
+
+              return fetch(url, { signal: controller.signal })
+                .then(response => {
+                  clearTimeout(timeoutId);
+                  return response.json();
+                })
+                .catch(error => {
+                  clearTimeout(timeoutId);
+                  if (error.name === 'AbortError') {
+                    console.log(`API call timed out after ${timeoutMs}ms: ${url}`);
+                  } else {
+                    console.log(`API call failed: ${error.message} for ${url}`);
+                  }
+                  return null;
+                });
+            };
+
+            // Wait for all seven API calls to complete with 36 second timeout each
             const [pricingDataVN, pricingDataTH, pricingDataUK, pricingDataUS, pricingDataIN, pricingDataNZ, pricingDataMX] = await Promise.all([
-              pricingResponseVN.then(response => response.json()),
-              pricingResponseTH.then(response => response.json()),
-              pricingResponseUK.then(response => response.json()),
-              pricingResponseUS.then(response => response.json()),
-              pricingResponseIN.then(response => response.json()),
-              pricingResponseNZ.then(response => response.json()),
-              pricingResponseMX.then(response => response.json())
+              fetchWithTimeout(`https://sp.autodeal.io/api/prices/VN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`),
+              fetchWithTimeout(`https://sp.autodeal.io/api/prices/TH4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`),
+              fetchWithTimeout(`https://autodeal.io/api/prices/UK4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`),
+              fetchWithTimeout(`https://autodeal.io/api/prices/US4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`),
+              fetchWithTimeout(`https://autodeal.io/api/prices/IN4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`),
+              fetchWithTimeout(`https://autodeal.io/api/prices/NZ4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`),
+              fetchWithTimeout(`https://autodeal.io/api/prices/MX4?hotelName=${hotelName}&checkInDate=${answersArray[8]?.answer || ''}&checkOutDate=${answersArray[9]?.answer || ''}&useProxy=true&userCountryCode=US`)
             ]);
             
             console.log('Pricing API response VN:', pricingDataVN);
