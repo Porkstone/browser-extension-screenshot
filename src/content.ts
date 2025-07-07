@@ -1165,26 +1165,41 @@ function injectPopup() {
                       const thirdMessageDiv = document.createElement('div');
                       thirdMessageDiv.className = 'ai-message';
                       messageDiv.appendChild(thirdMessageDiv);
-                      typeText(thirdMessageDiv, 'and how much better it is than Booking.com', TYPING_SPEED_MS, () => {
-                        systemMessagesShown.push({ key: 'three_msg_3', greetingMessage: 'and how much better it is than Booking.com', answer: '' });
-                        console.log('systemMessagesShown:', systemMessagesShown);
-                        // After all three messages complete, wait 1 second then check for pricing results
-                        setTimeout(() => {
-                          threeMessagesComplete = true;
-                          let attempts = 0;
-                          const maxAttempts = 20;
-                          async function pollFinalMessage() {
-                            while (!finalMessageDisplayed && attempts < maxAttempts) {
-                              attempts++;
-                              await new Promise(resolve => {
-                                maybeShowFinalMessage();
-                                setTimeout(resolve, 3000);
-                              });
-                            }
+                                          typeText(thirdMessageDiv, 'and how much better it is than Booking.com', TYPING_SPEED_MS, () => {
+                      systemMessagesShown.push({ key: 'three_msg_3', greetingMessage: 'and how much better it is than Booking.com', answer: '' });
+                      console.log('systemMessagesShown:', systemMessagesShown);
+                      
+                      // Add spinner after the message
+                      const spinner = document.createElement('div');
+                      spinner.style.cssText = `
+                        display: inline-block;
+                        width: 16px;
+                        height: 16px;
+                        border: 2px solid #f3f3f3;
+                        border-top: 2px solid #10a37f;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                        margin-left: 8px;
+                      `;
+                      thirdMessageDiv.appendChild(spinner);
+                      
+                      // After all three messages complete, wait 1 second then check for pricing results
+                      setTimeout(() => {
+                        threeMessagesComplete = true;
+                        let attempts = 0;
+                        const maxAttempts = 20;
+                        async function pollFinalMessage() {
+                          while (!finalMessageDisplayed && attempts < maxAttempts) {
+                            attempts++;
+                            await new Promise(resolve => {
+                              maybeShowFinalMessage();
+                              setTimeout(resolve, 3000);
+                            });
                           }
-                          pollFinalMessage();
-                        }, 1000);
-                      });
+                        }
+                        pollFinalMessage();
+                      }, 1000);
+                    });
                     }, 1000);
                   });
                 }, 1000);
@@ -1233,6 +1248,34 @@ function injectPopup() {
             threeMessagesComplete,
             finalMessageDisplayed
           });
+
+          // Remove the spinner from the third message
+          const messageDiv = document.querySelector('.message');
+          if (messageDiv) {
+            const aiMessages = messageDiv.querySelectorAll('.ai-message');
+            console.log('Found AI messages for spinner removal:', aiMessages.length);
+            if (aiMessages.length >= 4) {
+              const thirdMessage = aiMessages[3]; // Fourth message (index 3) - the one with spinner
+              console.log('Third message HTML:', thirdMessage.innerHTML);
+              const spinner = thirdMessage.querySelector('div[style*="animation:"]');
+              console.log('Found spinner:', spinner);
+              if (spinner) {
+                spinner.remove();
+                console.log('Spinner removed from third message');
+              } else {
+                // Try alternative method
+                const allDivs = thirdMessage.querySelectorAll('div');
+                console.log('All divs in third message:', allDivs.length);
+                allDivs.forEach((div, index) => {
+                  console.log(`Div ${index} style:`, div.style.cssText);
+                  if (div.style.cssText.includes('animation:') && div.style.cssText.includes('spin')) {
+                    div.remove();
+                    console.log('Spinner removed with alternative method');
+                  }
+                });
+              }
+            }
+          }
 
           finalMessageDisplayed = true;
           if (pricingResults.hasCheaperPrice) {
@@ -1350,6 +1393,35 @@ function injectPopup() {
             }, 1000);
           } else {
             console.log('No cheaper price found, showing no better price messages');
+            
+            // Remove the spinner from the third message
+            const messageDiv = document.querySelector('.message');
+            if (messageDiv) {
+              const aiMessages = messageDiv.querySelectorAll('.ai-message');
+              console.log('Found AI messages for spinner removal (no better price):', aiMessages.length);
+              if (aiMessages.length >= 4) {
+                const thirdMessage = aiMessages[3]; // Fourth message (index 3) - the one with spinner
+                console.log('Third message HTML (no better price):', thirdMessage.innerHTML);
+                const spinner = thirdMessage.querySelector('div[style*="animation:"]');
+                console.log('Found spinner (no better price):', spinner);
+                if (spinner) {
+                  spinner.remove();
+                  console.log('Spinner removed from third message (no better price)');
+                } else {
+                  // Try alternative method
+                  const allDivs = thirdMessage.querySelectorAll('div');
+                  console.log('All divs in third message (no better price):', allDivs.length);
+                  allDivs.forEach((div, index) => {
+                    console.log(`Div ${index} style (no better price):`, div.style.cssText);
+                    if (div.style.cssText.includes('animation:') && div.style.cssText.includes('spin')) {
+                      div.remove();
+                      console.log('Spinner removed with alternative method (no better price)');
+                    }
+                  });
+                }
+              }
+            }
+            
             finalMessageDisplayed = true;
             waitingForFinalMessage = false;
             console.log('Final message displayed and marked as shown');
