@@ -67,11 +67,27 @@ const isHighDPI = () => getScaleMultiplier() > 1;
 // --- 2. Position Adjustment for Zoom Levels ---
 function adjustPositionForZoom(position: number): number {
   const dpr = getScaleMultiplier();
-  if (dpr < 1) {
-    return position - Math.ceil(1 / dpr);
-  } else if (dpr > 1) {
-    return position - Math.ceil(dpr);
+  console.log(`Adjusting position ${position} with DPR: ${dpr}`);
+  
+  // Windows-specific adjustments
+  const isWindows = navigator.platform.indexOf('Win') !== -1;
+  
+  if (isWindows) {
+    // Windows often has different DPI scaling behavior
+    if (dpr > 1) {
+      const adjusted = position - Math.ceil(dpr * 0.5);
+      console.log(`Windows DPI adjustment: ${position} -> ${adjusted}`);
+      return adjusted;
+    }
+  } else {
+    // Original logic for other platforms
+    if (dpr < 1) {
+      return position - Math.ceil(1 / dpr);
+    } else if (dpr > 1) {
+      return position - Math.ceil(dpr);
+    }
   }
+  
   return position;
 }
 
@@ -110,8 +126,21 @@ function updatePricingData(pricingData: any[]) {
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'scrollToPosition') {
-    window.scrollTo(request.x, request.y);
-    setTimeout(() => sendResponse({ status: 'scrolled' }), 300); // Give time for scroll
+    console.log(`Scrolling to position: (${request.x}, ${request.y})`);
+    
+    // Use smooth scrolling for better Windows compatibility
+    window.scrollTo({
+      left: request.x,
+      top: request.y,
+      behavior: 'instant' // Use instant for more reliable positioning
+    });
+    
+    // Wait longer for scroll to complete on Windows
+    setTimeout(() => {
+      console.log(`Scroll completed to position: (${window.scrollX}, ${window.scrollY})`);
+      sendResponse({ status: 'scrolled', actualPosition: { x: window.scrollX, y: window.scrollY } });
+    }, 500); // Increased timeout for Windows
+    
     return true;
   }
 });
@@ -461,6 +490,12 @@ async function startScreenshotProcess() {
   const originalScrollX = window.scrollX;
   const originalScrollY = window.scrollY;
 
+  // Log platform information for debugging
+  console.log('Platform:', navigator.platform);
+  console.log('User Agent:', navigator.userAgent);
+  console.log('Device Pixel Ratio:', window.devicePixelRatio);
+  console.log('Screen Resolution:', screen.width + 'x' + screen.height);
+
   // Show animated dots overlay
   showAnimatedDotsOverlay();
 
@@ -478,6 +513,7 @@ async function startScreenshotProcess() {
     const totalScreenshotsHorizontal = Math.ceil(pageWidth / viewportWidth);
     console.log('FullPageScreenshot:', { pageWidth, pageHeight, viewportWidth, viewportHeight, totalScreenshotsHorizontal, totalScreenshotsVertical });
 
+    console.log('Sending screenshot request to background script...');
     const response = await chrome.runtime.sendMessage({
       action: 'takeFullPageScreenshot',
       totalScreenshotsVertical,
@@ -488,7 +524,17 @@ async function startScreenshotProcess() {
       pageHeight
     });
 
+    console.log('Received response from background script:', response);
+
+    if (response && response.error) {
+      console.error('Screenshot error:', response.error);
+      console.error('Error details:', response.details);
+      hideAnimatedDotsOverlay();
+      throw new Error(response.error);
+    }
+
     if (response && response.screenshots && response.screenshots.length) {
+      console.log(`Successfully received ${response.screenshots.length} screenshots`);
       const canvas = await stitchScreenshots(
         response.screenshots,
         totalScreenshotsVertical,
@@ -816,9 +862,22 @@ async function startScreenshotProcess() {
       window.scrollTo(originalScrollX, originalScrollY);
     }
   } catch (err) {
+    console.error('Screenshot process failed:', err);
+    
+    // Show user-friendly error message
+    const messageDiv = document.querySelector('.message');
+    if (messageDiv) {
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = 'color: #e74c3c; margin-top: 15px; text-align: center;';
+      errorDiv.textContent = `Screenshot failed: ${err instanceof Error ? err.message : 'Unknown error'}`;
+      messageDiv.appendChild(errorDiv);
+    }
+    
     // Restore original scroll position on error
     window.scrollTo(originalScrollX, originalScrollY);
-    throw err;
+    
+    // Don't throw the error, just log it
+    console.error('Full screenshot process error:', err);
   } finally {
     // Hide animated dots overlay
     hideAnimatedDotsOverlay();

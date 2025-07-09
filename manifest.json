@@ -1,13 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Zorro Co-Pilot",
-  "version": "0.9.11",
+  "version": "0.9.12",
   "description": "AI-powered travel booking assistant *beta*",
   "permissions": [
+    "storage",
     "activeTab",
     "tabs"
   ],
   "host_permissions": [
+    "<all_urls>",
     "https://secure.booking.com/*"
   ],
   "action": {
